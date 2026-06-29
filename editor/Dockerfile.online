@@ -1,0 +1,77 @@
+# PrivateOffice editor — Collabora ONLINE built FROM SOURCE (coolwsd + browser bundle),
+# against the LibreOffice/Collabora Office CORE taken from our PINNED base image (same version,
+# 26.04.1-4). The core is NOT built from source. Adapted from upstream
+# online/docker/from-source-gh-action (build.sh + Dockerfile). See assisted_translate.md
+# ("Целевой уровень") and editor/manifests/upstream.json.
+#
+# Status: BRINGUP. This first builds only the Online layer from source; the PrivateOffice
+# rebrand/theme/overrides are NOT applied here yet (added once a clean from-source build runs).
+
+ARG BASE=collabora/code@sha256:75859dc9f9084d1877ce36cf96ec86600f495bade33289c9cbc27e0a0ee23b81
+ARG ONLINE_REPO=https://github.com/CollaboraOnline/online.mirror
+ARG ONLINE_REF=cp-26.04.1-4
+
+# ---------- Stage 1: build Collabora Online (coolwsd + browser) from source ----------
+FROM ubuntu:24.04 AS builder
+ARG ONLINE_REPO
+ARG ONLINE_REF
+ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
+WORKDIR /build
+
+# Build deps (mirrors upstream from-source-gh-action/Dockerfile, online part only).
+RUN apt-get update && apt-get -y install \
+      ca-certificates wget curl git build-essential libtool autoconf automake pkg-config \
+      libpng-dev libcap-dev libcap2-bin libssl-dev libpam-dev libzstd-dev libcppunit-dev \
+      python3-polib python3-lxml npm fontconfig rsync \
+ && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/n.sh && bash /tmp/n.sh \
+ && apt-get install -y nodejs && rm /tmp/n.sh
+
+# Static poco (exactly as upstream).
+RUN mkdir -p /build/builddir && cd /build/builddir \
+ && wget -q https://pocoproject.org/releases/poco-1.12.5p2/poco-1.12.5p2-all.tar.gz \
+ && tar xf poco-1.12.5p2-all.tar.gz && cd poco-1.12.5p2-all \
+ && ./configure --static --no-tests --no-samples --no-sharedlibs --cflags="-fPIC" \
+      --omit=Zip,Data,Data/SQLite,Data/ODBC,Data/MySQL,MongoDB,PDF,CppParser,PageCompiler,Redis,Encodings,ActiveRecord \
+      --prefix=/build/poco \
+ && make -j"$(nproc)" && make install
+
+# Online source, pinned to the version that matches the base image's core.
+# The monorepo is large (~2.3 GB working tree); retry the shallow clone — large clones over
+# TLS occasionally drop mid-transfer ("GnuTLS recv error (-110) / early EOF").
+RUN git config --global http.postBuffer 1048576000 \
+ && for i in 1 2 3 4 5; do \
+      git clone --depth=1 --branch "$ONLINE_REF" "$ONLINE_REPO" /build/online && break; \
+      echo "clone attempt $i failed; retrying in 5s…"; rm -rf /build/online; sleep 5; \
+    done \
+ && test -d /build/online/.git
+
+# Engine (LibreOffice/Collabora Office core) from our PINNED base image — same version, not built.
+# configure detects engine/instdir (the LO install) + engine/include (LOKit headers, in source).
+COPY --from=collabora/code@sha256:75859dc9f9084d1877ce36cf96ec86600f495bade33289c9cbc27e0a0ee23b81 \
+     /opt/collaboraoffice /build/online/engine/instdir
+
+# Build coolwsd + the browser bundle from source (flags mirror upstream build.sh).
+WORKDIR /build/online
+RUN ./autogen.sh \
+ && ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-silent-rules \
+      --disable-tests \
+      --with-lokit-path=/build/online/engine/include \
+      --with-lo-path=/opt/collaboraoffice \
+      --with-poco-includes=/build/poco/include --with-poco-libs=/build/poco/lib \
+ && make -j"$(nproc)"
+RUN mkdir -p /build/instdir && cd /build/online && DESTDIR=/build/instdir make install
+
+# ---------- Stage 2: runtime = pinned base, with the from-source coolwsd+browser swapped in ----------
+# The base already provides the matching engine (/opt/collaboraoffice), the cool user, the jail
+# systemplate and capabilities; we overlay our freshly-built Online artifacts on top.
+FROM ${BASE} AS runtime
+USER root
+COPY --from=builder /build/instdir/usr/ /usr/
+# Re-apply capabilities (lost when the binaries were replaced) and regenerate the jail template
+# so it matches the from-source coolwsd. Tolerant: exact paths verified during bringup.
+RUN (setcap cap_fowner,cap_chown,cap_sys_chroot=ep /usr/bin/coolforkit-caps 2>/dev/null || true) \
+ && (setcap cap_sys_admin=ep /usr/bin/coolmount 2>/dev/null || true) \
+ && (chmod -R a+rX /usr/share/coolwsd/browser 2>/dev/null || true) \
+ && (coolwsd-systemplate-setup /opt/cool/systemplate /opt/collaboraoffice >/dev/null 2>&1 || true)
+USER cool

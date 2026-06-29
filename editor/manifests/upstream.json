@@ -16,6 +16,17 @@
     "libreoffice_buildid": "6040(Build:4)",
     "reference_ooo_major_minor": "4.1"
   },
+  "online_from_source": {
+    "repo": "https://github.com/CollaboraOnline/online.mirror",
+    "ref": "cp-26.04.1-4",
+    "note": "Collabora Online (coolwsd + browser bundle) is built from THIS source against the base image's engine (same version). The LO/Collabora Office core is NOT built from source. See editor/Dockerfile.online.",
+    "poco": "1.12.5p2",
+    "node_modules_asset": "node_modules-26.04.1-1.tar.xz"
+  },
+  "builds": {
+    "from_source": "editor/Dockerfile.online — validated; builds Online from source, runtime swaps coolwsd+browser into the pinned base (image tag: po-editor-online). Smoke: /hosting/discovery 200, browser bundle 200.",
+    "stopgap": "editor/Dockerfile — patches the prebuilt base image in place (interim)."
+  },
   "ui_locales": 22,
   "apps": ["Writer", "Calc", "Impress"],
   "paths": {
