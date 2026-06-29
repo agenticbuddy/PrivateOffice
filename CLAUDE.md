@@ -6,25 +6,14 @@ Run on http://localhost:8088 — build/start with `./scripts/up.sh` (NOT a bare
 
 ## CONVENTIONS
 
-### Fix at the source — never override as a substitute for fixing
-When something renders/behaves wrong, **fix the actual element in its own source code**
-so the correct result loads on the first paint. It is FORBIDDEN to mask a problem with an
-override layer *instead of* fixing it, i.e.:
-- no bolt-on override stylesheets / extra `!important` rules piled on top to beat a default,
-- no runtime DOM patching / `setInterval` scrubbers,
-- no wrapper or post-load hacks.
+### Fix at the source — never override as a substitute
+- Renders/behaves wrong → fix the REAL element in its own source so it's correct on first paint.
+- FORBIDDEN as a substitute for fixing: bolt-on override stylesheets / extra `!important`; runtime DOM patching / `setInterval` scrubbers; wrapper or post-load hacks.
+- Editor: its CSS/branding/HTML are editable at build (`editor/Dockerfile.online`). Theme via the editor's OWN files + native CSS vars (`--color-*` / `--co-primary-element`, real class rules) so menus/hovers/submenus/dialogs are right natively. Override ONLY when the source genuinely can't be edited.
 
-For the embedded editor specifically: its CSS, branding and HTML in the image ARE editable
-at build time (`editor/Dockerfile.online`). Theme it through the editor's **own** files and native
-CSS variables (`branding.css`, the `--color-*` / `--co-primary-element` tokens, the real
-class rules) so menus, hovers, submenus, dialogs are correct natively — do not bolt a separate
-override sheet on top to patch individual elements. Overriding is acceptable ONLY when the
-source genuinely cannot be edited.
-
-### Git: commit self-contained tasks automatically
-Initialize/maintain the repo and commit each self-contained, completed+verified task on your
-own (no need to ask each time). One logical task = one commit, clear message. Don't commit
-debugging artifacts (root-level screenshots, zips, `.playwright-mcp/`).
+### Git — auto-commit
+- Commit each self-contained, completed + Playwright-verified task yourself (don't ask each time). One logical task = one commit, clear message.
+- Never commit debug artifacts (root-level screenshots, zips, `.playwright-mcp/`).
 
 ## BUILD & RUN
 - Stack: `./scripts/up.sh`. Builds + starts; stamps `BUILD_ID=<git sha>` (a bare `docker compose up --build` leaves it `dev` → editor cache-bust is a no-op). One service: `./scripts/up.sh editor|app|nginx`.

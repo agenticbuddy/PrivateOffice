@@ -44,7 +44,7 @@ In Collabora Online there are more layers:
 | Layer | What lives in it | How it is usually fixed |
 | --- | --- | --- |
 | App frontend | The project's wrapper around Collabora: login, files, profile, modals | `frontend/src/i18n/messages/*.json` |
-| Collabora browser UI | Ribbon/notebookbar, part of the menus, tooltips, panels, buttons in web code | `l10n/ui-<locale>.json`, in this project via a patch in `editor/Dockerfile` |
+| Collabora browser UI | Ribbon/notebookbar, part of the menus, tooltips, panels, buttons in web code | `l10n/ui-<locale>.json` — data in `editor/l10n/overrides/client/<lang>.json`, merged by the deployed build `editor/Dockerfile.online` (`editor/Dockerfile` is the stopgap) |
 | UNO command labels | Labels of LibreOffice commands that Collabora invokes via `_UNO(...)` | `l10n/uno/<locale>.json` or the source that generates these catalogs |
 | LibreOffice-core | Dialogs, server/core UI, `.ui`, gettext, some sidebar and dialog strings | `.po` -> `.mo`, then rebuild or replace resources in the image |
 | Composed strings | Phrases assembled from several translatable or non-translatable pieces | Rewrite into a whole phrase with placeholders |
@@ -799,7 +799,7 @@ You can edit if:
 - the translation does not break width/RTL;
 - there is a render-check plan.
 
-In this project such edits are best done via the existing patch in `editor/Dockerfile`, rather than manually changing an already-built file in the container. Then the edit is reproducible on rebuild.
+In this project such edits go as data in `editor/l10n/overrides/client/<lang>.json`, merged by the deployed build `editor/Dockerfile.online` (`editor/Dockerfile` is only a stopgap/fallback), rather than manually changing an already-built file in the container. Then the edit is reproducible on rebuild.
 
 Command to the agent:
 

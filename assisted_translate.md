@@ -44,7 +44,7 @@
 | Слой | Что в нем живет | Как обычно чинить |
 | --- | --- | --- |
 | Frontend приложения | Обертка проекта вокруг Collabora: логин, файлы, профиль, модалки | `frontend/src/i18n/messages/*.json` |
-| Collabora browser UI | Ribbon/notebookbar, часть меню, tooltips, панели, кнопки в web-коде | `l10n/ui-<locale>.json`, в этом проекте через патч в `editor/Dockerfile` |
+| Collabora browser UI | Ribbon/notebookbar, часть меню, tooltips, панели, кнопки в web-коде | `l10n/ui-<locale>.json` — данные в `editor/l10n/overrides/client/<lang>.json`, их мёрджит deployed-сборка `editor/Dockerfile.online` (`editor/Dockerfile` — stopgap) |
 | UNO command labels | Подписи команд LibreOffice, которые Collabora вызывает через `_UNO(...)` | `l10n/uno/<locale>.json` или источник генерации этих каталогов |
 | LibreOffice-core | Диалоги, server/core UI, `.ui`, gettext, некоторые sidebar и dialog строки | `.po` -> `.mo`, затем пересборка или замена ресурсов в образе |
 | Составные строки | Фразы, собранные из нескольких переводимых или непереводимых кусков | Переписать на цельную фразу с placeholders |
@@ -799,7 +799,7 @@ Decision package неполный. Не меняй файлы.
 - перевод не ломает ширину/RTL;
 - есть план рендер-проверки.
 
-В этом проекте такие правки логично делать через существующий патч в `editor/Dockerfile`, а не вручную менять уже собранный файл в контейнере. Тогда правка воспроизводима при пересборке.
+В этом проекте такие правки кладут как данные в `editor/l10n/overrides/client/<lang>.json` — их мёрджит deployed-сборка `editor/Dockerfile.online` (`editor/Dockerfile` — лишь stopgap/fallback), а не вручную меняют уже собранный файл в контейнере. Тогда правка воспроизводима при пересборке.
 
 Команда агенту:
 

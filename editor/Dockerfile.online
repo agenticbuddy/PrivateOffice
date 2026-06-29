@@ -91,7 +91,7 @@ COPY --from=builder /build/instdir/etc/coolwsd/coolwsd.xml /etc/coolwsd/coolwsd.
 # build ships no branding.js, so a missing file is a 404 — and a returning browser could even replay
 # a stale cached brand script. Provide our OWN empty branding.js so the injected reference always
 # resolves to inert, non-Collabora content (branding is done via the folded theme + rebrand).
-RUN printf '%s\n' '/* PrivateOffice: intentionally empty. Branding is applied via the folded glass theme and the Collabora->PrivateOffice rebrand, not via a brand script. */' > ${DIST}/branding.js
+RUN printf '%s\n' '/* PrivateOffice: intentionally empty branding script. Branding is applied via the folded theme and the product rebrand. */' > ${DIST}/branding.js
 
 # --- PrivateOffice assets ---
 COPY fonts/ ${DIST}/fonts/
@@ -145,9 +145,9 @@ RUN cp ${DIST}/images/lc_paste.svg ${DIST}/images/lc_pastespecial.svg \
 RUN sed -i 's#getImageURL=function(imgName){var _a;#getImageURL=function(imgName){var _a;if(!imgName)return"";#' ${DIST}/bundle.js
 
 # Privacy + rebrand of coolwsd's SERVE-TIME placeholders. Name -> PrivateOffice, product URL ->
-# about:blank; empty feedback/welcome/buyproduct; disable auto-welcome. The from-source build ships
-# no branding.js and no welcome/ dir, so we do NOT inject a branding.js tag (the %BRANDING_JS%
-# comment is left inert) and the welcome removal is a harmless no-op.
+# about:blank; empty feedback/welcome/buyproduct; disable auto-welcome. coolwsd injects %BRANDING_JS%
+# at serve time, so the empty branding.js created above is exactly what that injected <script> loads
+# (inert). The from-source build ships no welcome/ dir, so the welcome removal is a harmless no-op.
 RUN sed -i 's/%FEEDBACK_URL%//g; s/%WELCOME_URL%//g; s/%BUYPRODUCT_URL%//g; s/%AUTO_SHOW_WELCOME%/false/g; s/%PRODUCT_BRANDING_NAME%/PrivateOffice/g; s|%PRODUCT_BRANDING_URL%|about:blank|g' ${DIST}/cool.html \
  && rm -rf ${DIST}/welcome ${DIST}/welcome.html ${DIST}/welcome.js \
  && chmod -R a+r ${DIST}/fonts ${DIST}/images
