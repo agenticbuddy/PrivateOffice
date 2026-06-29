@@ -4,8 +4,9 @@
 # online/docker/from-source-gh-action (build.sh + Dockerfile). See assisted_translate.md
 # ("Целевой уровень") and editor/manifests/upstream.json.
 #
-# Status: BRINGUP. This first builds only the Online layer from source; the PrivateOffice
-# rebrand/theme/overrides are NOT applied here yet (added once a clean from-source build runs).
+# The PrivateOffice theme + full rebrand + l10n overrides are applied AT BUILD TIME: the theme and
+# l10n live as data (branding-privateoffice.css, l10n/overrides/client/*.json) and the rebrand/code
+# fixes edit the freshly-built files in place — no runtime DOM patching, no bolt-on override sheet.
 
 ARG BASE=collabora/code@sha256:75859dc9f9084d1877ce36cf96ec86600f495bade33289c9cbc27e0a0ee23b81
 ARG ONLINE_REPO=https://github.com/CollaboraOnline/online.mirror
@@ -62,16 +63,101 @@ RUN ./autogen.sh \
  && make -j"$(nproc)"
 RUN mkdir -p /build/instdir && cd /build/online && DESTDIR=/build/instdir make install
 
-# ---------- Stage 2: runtime = pinned base, with the from-source coolwsd+browser swapped in ----------
+# Merge our client-catalog translation OVERRIDES (data) into the freshly-built ui-<lang>.json.
+# This is the honest data layer (editor/l10n/overrides/client/<lang>.json) replacing the old
+# inline-sed injection; override keys win (adds missing keys, corrects the few wrong ones).
+COPY l10n/overrides/client /tmp/po-overrides
+RUN set -e; for f in /tmp/po-overrides/*.json; do \
+      lang="$(basename "$f" .json)"; cat="/build/instdir/usr/share/coolwsd/browser/dist/l10n/ui-${lang}.json"; \
+      if [ -f "$cat" ]; then \
+        python3 -c "import json,sys; b=json.load(open('$cat')); o=json.load(open('$f')); b.update(o); json.dump(b, open('$cat','w'), ensure_ascii=False)"; \
+        echo "merged $(python3 -c "import json;print(len(json.load(open('$f'))))") keys into ui-${lang}.json"; \
+      else echo "WARN: no catalog for ${lang} ($cat)"; fi; \
+    done; rm -rf /tmp/po-overrides
+
+# ---------- Stage 2: runtime = pinned base, with the customized from-source Online swapped in ----------
 # The base already provides the matching engine (/opt/collaboraoffice), the cool user, the jail
-# systemplate and capabilities; we overlay our freshly-built Online artifacts on top.
+# systemplate and capabilities; we overlay our freshly-built + customized Online artifacts on top.
 FROM ${BASE} AS runtime
 USER root
+ARG DIST=/usr/share/coolwsd/browser/dist
+ARG BUILD_ID=dev
+
+# Bring in the from-source Online (coolwsd binaries, browser dist, etc.) + the built coolwsd.xml.
 COPY --from=builder /build/instdir/usr/ /usr/
-# Re-apply capabilities (lost when the binaries were replaced) and regenerate the jail template
-# so it matches the from-source coolwsd. Tolerant: exact paths verified during bringup.
+COPY --from=builder /build/instdir/etc/coolwsd/coolwsd.xml /etc/coolwsd/coolwsd.xml
+# The open-source from-source build ships no branding.js; drop any base-image leftover so nothing
+# stale is served (cool.html's %BRANDING_JS% placeholder is left empty — we brand via theme+rebrand).
+RUN rm -f ${DIST}/branding.js
+
+# --- PrivateOffice assets ---
+COPY fonts/ ${DIST}/fonts/
+COPY po-logo.svg ${DIST}/images/po-logo.svg
+COPY po-toggle.js ${DIST}/po-toggle.js
+
+# Fold the PrivateOffice glass theme into the editor's OWN stylesheet (bundle.css), correct on first
+# paint — not a separate override sheet. The theme gate (po-toggle.js) is a same-origin external
+# parse-blocking script (CSP is script-src 'self'); it sets data-po for the glass theme, classic
+# sessions opt out via ?po_design.
+COPY branding-privateoffice.css /tmp/po-theme.css
+RUN cat /tmp/po-theme.css >> ${DIST}/bundle.css && rm /tmp/po-theme.css \
+ && sed -i '/po-theme\.css/d; /po-theme-toggle/d; /po-toggle\.js/d' ${DIST}/cool.html \
+ && sed -i "s#</head>#<script id=\"po-theme-toggle\" src=\"%SERVICE_ROOT%/browser/%VERSION%/po-toggle.js\"></script></head>#" ${DIST}/cool.html
+
+# Remove the engine's DEAD bare inline dark-theme <script> (CSP rejects inline; it never runs).
+RUN sed -i '/<script>/{:a;N;/<\/script>/!ba;/Apply dark theme immediately/d;}' ${DIST}/cool.html
+
+# Rebrand the product name + copyright everywhere (display strings, safe across JS/HTML/JSON/CSS).
+# Phrases first, then the bare upstream word on data/markup files only (NOT bundle.js). The open-
+# source build has no branding.js, so only admin-bundle.js gets the bare-word pass.
+RUN PHRASES='s/Collabora Online Development Edition (CODE)/PrivateOffice/g; s/Collabora Online Development Edition/PrivateOffice/g; s/Collabora Online/PrivateOffice/g; s/Collabora Office/PrivateOffice/g; s/Collabora Productivity Limited/PrivateOffice/g; s/Collabora Productivity/PrivateOffice/g' \
+ && grep -rIl 'Collabora' ${DIST} --include='*.js' --include='*.html' --include='*.json' --include='*.css' 2>/dev/null | xargs -r sed -i "$PHRASES" \
+ && grep -rIl 'Collabora' ${DIST} --include='*.html' --include='*.json' --include='*.css' 2>/dev/null | xargs -r sed -i 's/Collabora/PrivateOffice/g' \
+ && sed -i 's/Collabora/PrivateOffice/g' ${DIST}/admin-bundle.js
+
+# Localize the ribbon group "more options" expander at source (de-concatenate aria/tooltip).
+RUN sed -i "s#\"More options for \"+id#_(\"More options for {1}\").replace(\"{1}\",groupLabel\&\&groupLabel.textContent?groupLabel.textContent:id)#g" ${DIST}/bundle.js
+
+# Localize the combobox dropdown accessible name (de-concatenate the fragment msgids).
+RUN sed -i "s#dataAriaLabel?_(\"Open \")+dataAriaLabel+_(\" list\"):_(\"Open list\")#dataAriaLabel?_(\"Open {name}\").replace(\"{name}\",dataAriaLabel):_(\"Open list\")#" ${DIST}/bundle.js
+
+# Neutralize every external upstream URL at source (no phone-home / identity leak).
+# Case-insensitive so capitalized identity URLs (e.g. github.com/CollaboraOnline/online) are caught too.
+RUN grep -rIli 'collabora' ${DIST} --include='*.js' --include='*.html' --include='*.json' --include='*.css' 2>/dev/null \
+      | xargs -r sed -i -E 's|https?://[a-zA-Z0-9._/?=&:%~-]*[Cc]ollabora[a-zA-Z0-9./?=&:%~_-]*|about:blank|g' \
+ && grep -rIl 'col\.la' ${DIST} --include='*.js' --include='*.html' --include='*.json' --include='*.css' 2>/dev/null \
+      | xargs -r sed -i 's|https\?://col\.la[a-zA-Z0-9./?=&:%~_-]*|about:blank|g'
+
+# Replace upstream logo image files with the PrivateOffice mark.
+RUN for f in $(ls ${DIST}/images/ | grep -iE 'collabora|full-logo|lc_about|toolbar-bg-logo'); do \
+      cp ${DIST}/images/po-logo.svg ${DIST}/images/$f; \
+    done
+
+# Provide the Paste Special context-menu icon the engine requests but upstream omits.
+RUN cp ${DIST}/images/lc_paste.svg ${DIST}/images/lc_pastespecial.svg \
+ && cp ${DIST}/images/dark/lc_paste.svg ${DIST}/images/dark/lc_pastespecial.svg \
+ && chmod a+r ${DIST}/images/lc_pastespecial.svg ${DIST}/images/dark/lc_pastespecial.svg
+
+# Don't request an empty images/ URL for icon-less entries (stray 404 guard).
+RUN sed -i 's#getImageURL=function(imgName){var _a;#getImageURL=function(imgName){var _a;if(!imgName)return"";#' ${DIST}/bundle.js
+
+# Privacy + rebrand of coolwsd's SERVE-TIME placeholders. Name -> PrivateOffice, product URL ->
+# about:blank; empty feedback/welcome/buyproduct; disable auto-welcome. The from-source build ships
+# no branding.js and no welcome/ dir, so we do NOT inject a branding.js tag (the %BRANDING_JS%
+# comment is left inert) and the welcome removal is a harmless no-op.
+RUN sed -i 's/%FEEDBACK_URL%//g; s/%WELCOME_URL%//g; s/%BUYPRODUCT_URL%//g; s/%AUTO_SHOW_WELCOME%/false/g; s/%PRODUCT_BRANDING_NAME%/PrivateOffice/g; s|%PRODUCT_BRANDING_URL%|about:blank|g' ${DIST}/cool.html \
+ && rm -rf ${DIST}/welcome ${DIST}/welcome.html ${DIST}/welcome.js \
+ && chmod -R a+r ${DIST}/fonts ${DIST}/images
+
+# Per-build cache-bust: stamp BUILD_ID into ver_suffix (fresh ETag) + ?b= on cool.html assets.
+RUN sed -i "s#\(<ver_suffix [^>]*>\)</ver_suffix>#\1${BUILD_ID}</ver_suffix>#" /etc/coolwsd/coolwsd.xml
+RUN sed -i -E "s#(%SERVICE_ROOT%/browser/%VERSION%/[A-Za-z0-9._/-]+\.(css|js|json))#\1?b=${BUILD_ID}#g" ${DIST}/cool.html
+
+# Re-apply capabilities (lost when binaries were replaced) and regenerate the jail systemplate so
+# it matches the from-source coolwsd.
 RUN (setcap cap_fowner,cap_chown,cap_sys_chroot=ep /usr/bin/coolforkit-caps 2>/dev/null || true) \
  && (setcap cap_sys_admin=ep /usr/bin/coolmount 2>/dev/null || true) \
  && (chmod -R a+rX /usr/share/coolwsd/browser 2>/dev/null || true) \
  && (coolwsd-systemplate-setup /opt/cool/systemplate /opt/collaboraoffice >/dev/null 2>&1 || true)
+
 USER cool

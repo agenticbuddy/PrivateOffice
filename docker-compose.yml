@@ -32,7 +32,10 @@ services:
   editor:
     build:
       context: ./editor
-      dockerfile: Dockerfile
+      # Collabora Online built FROM SOURCE (coolwsd + browser) against the pinned base image's
+      # engine; the PrivateOffice theme/rebrand/l10n are applied at build. See editor/Dockerfile.online
+      # and editor/manifests/upstream.json. (editor/Dockerfile is the prebuilt-base stopgap.)
+      dockerfile: Dockerfile.online
       args:
         # Per-build cache-bust token baked into coolwsd's ver_suffix (see editor/Dockerfile)
         # so every /browser asset ETag changes once per patched build and returning browsers
