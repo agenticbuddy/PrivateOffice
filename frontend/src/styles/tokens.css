@@ -1,0 +1,119 @@
+/* Liquid Glass design tokens — derived from the Liquid Glass template.
+   Accent: green #0a7f5e. Glass surfaces use backdrop-filter blur + inset highlight. */
+:root {
+  /* accent */
+  --accent: #0a7f5e;
+  --accent-ink: #07614a;
+  --accent-soft: rgba(10, 127, 94, 0.12);
+  --accent-grad: linear-gradient(140deg, #0a7f5e, #07614a);
+
+  /* ink scale */
+  --ink: #1b2433;
+  --ink-2: #5d6b80;
+  --ink-3: #6b7689; /* darkened for AA contrast on small faint text */
+  --line: rgba(20, 32, 56, 0.1);
+  --line-2: rgba(20, 32, 56, 0.16);
+  --canvas: #ffffff;
+
+  /* semantic */
+  --pos: #1f8a5b;
+  --neg: #d23f3f;
+  --warn: #c2410c;
+
+  /* file-type accents */
+  --doc: #2563d9;
+  --sheet: #1f8a5b;
+  --slide: #c2410c;
+  --folder: #d99a0a;
+
+  /* glass */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-blur: 22px;
+  --glass-sat: 1.6;
+  --glass-bd: rgba(255, 255, 255, 0.72);
+  --glass-hi: rgba(255, 255, 255, 0.65);
+  --glass-sh: 0 10px 34px rgba(17, 32, 63, 0.12);
+  --glass-fill: rgba(255, 255, 255, 0.5);
+  --amb: 1;
+
+  /* spacing (8px grid) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-8: 48px;
+
+  /* radius */
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+  --r-full: 999px;
+
+  /* elevation (non-glass) */
+  --shadow-1: 0 1px 2px rgba(17, 32, 63, 0.06);
+  --shadow-2: 0 8px 24px rgba(17, 32, 63, 0.12);
+
+  /* type */
+  --font: "Public Sans", system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* layout */
+  --rail-w: 80px; /* wide enough for 2-line nav labels (e.g. "Shared with me") in all locales */
+  --sidebar-w: 264px;
+  --topbar-h: 52px;
+  --content-max: 1200px;
+
+  /* ---- compatibility aliases (old token names → new palette) ---- */
+  --bg: transparent;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-2: rgba(20, 32, 56, 0.05);
+  --text: var(--ink);
+  --text-muted: var(--ink-2);
+  --text-faint: var(--ink-3);
+  --primary: var(--accent);
+  --primary-700: var(--accent-ink);
+  --primary-50: var(--accent-soft);
+  --success: var(--pos);
+  --warning: var(--warn);
+  --danger: var(--neg);
+  --danger-50: rgba(210, 63, 63, 0.1);
+  --accent-purple: #7c5cfc;
+  --focus: var(--accent);
+}
+
+/* ============================================================================
+   CLASSIC design — the original flat, indigo, solid-surface look. Selected per
+   user via <html data-design="classic">. Glass is neutralized in base.css.
+   ============================================================================ */
+:root[data-design="classic"] {
+  --accent: #4c6fff;
+  --accent-ink: #3a57d6;
+  --accent-soft: #ecf0ff;
+  --accent-grad: linear-gradient(140deg, #4c6fff, #3a57d6);
+
+  --ink: #1b1f26;
+  --ink-2: #5b6472;
+  --ink-3: #6b7689; /* AA contrast */
+  --line: #e6e8ec;
+  --line-2: #dfe2e7;
+
+  --doc: #4c6fff;
+  --sheet: #1fb57a;
+  --slide: #e8590c;
+  --folder: #f5a623;
+
+  /* flat surfaces instead of glass */
+  --glass-bg: #ffffff;
+  --glass-fill: #f1f3f6;
+  --glass-bd: #e6e8ec;
+  --glass-hi: transparent;
+  --glass-sh: var(--shadow-1);
+  /* solid aliases so translucent helpers flatten in classic */
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+
+  --font: Inter, "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif;
+}

@@ -1,0 +1,268 @@
+/* ============================================================================
+   PrivateOffice — Liquid Glass theme for the embedded editor.
+   This file is concatenated into the editor's OWN stylesheet (bundle.css) at
+   build time, so the theme is part of the editor's native CSS and is correct on
+   the first paint — it is NOT a bolt-on override sheet and there is no runtime
+   DOM patching. Every rule is scoped under `html[data-po="glass"]`, an attribute
+   set during page parse only for users on the "glass" design (classic users keep
+   the editor's default look). Re-branding is design-independent and handled by
+   build-time source edits in the Dockerfile.
+   Accent: green #0a7f5e. Self-hosted Public Sans + IBM Plex Mono.
+   Colours are driven through the editor's native CSS variables wherever possible
+   so menus / hovers / submenus / dialogs theme consistently without per-element
+   overrides.
+   ============================================================================ */
+
+/* ---- self-hosted fonts (global; harmless when theme inactive) ---- */
+@font-face { font-family: "Public Sans"; font-weight: 400; font-display: swap;
+  src: url(./fonts/public-sans-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Public Sans"; font-weight: 400; font-display: swap;
+  src: url(./fonts/public-sans-latin-ext-400-normal.woff2) format("woff2");
+  unicode-range: U+0100-024F,U+0259,U+1E00-1EFF,U+2020,U+20A0-20AB,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Public Sans"; font-weight: 500; font-display: swap;
+  src: url(./fonts/public-sans-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Public Sans"; font-weight: 600; font-display: swap;
+  src: url(./fonts/public-sans-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Public Sans"; font-weight: 700; font-display: swap;
+  src: url(./fonts/public-sans-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-display: swap;
+  src: url(./fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2"); }
+
+html[data-po="glass"] {
+  --po-accent: #0a7f5e;
+  --po-accent-ink: #07614a;
+  --po-accent-soft: rgba(10, 127, 94, 0.12);
+  --po-glass: rgba(255, 255, 255, 0.62);
+  --po-glass-strong: rgba(255, 255, 255, 0.92);
+  --po-glass-bd: rgba(255, 255, 255, 0.72);
+  --po-ink: #1b2433;
+  --po-ink-2: #5d6b80;
+  --po-line: rgba(20, 32, 56, 0.10);
+}
+
+/* ---- typography ---- */
+html[data-po="glass"] body, html[data-po="glass"] #main-document-content, html[data-po="glass"] .notebookbar,
+html[data-po="glass"] #toolbar-up, html[data-po="glass"] #toolbar-down, html[data-po="glass"] .ui-content,
+html[data-po="glass"] .unotoolbutton, html[data-po="glass"] .ui-text, html[data-po="glass"] .jsdialog,
+html[data-po="glass"] .menubar {
+  font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+html[data-po="glass"] .formulabar input, html[data-po="glass"] #formulabar, html[data-po="glass"] .lokformula {
+  font-family: "IBM Plex Mono", monospace !important;
+}
+
+/* ---- app background ---- */
+html[data-po="glass"], html[data-po="glass"] body, html[data-po="glass"] #main-document-content,
+html[data-po="glass"] #document-container {
+  background: linear-gradient(158deg, #e9f0fb 0%, #f1eefb 46%, #eaf6f1 100%) !important;
+}
+
+/* ---- top chrome: colored notebookbar header → glass (match the editor's specificity) ---- */
+html[data-po="glass"]:not([data-theme="dark"]) .main-nav.hasnotebookbar,
+html[data-po="glass"]:not([data-theme="dark"]) .main-nav.hasnotebookbar.hasnotebookbar,
+html[data-po="glass"]:not([data-theme="dark"]) body .main-nav,
+html[data-po="glass"] nav.main-nav, html[data-po="glass"] .main-nav.hasnotebookbar, html[data-po="glass"] .main-nav {
+  background: var(--po-glass) !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border-bottom: 1px solid var(--po-line) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"]:not([data-theme="dark"]) .main-nav #document-header,
+html[data-po="glass"]:not([data-theme="dark"]) .main-nav .document-title,
+html[data-po="glass"]:not([data-theme="dark"]) .main-nav #document-titlebar,
+html[data-po="glass"] .main-nav #closebuttonwrapper, html[data-po="glass"] .main-nav #permissionmode {
+  background: transparent !important; color: var(--po-ink) !important;
+}
+html[data-po="glass"]:not([data-theme="dark"]) #document-header,
+html[data-po="glass"] .main-nav .editorlogo, html[data-po="glass"] #document-header { background: transparent !important; }
+
+html[data-po="glass"] .notebookbar, html[data-po="glass"] #toolbar-wrapper, html[data-po="glass"] #toolbar-up,
+html[data-po="glass"] #formulabar-row, html[data-po="glass"] #topToolbar, html[data-po="glass"] .notebookbar-tabs-container {
+  background: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border-color: var(--po-line) !important;
+}
+
+/* nav text / menubar / doc title → dark ink */
+html[data-po="glass"] .main-nav a, html[data-po="glass"] .main-nav button, html[data-po="glass"] .main-nav .ui-tab,
+html[data-po="glass"] .main-nav span, html[data-po="glass"] .document-title input, html[data-po="glass"] #document-name-input,
+html[data-po="glass"] .main-menu a, html[data-po="glass"] .menubar a, html[data-po="glass"] .document-titlebar,
+html[data-po="glass"] .document-title {
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .main-menu, html[data-po="glass"] #main-menu, html[data-po="glass"] .menubar { background: transparent !important; }
+html[data-po="glass"] .menubar a:hover, html[data-po="glass"] .main-menu a:hover, html[data-po="glass"] .lo-menu .has-submenu:hover {
+  background: var(--po-accent-soft) !important; border-radius: 8px;
+}
+
+/* ribbon tabs */
+html[data-po="glass"] .ui-tabs.notebookbar .ui-tab, html[data-po="glass"] .notebookbar .ui-tab, html[data-po="glass"] .main-nav .ui-tab {
+  color: var(--po-ink-2) !important; border-radius: 8px 8px 0 0; background: transparent !important;
+}
+html[data-po="glass"] .ui-tabs.notebookbar .ui-tab.selected, html[data-po="glass"] .notebookbar .ui-tab.selected,
+html[data-po="glass"] .main-nav .ui-tab.selected {
+  color: var(--po-ink) !important; font-weight: 700; background: transparent !important;
+  border-bottom: 2px solid var(--po-accent) !important;
+}
+
+/* toolbar buttons */
+html[data-po="glass"] .unotoolbutton:hover, html[data-po="glass"] .w2ui-button:hover, html[data-po="glass"] .ui-pushbutton:hover {
+  background: rgba(20, 32, 56, 0.07) !important;
+}
+html[data-po="glass"] .unotoolbutton.selected, html[data-po="glass"] .w2ui-button.checked,
+html[data-po="glass"] .ui-pushbutton.selected, html[data-po="glass"] .unotoolbutton.checked {
+  background: var(--po-accent-soft) !important; color: var(--po-accent-ink) !important;
+}
+
+/* formula bar */
+html[data-po="glass"] #formulabar, html[data-po="glass"] .inputbar_container { background: rgba(255, 255, 255, 0.55) !important; }
+
+/* right sidebar */
+html[data-po="glass"] #sidebar-panel, html[data-po="glass"] #sidebar-dock-wrapper, html[data-po="glass"] .sidebar {
+  background: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border-color: var(--po-line) !important;
+}
+
+/* status bar */
+html[data-po="glass"] #toolbar-down {
+  background: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border-top: 1px solid var(--po-line) !important;
+  color: var(--po-ink-2) !important;
+}
+
+/* Calc sheet tabs */
+html[data-po="glass"] .spreadsheet-tab { border-radius: 7px !important; color: var(--po-ink-2) !important; }
+html[data-po="glass"] .spreadsheet-tab.spreadsheet-tab-selected, html[data-po="glass"] .spreadsheet-tab.selected {
+  background: var(--po-accent-soft) !important; color: var(--po-accent-ink) !important; font-weight: 700;
+}
+
+/* Impress slide panel */
+html[data-po="glass"] #slide-sorter, html[data-po="glass"] #presentation-controls-wrapper { background: var(--po-glass) !important; }
+html[data-po="glass"] #slide-sorter .preview-frame .preview-img-selected,
+html[data-po="glass"] .preview-frame.selected img { outline: 2px solid var(--po-accent) !important; }
+
+/* dialogs */
+html[data-po="glass"] .jsdialog-window, html[data-po="glass"] .lokdialog_container.ui-dialog, html[data-po="glass"] .ui-dialog.jsdialog {
+  border-radius: 14px !important;
+  border: 1px solid var(--po-glass-bd) !important;
+  box-shadow: 0 18px 50px rgba(17, 32, 63, 0.22) !important;
+  overflow: hidden;
+}
+html[data-po="glass"] .jsdialog-window .ui-dialog-titlebar, html[data-po="glass"] .ui-dialog-titlebar {
+  background: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--po-line) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .ui-pushbutton.button-primary, html[data-po="glass"] button.button-primary, html[data-po="glass"] .ui-ok {
+  background: var(--po-accent) !important; color: #fff !important; border-radius: 8px !important;
+}
+
+html[data-po="glass"] .leaflet-control-attribution { display: none !important; }
+
+/* ============================================================================
+   Hover / active contrast across every menu, list and dropdown at once.
+   The editor drives these states through CSS variables; pointing those variables
+   at the PrivateOffice palette themes all of them consistently (soft green fill,
+   dark ink) — no per-element override needed.
+   ============================================================================ */
+html[data-po="glass"] {
+  --color-background-darker: rgba(10, 127, 94, 0.12);  /* hover/active fill */
+  --color-background-hover: rgba(10, 127, 94, 0.12);
+  --color-background-dark: rgba(20, 32, 56, 0.06);
+  --color-background-lighter: #ffffff;
+  --color-main-background: #ffffff;
+  --color-text-darker: #1b2433;                        /* hover/active text */
+  --color-main-text: #1b2433;
+  --color-border-darker: rgba(20, 32, 56, 0.14);
+  --co-primary-element: #0a7f5e;
+}
+
+/* JSDialog popup surfaces (toolbar dropdowns, listboxes, the wizard) */
+html[data-po="glass"] .jsdialog-container,
+html[data-po="glass"] .modalpopup,
+html[data-po="glass"] .ui-menu,
+html[data-po="glass"] .ui-listbox-container,
+html[data-po="glass"] .mobile-wizard {
+  background: var(--po-glass-strong) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--po-glass-bd) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.20) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .ui-listbox, html[data-po="glass"] .ui-combobox,
+html[data-po="glass"] .ui-menu-item, html[data-po="glass"] .lo-menu a {
+  color: var(--po-ink) !important;
+}
+
+/* explicit, high-contrast hover/active for JSDialog menu & list items */
+html[data-po="glass"] .ui-menu-item:hover,
+html[data-po="glass"] .ui-menu-item.selected,
+html[data-po="glass"] .lo-menu a:hover,
+html[data-po="glass"] .lo-menu a.highlighted,
+html[data-po="glass"] .lo-menu > li > a:hover,
+html[data-po="glass"] .ui-listbox-container li:hover,
+html[data-po="glass"] .ui-listbox:hover,
+html[data-po="glass"] #jsd-context-menu-entries .ui-combobox-entry:hover {
+  background: var(--po-accent-soft) !important;
+  color: var(--po-ink) !important;
+  border-radius: 8px;
+}
+
+/* ----------------------------------------------------------------------------
+   Right-click context menus AND their submenus.
+   The editor's context menu (jQuery contextMenu) renders the menu — and every
+   nested submenu — as `.context-menu-list`, which the editor leaves on a flat
+   white surface with square corners. Its own rule carries no !important, so the
+   real classes are themed here by specificity alone (honest fix, no override
+   hack), making menu + submenu match the rest of the glass chrome. The green
+   hover fill already comes from --color-background-darker above; here it is just
+   given rounded corners so it sits inside the rounded container.
+   ---------------------------------------------------------------------------- */
+html[data-po="glass"] .context-menu-list {
+  background: var(--po-glass-strong);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--po-glass-bd);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.20);
+  padding: 6px;
+  color: var(--po-ink);
+}
+html[data-po="glass"] .context-menu-item {
+  border-radius: 8px;
+  color: var(--po-ink);
+}
+html[data-po="glass"] .context-menu-separator { border-color: var(--po-line); }
+
+/* property sidebar — make inner panels/expanders glassy with dark text */
+html[data-po="glass"] .sidebar, html[data-po="glass"] .sidebar-panel,
+html[data-po="glass"] .ui-expander, html[data-po="glass"] .ui-expander-content,
+html[data-po="glass"] .ui-expander-label, html[data-po="glass"] .unospan {
+  background: transparent !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .ui-expander-label:hover { background: rgba(20, 32, 56, 0.05) !important; }
+
+/* ---- anti-FOUC: when the notebookbar/menus are built during document load, snap
+   the glass styles in instantly instead of letting the default fills fade/transition
+   in (the brief "full-fill then recolor" flash). ---- */
+html[data-po="glass"] .main-nav, html[data-po="glass"] .main-nav *,
+html[data-po="glass"] .notebookbar, html[data-po="glass"] .notebookbar *,
+html[data-po="glass"] #toolbar-up, html[data-po="glass"] #toolbar-up *,
+html[data-po="glass"] .lo-menu, html[data-po="glass"] .lo-menu *,
+html[data-po="glass"] .ui-menu, html[data-po="glass"] .ui-menu *,
+html[data-po="glass"] .context-menu-list, html[data-po="glass"] .context-menu-list *,
+html[data-po="glass"] .notebookbar-tabs-container, html[data-po="glass"] .notebookbar-tabs-container * {
+  transition: none !important;
+  animation: none !important;
+}

@@ -1,0 +1,35 @@
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+.env
+*.log
+frontend/node_modules/
+playwright-report/
+test-results/
+.pytest_cache/
+
+# debugging / scratch artifacts (root-level captures, archives, MCP scratch)
+/*.png
+/*.zip
+.playwright-mcp/
+
+# generated e2e artifacts (regenerable test output)
+e2e/report/
+e2e/lang-sweep/
+e2e/*.png
+e2e/.qa/
+
+# QA remediation working dir (per-round problem files; zipped snapshots kept in cwd)
+.qa/
+
+# local browser/debug extraction artifacts
+/snap-layout.yml
+/*-ribbon-all.json
+
+.claude/
+.design-template/
+issues.md
+QA-SUMMARY.md
+update-log.md

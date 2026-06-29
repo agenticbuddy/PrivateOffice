@@ -1,0 +1,153 @@
+/* Base resets + Liquid Glass primitives. Logical properties for RTL safety. */
+@import "./tokens.css";
+
+* { box-sizing: border-box; }
+
+html, body, #app { height: 100%; margin: 0; }
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink);
+  background: #e9f0fb;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, p { margin: 0; }
+a { color: var(--accent-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font-family: inherit; color: inherit; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- Liquid glass background (gradient + ambient blobs) ---- */
+.lg-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.lg-bg .grad {
+  position: absolute; inset: 0;
+  background: linear-gradient(158deg, #e9f0fb 0%, #f1eefb 46%, #eaf6f1 100%);
+}
+.lg-bg .blob { position: absolute; border-radius: 50%; filter: blur(64px); opacity: var(--amb); }
+.lg-bg .b1 { width: 48vw; height: 48vw; left: -9vw; top: -14vw; background: radial-gradient(circle at 35% 35%, #b9d2ff, transparent 68%); }
+.lg-bg .b2 { width: 42vw; height: 42vw; right: -10vw; bottom: -16vw; background: radial-gradient(circle at 60% 50%, #cdeede, transparent 70%); filter: blur(70px); }
+.lg-bg .b3 { width: 34vw; height: 34vw; right: 24vw; top: -10vw; background: radial-gradient(circle at 50% 50%, #d8caff, transparent 72%); filter: blur(72px); opacity: calc(var(--amb) * 0.8); }
+
+/* ---- Glass panel utility ---- */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  border: 1px solid var(--glass-bd);
+  box-shadow: var(--glass-sh), inset 0 1px 0 var(--glass-hi);
+}
+
+/* ---- Material Symbols icon helper ---- */
+.ms {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  user-select: none;
+}
+.ms.fill { font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24; }
+
+/* ---- Type utilities ---- */
+.t-display { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.01em; }
+.t-h1 { font-size: 19px; line-height: 26px; font-weight: 700; }
+.t-h2 { font-size: 15px; line-height: 22px; font-weight: 700; }
+.t-small { font-size: 13px; line-height: 18px; }
+.t-caption { font-size: 11px; line-height: 15px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.t-muted { color: var(--ink-2); }
+.t-faint { color: var(--ink-3); }
+.mono { font-family: var(--font-mono); }
+
+/* ---- Scrollbars ---- */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(20, 32, 56, 0.22);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(20, 32, 56, 0.34); background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+/* ============================================================================
+   CLASSIC design overrides — flat, solid, no glass/blur, top nav bar.
+   ============================================================================ */
+[data-design="classic"] body { background: #f7f8fa; }
+[data-design="classic"] .lg-bg { display: none !important; }
+/* kill all backdrop blur in classic */
+[data-design="classic"] *,
+[data-design="classic"] *::before,
+[data-design="classic"] *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* glass panels → solid cards */
+[data-design="classic"] .glass {
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-1) !important;
+}
+/* modals/drawers don't use .glass and set their own translucent bg — flatten them */
+[data-design="classic"] .modal,
+[data-design="classic"] .drawer { background: #ffffff !important; }
+
+/* filenames / identifiers: isolate bidi so "11.xlsx" isn't reordered in RTL UIs */
+.nm, .fname, .linkbox { unicode-bidi: plaintext; }
+
+/* AppShell: the left rail becomes a top bar (structurally classic) */
+[data-design="classic"] .shell { flex-direction: column !important; }
+[data-design="classic"] .rail {
+  flex: 0 0 auto !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  height: 52px !important;
+  /* glass rail uses min-height (desktop 48 / mobile 56) which CSS clamps via
+     max(min-height,height); reset it so the classic bar stays exactly 52px */
+  min-height: 0 !important;
+  align-items: center !important;
+  gap: var(--s-2) !important;
+  padding: 6px 10px !important;
+}
+[data-design="classic"] .rail .logo { margin: 0 !important; margin-inline-end: var(--s-2) !important; }
+[data-design="classic"] .rail .railbtn {
+  flex-direction: row !important;
+  width: auto !important;
+  height: 38px !important;
+  /* glass railbtn now uses min-height (desktop 48 / mobile 46); reset it too so
+     the classic pill stays 38px (height:!important alone can't beat min-height) */
+  min-height: 0 !important;
+  gap: 6px !important;
+  padding: 0 var(--s-3) !important;
+}
+[data-design="classic"] .rail .rlabel { font-size: 13px !important; max-width: none !important; }
+[data-design="classic"] .rail .grow { flex: 1 !important; }
+[data-design="classic"] .rail .menu {
+  inset-inline-start: auto !important;
+  inset-inline-end: 0 !important;
+  top: calc(100% + 6px) !important;
+  bottom: auto !important;
+}
+/* classic top bar: keep overflow VISIBLE so the account dropdown (which drops below the
+   bar from .userwrap inside the rail) is never clipped. Prevent horizontal overflow on
+   phones by collapsing nav labels to icons at narrow widths instead of scroll-clipping. */
+[data-design="classic"] .rail { overflow: visible !important; }
+@media (max-width: 560px) {
+  [data-design="classic"] .rail .rlabel { display: none !important; }
+}
+/* flatten the decorative diagonal-hatch thumbnails in classic */
+[data-design="classic"] .thumb { background: var(--surface-2) !important; }
