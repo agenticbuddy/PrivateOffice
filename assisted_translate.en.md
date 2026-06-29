@@ -23,6 +23,8 @@ Reasons:
 - A translation may already be in the catalog yet still not appear on screen, if the string is rendered by a different layer.
 - Ready-made third-party translations (a fresh LibreOffice language pack) cannot be dropped in blindly: Collabora differs from stock LibreOffice, and some strings will not match.
 
+The good news, though: **almost all localization, and all UI element texts, sizes, and design, are reachable without building the LibreOffice core** — they live in the Collabora Online layer (data + CSS + a little code). Building the core is needed only to render the document itself.
+
 So the correct path is:
 
 1. Collect all English strings.
@@ -1285,7 +1287,7 @@ After a pass there is a coverage report — for example `.qa/l10n/REPORT.md` (ho
 
 ## Strategy for working with Collabora sources
 
-The project's goal is to **build the editor from source** of a pinned Collabora Online and LibreOffice-core, not to patch a ready-made image. The reason is simple: deep localization keeps surfacing things that can only be fixed in source — string concatenation in JavaScript, a contextual translation API, `.ui` files, `.po` files, dialogs. Here reliability and control matter more than "fast to prod."
+The project's goal is to **build Collabora Online from source** (the coolwsd server + the browser bundle), not to patch a ready-made image. The **LibreOffice/Collabora Office core is NOT built from source** — we take it as a pinned prebuilt binary (engine-assets) and patch its strings as data (`.po`→`.mo`). The reason: deep localization keeps surfacing things that can only be fixed in the Online source — string concatenation in JavaScript, a contextual translation API, client catalogs. And everything we change in the UI (texts, sizes, design) lives in the Online layer, not in the core. Here reliability and control matter more than "fast to prod."
 
 The quick path we are moving away from usually looks like:
 
@@ -1304,11 +1306,11 @@ Why you cannot live on it long-term:
 - It is hard to know which source file produced a string, or to carry a fix across updates.
 - It is hard to prove that a patch fixes the correct layer instead of masking the problem.
 
-So we move in stages, but the endpoint is one — **a build from pinned source**.
+So we move in stages, but the endpoint is one — **building Online from pinned source** (the core stays a pinned prebuilt binary).
 
-Pin the version hard. Translations are made for a **specific** version: the set of strings and their `msgid`/`msgctxt` are version-dependent. Pin **both Collabora Online and LibreOffice-core** (in `upstream.json` — both the CO commit/version and the LO-core version). A version update is a separate, controlled event with acceptance testing of all translations, not a "pull latest."
+Pin the version hard. Translations are made for a **specific** version: the set of strings and their `msgid`/`msgctxt` are version-dependent. Pin **a matching pair**: the Collabora Online commit/tag AND the prebuilt core/engine-assets version (both in `upstream.json`). A version update is a separate, controlled event with acceptance testing of all translations, not a "pull latest."
 
-The cost should be named honestly: building CO + LO-core from source is heavy — tens of gigabytes, hours of build time, a real toolchain and CI. Budget for it upfront: that is the cost of full control.
+The cost should be named honestly: building **Online** from source is manageable — officially it is `./configure && make` on top of prebuilt engine-assets, from minutes to about half an hour, and it runs locally. Building the **core** from source, however, is heavy (tens of gigabytes, hours); we do not do it — see "When you would build the LO core from source" below.
 
 ### Stage 1 (temporary): remove nondeterminism of the ready-made image
 
@@ -1388,19 +1390,27 @@ This keeps the current repo manageable: the application stays here, and all edit
 
 ### Target level: build from pinned source
 
-This is the project's working base. Keep a fork or submodule of the pinned version — both Collabora Online and LibreOffice-core (part of the strings and dialogs comes from core, so its version is pinned too) — not a copy.
+This is the project's working base. From source we build **Collabora Online** (the coolwsd server + the browser bundle) — keep a fork or submodule of the pinned commit, not a copy. The **LibreOffice/Collabora Office core is NOT built from source**: we take it as a pinned prebuilt binary (engine-assets) and patch its `.mo` strings as data (our `.po`). This gives full control over the interface cheaply — everything we change in the UI lives in the Online layer.
+
+What each layer lets you change:
+
+- **Texts** (menus, ribbon, tooltips, dialogs) — all of them: data (client `ui/uno/locore-<lang>.json` + core `.mo` from our `.po`) plus a little Online code to split concatenated phrases and disambiguate homonyms. No core build needed.
+- **Element sizes** — CSS (and some JS). No core build.
+- **Element design** (colors, shapes, spacing, icons) — CSS + SVG icon replacement (deeper changes — JS). No core build; this is how the glass theme is already done.
+
+The only thing that needs building the core is rendering the document itself on the canvas (the Calc grid, the slide, in-cell text). That is document content, not UI elements (see "When you would build the LO core from source").
 
 ```text
 third_party/
-  collabora-online/      # git submodule or pinned fork, pinned commit
-  libreoffice-core/      # pinned version (part of strings/dialogs comes from core)
+  collabora-online/      # git submodule or pinned fork, pinned commit (BUILT from source)
 editor/
+  engine/                # pinned LO core engine-assets (prebuilt binary, NOT source)
   l10n/
     overrides/
-      core/<lang>.po      # our translations of core strings, with msgctxt
+      core/<lang>.po      # our translations of core strings, with msgctxt → compiled to .mo
       client/<lang>.json  # our overlays for client strings
-  patches/                # CODE changes ONLY (context API, splitting concatenation)
-  build/                  # deterministic build from source
+  patches/                # Online CODE changes ONLY (context API, splitting concatenation)
+  build/                  # deterministic Online build from source + applying the data
   manifests/
     upstream.json
     patchset.json
@@ -1427,7 +1437,7 @@ Separately: building from source means you **backport upstream security fixes yo
 
 ### Which layer to fix (core or client)
 
-Collabora Online does not own every string. Part of the interface comes from LibreOffice-core: `.ui`, gettext `.po/.mo`, UNO command metadata, dialogs, sidebar. That is why LO-core is pinned and built together with CO.
+Collabora Online does not own every string. Part of the interface comes from LibreOffice-core: `.ui`, gettext `.po/.mo`, UNO command metadata, dialogs, sidebar. That is why the LO core is pinned as a prebuilt binary (engine-assets), and its strings are patched as data (`.mo` from our `.po`) — without building the core.
 
 But before every fix you still have to prove which layer the string lives in, otherwise the fix lands in the wrong place (this is the same render-path attribution):
 
@@ -1437,6 +1447,12 @@ But before every fix you still have to prove which layer the string lives in, ot
 - there is a rendered scenario that proves the result on screen.
 
 For client strings, edit our JSON overlays; for core strings, our `.po` with `msgctxt`. The layer is chosen by proof, not by guesswork.
+
+### When you would build the LO core from source
+
+Almost never. Building the core from source is needed only to change **how the document itself is rendered** (how the core draws the Calc grid, the slide, in-cell text) or **core C++ behavior**. That is document content, not UI elements — for texts, sizes, and UI design it is not needed.
+
+This is the heaviest path: "a few hours even on the fastest computer," the image balloons to ~30 GB; normally only Collabora's own CI does it. Tellingly, even the official "build CODE for Web" does NOT rebuild the core — it drops in prebuilt engine-assets. So a full core build is an optional escalation, not our default.
 
 ### What not to do
 
@@ -1467,7 +1483,7 @@ This strategy needs its own artifacts:
 Invariants:
 
 - the editor image must not be `latest`;
-- the build comes from pinned source; the CO commit/version and the LO-core version are fixed in `upstream.json`;
+- Online is built from pinned source; the LO core is a pinned prebuilt binary/engine-assets; both versions are fixed in `upstream.json` and **match**;
 - translations are stored as data (`.po`/JSON overlays), not as code patches;
 - every patch (code only) has an upstream base commit, an owner, and a reason;
 - every translation entry and every code patch links to occurrence ids;
@@ -1513,8 +1529,8 @@ The same caution applies to third-party translations: Collabora is not stock Lib
 
 A version update is a controlled event with full acceptance, not carrying over a single patch. The order is:
 
-1. Bring up the new pinned version (CO + LO-core) **in a non-prod environment first**, leaving prod untouched.
-2. Build the editor **from source** of the new version.
+1. Bring up the new pinned version **in a non-prod environment first**, leaving prod untouched: the new Collabora Online commit + a **matching** prebuilt core/engine-assets version.
+2. **Rebuild Online from source** of the new version (the core is taken as a prebuilt binary/engine-assets, not rebuilt).
 3. Run **full acceptance, not a smoke test**:
    - rebuild the occurrence map and coverage;
    - run the render ground-truth (a screenshot per object) across **all** target languages;
