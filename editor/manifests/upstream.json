@@ -1,0 +1,31 @@
+{
+  "note": "Pinned upstream versions the PrivateOffice editor image is built on. Translations are authored against this exact version. Re-pin deliberately on upgrade; never float to :latest. See the controlled-upgrade process in assisted_translate.md.",
+  "base_image": {
+    "repository": "collabora/code",
+    "tag_at_pin": "latest",
+    "digest": "sha256:75859dc9f9084d1877ce36cf96ec86600f495bade33289c9cbc27e0a0ee23b81",
+    "pinned_on": "2026-06-28",
+    "size": "1.9GB"
+  },
+  "collabora_online": {
+    "coolwsd": "26.04.1.4-1"
+  },
+  "collabora_office_core": {
+    "version": "26.04.1-4",
+    "code_brand": "26.04.1-3",
+    "libreoffice_buildid": "6040(Build:4)",
+    "reference_ooo_major_minor": "4.1"
+  },
+  "ui_locales": 22,
+  "apps": ["Writer", "Calc", "Impress"],
+  "paths": {
+    "client_catalogs": "/usr/share/coolwsd/browser/dist/l10n/{ui-<lang>.json, uno/<lang>.json, locore/<lang>.json}",
+    "core_gettext": "/opt/collaboraoffice/program/resource/<lang>/LC_MESSAGES/*.mo"
+  },
+  "references": {
+    "baseline": "docs/localization/baseline.md",
+    "patchset": "editor/manifests/patchset.json",
+    "overrides": "editor/l10n/overrides/",
+    "coverage_report": [".qa/l10n/REPORT.md", ".qa/l10n/visible-coverage.csv"]
+  }
+}

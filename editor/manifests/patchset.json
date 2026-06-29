@@ -1,0 +1,144 @@
+{
+  "note": "Every modification the editor image makes to the upstream build, as typed units. Type 'translation-data' is data that belongs in editor/l10n/overrides/ (PO-L10N-006 is being migrated there); all other units are code/asset/config/theme patches, currently inline in editor/Dockerfile. At the target source build (assisted_translate.md) the code patches become a patch series and the data is merged/compiled separately. dockerfile_lines are approximate and may shift as the file changes.",
+  "base": "see editor/manifests/upstream.json",
+  "patches": [
+    {
+      "id": "PO-THEME-001",
+      "title": "Fold glass theme into bundle.css + external po-toggle.js theme gate",
+      "type": "theme",
+      "files": ["editor/branding-privateoffice.css", "editor/po-toggle.js", "dist/bundle.css", "dist/cool.html"],
+      "dockerfile_lines": "21-24",
+      "rationale": "Theme is part of the editor's own stylesheet (correct on first paint), gated by a same-origin external script (CSP-safe), not an override sheet.",
+      "rollback": "Drop the cat>>bundle.css and the two cool.html sed lines; remove the po-toggle.js COPY.",
+      "status": "active"
+    },
+    {
+      "id": "PO-CSP-002",
+      "title": "Delete dead inline dark-theme <script> from cool.html",
+      "type": "code-fix",
+      "files": ["dist/cool.html"],
+      "dockerfile_lines": "37",
+      "rationale": "Inline script violates the binary-baked CSP on every load and never runs (gated on ?darkTheme, which our integration never sets); deletion is behavior-preserving.",
+      "rollback": "Remove the sed; the dead block returns on rebuild.",
+      "status": "active"
+    },
+    {
+      "id": "PO-BRAND-003",
+      "title": "Rewrite Collabora product/copyright display strings to PrivateOffice",
+      "type": "rebrand",
+      "files": ["dist/**/*.{js,html,json,css}", "dist/admin-bundle.js", "dist/branding.js"],
+      "dockerfile_lines": "43-46",
+      "rationale": "MPL-2.0 permits modifying this self-hosted build; phrases first, then the bare word on data/markup files only (not the bundle.js global).",
+      "rollback": "Remove the PHRASES sed block.",
+      "status": "active"
+    },
+    {
+      "id": "PO-CODE-004",
+      "title": "De-concatenate ribbon group expander 'More options for {1}'",
+      "type": "code-fix",
+      "files": ["dist/bundle.js"],
+      "dockerfile_lines": "56",
+      "source_class": "client-ui",
+      "render_path": "client",
+      "rationale": "Upstream builds 'More options for '+id as a raw concat (never translated, leaks the control id); route through the existing catalog key 'More options for {1}'.",
+      "rollback": "Revert the sed to the original concat.",
+      "status": "active"
+    },
+    {
+      "id": "PO-CODE-005",
+      "title": "De-concatenate combobox accessible name 'Open {name}'",
+      "type": "code-fix",
+      "files": ["dist/bundle.js"],
+      "dockerfile_lines": "68",
+      "source_class": "client-ui",
+      "render_path": "client",
+      "rationale": "Upstream composes _('Open ')+value+_(' list') (un-localizable fragments leak English / freeze word order); route through the existing 'Open {name}' key.",
+      "rollback": "Revert the sed.",
+      "status": "active"
+    },
+    {
+      "id": "PO-L10N-006",
+      "title": "Client catalog string injections (12 langs)",
+      "type": "translation-data",
+      "files": ["dist/l10n/ui-{ar,cs,fr,he,it,ja,ko,pt_BR,ru,tr,vi,uk}.json"],
+      "dockerfile_lines": "87-98",
+      "source_class": "client-ui",
+      "render_path": "client (UNVERIFIED per string: catalog presence does not prove the string renders from the client catalog - some render from core. Verify each, see the Clipboard caveat in assisted_translate.md).",
+      "migrate_to": "editor/l10n/overrides/client/",
+      "rationale": "Fills missing client _() keys the merged catalog omits. The values are now extracted to editor/l10n/overrides/client/<lang>.json as canonical data.",
+      "rollback": "Remove the 12 sed lines (and, after migration, the overrides merge step).",
+      "status": "active (pending migration to overrides/client; needs a verify build)"
+    },
+    {
+      "id": "PO-URL-007",
+      "title": "Neutralize upstream URLs to about:blank",
+      "type": "privacy",
+      "files": ["dist/**/*.{js,html,json,css}"],
+      "dockerfile_lines": "102-105",
+      "rationale": "No phone-home and no upstream-identity leak via header-logo / release-notes / docs / proxy links.",
+      "rollback": "Remove the two grep|sed URL passes.",
+      "status": "active"
+    },
+    {
+      "id": "PO-ASSET-008",
+      "title": "Replace upstream logo images with the PrivateOffice mark",
+      "type": "asset",
+      "files": ["dist/images/{collabora*,full-logo*,lc_about*,toolbar-bg-logo*}", "editor/po-logo.svg"],
+      "dockerfile_lines": "108-110",
+      "rationale": "About wordmark and header logo show PrivateOffice.",
+      "rollback": "Remove the cp loop; the original images return on rebuild.",
+      "status": "active"
+    },
+    {
+      "id": "PO-ASSET-009",
+      "title": "Materialize missing lc_pastespecial.svg icon (light + dark)",
+      "type": "asset",
+      "files": ["dist/images/lc_pastespecial.svg", "dist/images/dark/lc_pastespecial.svg"],
+      "dockerfile_lines": "118-120",
+      "rationale": "Engine deterministically requests an icon upstream omits -> 404 + blank icon; copy it from the shipped paste art.",
+      "rollback": "Remove the cp lines.",
+      "status": "active"
+    },
+    {
+      "id": "PO-CODE-010",
+      "title": "getImageURL empty-name guard (no stray images/ request)",
+      "type": "code-fix",
+      "files": ["dist/bundle.js"],
+      "dockerfile_lines": "128",
+      "render_path": "client",
+      "rationale": "Icon-less submenu entries build getURL('images/') -> 404; return '' for an empty imgName, matching the engine's own empty-path guard.",
+      "rollback": "Revert the sed.",
+      "status": "active"
+    },
+    {
+      "id": "PO-BRAND-011",
+      "title": "Neutralize serve-time %PLACEHOLDER% branding + inject rebranded branding.js + remove welcome",
+      "type": "privacy",
+      "files": ["dist/cool.html", "dist/welcome*"],
+      "dockerfile_lines": "138-141",
+      "rationale": "coolwsd substitutes %PRODUCT_BRANDING_NAME/URL% at serve time (the bare-word sed never sees them); set them to PrivateOffice / about:blank, empty feedback/welcome/buyproduct, drop welcome assets.",
+      "rollback": "Remove the placeholder sed + branding.js inject; keep welcome.",
+      "status": "active"
+    },
+    {
+      "id": "PO-CACHE-012",
+      "title": "Per-build ETag via ver_suffix = BUILD_ID (coolwsd.xml)",
+      "type": "cache",
+      "files": ["/etc/coolwsd/coolwsd.xml"],
+      "dockerfile_lines": "159",
+      "rationale": "ETag derives from the compile-time hash, which our content patches never change; stamp BUILD_ID into ver_suffix so each patched rebuild yields a fresh ETag.",
+      "rollback": "Remove the sed; the ETag reverts to the upstream hash.",
+      "status": "active"
+    },
+    {
+      "id": "PO-CACHE-013",
+      "title": "Cache-bust cool.html-referenced assets with ?b=BUILD_ID",
+      "type": "cache",
+      "files": ["dist/cool.html"],
+      "dockerfile_lines": "166",
+      "rationale": "Browsers holding a 128-day max-age copy won't revalidate; ?b= forces a refetch of the patched bundle.css/js + l10n catalogs on next open.",
+      "rollback": "Remove the sed.",
+      "status": "active"
+    }
+  ]
+}

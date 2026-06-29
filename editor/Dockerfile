@@ -2,7 +2,12 @@
 # BUILD TIME to the served files, so the editor loads correct on the first paint — no runtime
 # DOM patching and no bolt-on override stylesheet. The theme is folded into the editor's own
 # bundle.css; the rebrand rewrites the upstream display strings in place.
-FROM collabora/code:latest
+# Pinned by digest (NOT :latest) for reproducible builds: translations are authored against this
+# EXACT version (coolwsd 26.04.1.4-1, Collabora Office core 26.04.1-4, code-brand 26.04.1-3).
+# Never float to :latest — re-pin DELIBERATELY on upgrade, then re-run the full translation
+# acceptance pass before promoting (see the controlled-upgrade process in assisted_translate.md).
+# Tag at pin time: latest (2026-06-28). Details: editor/manifests/upstream.json.
+FROM collabora/code@sha256:75859dc9f9084d1877ce36cf96ec86600f495bade33289c9cbc27e0a0ee23b81
 
 USER root
 ARG DIST=/usr/share/coolwsd/browser/dist
