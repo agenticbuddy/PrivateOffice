@@ -112,12 +112,12 @@
     },
     {
       "id": "PO-BRAND-011",
-      "title": "Neutralize serve-time %PLACEHOLDER% branding + provide an empty branding.js + remove welcome",
+      "title": "Neutralize serve-time %PLACEHOLDER% branding + own (cache-busted) branding.js + remove welcome",
       "type": "privacy",
       "files": ["dist/cool.html", "dist/branding.js", "dist/welcome*"],
       "dockerfile_lines": "138-141",
-      "rationale": "coolwsd substitutes %PRODUCT_BRANDING_NAME/URL% at serve time (the bare-word sed never sees them); set them to PrivateOffice / about:blank, empty feedback/welcome/buyproduct, drop welcome assets. coolwsd ALSO injects <script src=.../branding.js> for the %BRANDING_JS% placeholder at serve time whether or not the file exists; the open-source from-source build ships none, so editor/Dockerfile.online provides an EMPTY branding.js (inert, non-Collabora) to avoid a 404 / a returning browser replaying a stale cached brand script. The stopgap editor/Dockerfile instead injects a rebranded branding.js.",
-      "rollback": "Remove the placeholder sed + the empty branding.js; keep welcome.",
+      "rationale": "coolwsd substitutes %PRODUCT_BRANDING_NAME/URL% at serve time (the bare-word sed never sees them); set them to PrivateOffice / about:blank, empty feedback/welcome/buyproduct, drop welcome assets. branding.js: if left alone, coolwsd substitutes the %BRANDING_JS% placeholder at serve time with an UN-cache-busted <script .../branding.js>. Instead editor/Dockerfile.online itself REPLACES <!--%BRANDING_JS%--> with our own <script %SERVICE_ROOT%/browser/%VERSION%/branding.js> tag pointing at an empty inert branding.js we write, so PO-CACHE-013 appends ?b=BUILD_ID and an already-cached browser refetches it (no stale brand script). The stopgap editor/Dockerfile injects a rebranded branding.js the same way. Do NOT revert to letting coolwsd inject the tag (it would be un-cache-busted).",
+      "rollback": "Remove the placeholder seds (incl. the %BRANDING_JS% -> <script> replace) + the empty branding.js; keep welcome.",
       "status": "active"
     },
     {
@@ -136,7 +136,7 @@
       "type": "cache",
       "files": ["dist/cool.html"],
       "dockerfile_lines": "166",
-      "rationale": "Browsers holding a 128-day max-age copy won't revalidate; ?b= forces a refetch of the patched bundle.css/js + l10n catalogs on next open.",
+      "rationale": "Browsers holding a 128-day max-age copy won't revalidate; ?b= forces a refetch of the patched bundle.css/js + l10n catalogs + the branding.js tag (injected by PO-BRAND-011) on next open.",
       "rollback": "Remove the sed.",
       "status": "active"
     }
