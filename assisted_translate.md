@@ -811,7 +811,7 @@ Decision package неполный. Не меняй файлы.
 Контекст:
 - Разрешены только msgid из утвержденного списка safe candidates.
 - Нельзя трогать mixed-context, composed-fragment, uno-json, lo-core-mo.
-- Нужно следовать существующему стилю патчей в editor/Dockerfile.
+- Класть переводы как данные в editor/l10n/overrides/client/<lang>.json (их мёрджит deployed-сборка editor/Dockerfile.online; editor/Dockerfile — stopgap).
 
 Результат:
 1. Минимальная правка.

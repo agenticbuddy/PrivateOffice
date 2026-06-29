@@ -811,7 +811,7 @@ Task: apply only safe direct ui-json translations.
 Context:
 - Only msgid from the approved safe-candidates list are allowed.
 - Do not touch mixed-context, composed-fragment, uno-json, lo-core-mo.
-- Follow the existing patch style in editor/Dockerfile.
+- Put translations as data in editor/l10n/overrides/client/<lang>.json (merged by the deployed editor/Dockerfile.online; editor/Dockerfile is the stopgap).
 
 Result:
 1. A minimal edit.

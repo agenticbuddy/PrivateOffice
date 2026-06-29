@@ -86,11 +86,11 @@ ARG BUILD_ID=dev
 # Bring in the from-source Online (coolwsd binaries, browser dist, etc.) + the built coolwsd.xml.
 COPY --from=builder /build/instdir/usr/ /usr/
 COPY --from=builder /build/instdir/etc/coolwsd/coolwsd.xml /etc/coolwsd/coolwsd.xml
-# coolwsd substitutes cool.html's %BRANDING_JS% placeholder AT SERVE TIME with
-# <script src="…/branding.js"></script>, whether or not the file exists. The open-source from-source
-# build ships no branding.js, so a missing file is a 404 — and a returning browser could even replay
-# a stale cached brand script. Provide our OWN empty branding.js so the injected reference always
-# resolves to inert, non-Collabora content (branding is done via the folded theme + rebrand).
+# Provide our OWN empty (inert) branding.js. If left to coolwsd, it substitutes cool.html's
+# %BRANDING_JS% placeholder AT SERVE TIME with <script src=".../branding.js"> WITHOUT our ?b=
+# cache-bust — a 404 in the open-source build, and an already-cached browser (long max-age, same
+# version-hash path) could replay a stale brand script. So we replace the placeholder ourselves
+# below (PO-BRAND-011) so the tag is real, points at this empty file, and goes through the ?b= step.
 RUN printf '%s\n' '/* PrivateOffice: intentionally empty branding script. Branding is applied via the folded theme and the product rebrand. */' > ${DIST}/branding.js
 
 # --- PrivateOffice assets ---
@@ -145,10 +145,12 @@ RUN cp ${DIST}/images/lc_paste.svg ${DIST}/images/lc_pastespecial.svg \
 RUN sed -i 's#getImageURL=function(imgName){var _a;#getImageURL=function(imgName){var _a;if(!imgName)return"";#' ${DIST}/bundle.js
 
 # Privacy + rebrand of coolwsd's SERVE-TIME placeholders. Name -> PrivateOffice, product URL ->
-# about:blank; empty feedback/welcome/buyproduct; disable auto-welcome. coolwsd injects %BRANDING_JS%
-# at serve time, so the empty branding.js created above is exactly what that injected <script> loads
-# (inert). The from-source build ships no welcome/ dir, so the welcome removal is a harmless no-op.
+# about:blank; empty feedback/welcome/buyproduct; disable auto-welcome. Also REPLACE the %BRANDING_JS%
+# placeholder with our OWN <script .../branding.js> tag: this stops coolwsd injecting its own
+# un-cache-busted tag at serve time, and routes branding.js through the ?b= step below so even an
+# already-cached browser refetches it. The from-source build ships no welcome/ dir → that rm is a no-op.
 RUN sed -i 's/%FEEDBACK_URL%//g; s/%WELCOME_URL%//g; s/%BUYPRODUCT_URL%//g; s/%AUTO_SHOW_WELCOME%/false/g; s/%PRODUCT_BRANDING_NAME%/PrivateOffice/g; s|%PRODUCT_BRANDING_URL%|about:blank|g' ${DIST}/cool.html \
+ && sed -i 's#<!--%BRANDING_JS%-->#<script src="%SERVICE_ROOT%/browser/%VERSION%/branding.js"></script>#' ${DIST}/cool.html \
  && rm -rf ${DIST}/welcome ${DIST}/welcome.html ${DIST}/welcome.js \
  && chmod -R a+r ${DIST}/fonts ${DIST}/images
 
