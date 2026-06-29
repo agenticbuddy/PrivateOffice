@@ -17,7 +17,9 @@ all in Docker Compose on a single `http://localhost` origin.
 
 ```bash
 cp deploy/.env.example .env          # compose reads .env from the repo root
-docker compose up -d --build         # builds the SPA into the app image
+./scripts/up.sh                      # build + start the stack; sets BUILD_ID=<git sha> so the
+                                     # editor's per-build cache-bust works (a bare
+                                     # `docker compose up -d --build` leaves BUILD_ID=dev → no-op)
 # app:   http://localhost:8088
 # admin: http://localhost:8088/admin   (BasicAuth  admin / 123)
 ```

@@ -86,9 +86,12 @@ ARG BUILD_ID=dev
 # Bring in the from-source Online (coolwsd binaries, browser dist, etc.) + the built coolwsd.xml.
 COPY --from=builder /build/instdir/usr/ /usr/
 COPY --from=builder /build/instdir/etc/coolwsd/coolwsd.xml /etc/coolwsd/coolwsd.xml
-# The open-source from-source build ships no branding.js; drop any base-image leftover so nothing
-# stale is served (cool.html's %BRANDING_JS% placeholder is left empty — we brand via theme+rebrand).
-RUN rm -f ${DIST}/branding.js
+# coolwsd substitutes cool.html's %BRANDING_JS% placeholder AT SERVE TIME with
+# <script src="…/branding.js"></script>, whether or not the file exists. The open-source from-source
+# build ships no branding.js, so a missing file is a 404 — and a returning browser could even replay
+# a stale cached brand script. Provide our OWN empty branding.js so the injected reference always
+# resolves to inert, non-Collabora content (branding is done via the folded theme + rebrand).
+RUN printf '%s\n' '/* PrivateOffice: intentionally empty. Branding is applied via the folded glass theme and the Collabora->PrivateOffice rebrand, not via a brand script. */' > ${DIST}/branding.js
 
 # --- PrivateOffice assets ---
 COPY fonts/ ${DIST}/fonts/

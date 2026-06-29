@@ -1,5 +1,5 @@
 {
-  "note": "Every modification the editor image makes to the upstream build, as typed units. Type 'translation-data' is data that belongs in editor/l10n/overrides/ (PO-L10N-006 is being migrated there); all other units are code/asset/config/theme patches, currently inline in editor/Dockerfile. At the target source build (assisted_translate.md) the code patches become a patch series and the data is merged/compiled separately. dockerfile_lines are approximate and may shift as the file changes.",
+  "note": "Every modification the editor image makes to the upstream build, as typed units. The DEPLOYED build is editor/Dockerfile.online (Collabora Online from source, wired in docker-compose.yml): it merges the translation data from editor/l10n/overrides/client/*.json into the built catalogs and applies the code/asset/theme patches below to the from-source output. editor/Dockerfile (prebuilt-base patching) is the stopgap/fallback and still uses inline sed for PO-L10N-006. dockerfile_lines below refer to the stopgap editor/Dockerfile and are approximate; the same patches live in editor/Dockerfile.online.",
   "base": "see editor/manifests/upstream.json",
   "patches": [
     {
@@ -66,8 +66,8 @@
       "render_path": "client (UNVERIFIED per string: catalog presence does not prove the string renders from the client catalog - some render from core. Verify each, see the Clipboard caveat in assisted_translate.md).",
       "migrate_to": "editor/l10n/overrides/client/",
       "rationale": "Fills missing client _() keys the merged catalog omits. The values are now extracted to editor/l10n/overrides/client/<lang>.json as canonical data.",
-      "rollback": "Remove the 12 sed lines (and, after migration, the overrides merge step).",
-      "status": "active (pending migration to overrides/client; needs a verify build)"
+      "rollback": "Remove the overrides merge step in editor/Dockerfile.online (and the 12 sed lines in the stopgap editor/Dockerfile).",
+      "status": "consumed: editor/Dockerfile.online merges editor/l10n/overrides/client/*.json into the built ui-<lang>.json (migration done, build-verified). The stopgap editor/Dockerfile still injects via inline sed."
     },
     {
       "id": "PO-URL-007",
@@ -112,12 +112,12 @@
     },
     {
       "id": "PO-BRAND-011",
-      "title": "Neutralize serve-time %PLACEHOLDER% branding + inject rebranded branding.js + remove welcome",
+      "title": "Neutralize serve-time %PLACEHOLDER% branding + provide an empty branding.js + remove welcome",
       "type": "privacy",
-      "files": ["dist/cool.html", "dist/welcome*"],
+      "files": ["dist/cool.html", "dist/branding.js", "dist/welcome*"],
       "dockerfile_lines": "138-141",
-      "rationale": "coolwsd substitutes %PRODUCT_BRANDING_NAME/URL% at serve time (the bare-word sed never sees them); set them to PrivateOffice / about:blank, empty feedback/welcome/buyproduct, drop welcome assets.",
-      "rollback": "Remove the placeholder sed + branding.js inject; keep welcome.",
+      "rationale": "coolwsd substitutes %PRODUCT_BRANDING_NAME/URL% at serve time (the bare-word sed never sees them); set them to PrivateOffice / about:blank, empty feedback/welcome/buyproduct, drop welcome assets. coolwsd ALSO injects <script src=.../branding.js> for the %BRANDING_JS% placeholder at serve time whether or not the file exists; the open-source from-source build ships none, so editor/Dockerfile.online provides an EMPTY branding.js (inert, non-Collabora) to avoid a 404 / a returning browser replaying a stale cached brand script. The stopgap editor/Dockerfile instead injects a rebranded branding.js.",
+      "rollback": "Remove the placeholder sed + the empty branding.js; keep welcome.",
       "status": "active"
     },
     {

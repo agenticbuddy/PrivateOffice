@@ -13,8 +13,9 @@ patches).
   (`/opt/collaboraoffice/program/resource/<lang>/LC_MESSAGES/*.mo`). Use `.po` because core
   strings can carry `msgctxt` (context), which the flat client JSON cannot express.
 
-At the target source build these files are merged into the client catalogs and compiled into
-`.mo` deterministically. Until then see the transitional note below.
+The deployed source build (`editor/Dockerfile.online`) merges `client/<lang>.json` into the built
+client catalogs at image-build time. Compiling `core/<lang>.po` into `.mo` is the next step (not
+done yet). See "How these are consumed" below.
 
 ## Important caveat: catalog presence is not proof
 
@@ -24,10 +25,13 @@ it exists in `ui-ru.json` yet the ribbon shows English). So a value added under 
 **hypothesis** until the render is verified. Confirm the render path per string (add the value,
 rebuild/clear cache, check the screen) before trusting it. See `assisted_translate.md`.
 
-## Transitional note
+## How these are consumed
 
-These files are the **canonical source** for the client-catalog translations. The editor
-`Dockerfile` currently still injects the same values directly via `sed` (patch `PO-L10N-006` in
-`editor/manifests/patchset.json`). Switching the Dockerfile to consume these files (and dropping
-the inline `sed`) is a build-verified migration step that has **not** been done yet — it needs a
-rebuild to confirm the result is identical.
+These files are the **canonical source** for the client-catalog translations. The deployed build,
+`editor/Dockerfile.online` (Collabora Online from source, wired in `docker-compose.yml`), **merges**
+every `client/<lang>.json` into the built `ui-<lang>.json` at image-build time (build-verified). The
+prebuilt-base stopgap `editor/Dockerfile` still injects the same values via inline `sed` (patch
+`PO-L10N-006`) and is not the deployed build.
+
+`core/<lang>.po` (LibreOffice-core overrides) are **not consumed yet** — compiling them into `.mo`
+is the next localization step.
