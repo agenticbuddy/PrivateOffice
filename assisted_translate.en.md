@@ -119,6 +119,34 @@ Conclusion: a translation must be tied not only to the English text, but to the 
 
 The work is best split into stages. You must not start with a mass translation edit.
 
+## Inventory tooling (implemented)
+
+The term inventory for Russian as the reference language is already built and reproducible.
+Detail and rebuild commands are in `docs/localization/term-map.md`. Three tools, in short:
+
+- **Translatable universe** (`scripts/build-l10n-catalog.py`) — every string that can be translated
+  at all (client `ui/uno/locore` + core `.mo`), with the current RU value and source class. This is
+  the completeness denominator (Stage 2).
+- **Deep rendered walk** (`e2e/scripts/editor-l10n-rendered.mjs`) — Playwright visits every surface of
+  every app (ribbon tabs, dropdowns, per-object context menus, dialogs via `sendUnoCommand` + their
+  tabs, sidebar, tooltips), capturing visible text + geometry + context (`app/surface/path/precondition`)
+  and honestly logging `notReached` (Stage 3).
+- **Term map** (`scripts/build-l10n-ru-terms.py`) — joins the render to the universe and classifies
+  every term: **simple** (one place, one rendering, matches the catalog), **complex** (homograph /
+  render-path-mismatch / >1 catalog value / multi-source), **composite** (runtime-glued fragment).
+  Output: `ru-terms.json` + CSVs (`terms / occurrences / collisions / composites / unresolved`) (Stage 4).
+
+### How to use it when translating
+
+1. Take `terms.csv`, filter `classification=simple` → translate pointwise in the right source class.
+2. `collisions.csv` (complex) → decide by context (rendered variants and occurrence sites are shown);
+   split keys if needed. `composites.csv` → rewrite as a whole phrase, never piece by piece.
+3. After each block, run the regression test `scripts/l10n-regression.sh` (or the Workflow
+   `scripts/workflows/l10n-regression.workflow.js`): it confirms only the intended change happened,
+   nothing broke elsewhere, and geometry is intact (overlap / clipping / viewport-exit / zero-size).
+   Expectations live in `expectations.json` (a term moves from "should stay English" to "translated") —
+   a hybrid model layered on top of the golden snapshot.
+
 ## Principle of provability
 
 The most reliable proof here is what is actually drawn on screen. A screenshot is the only ground truth. A JSON catalog, grep, the contents of `.mo`, and even the very fact that the code has a `_("...")` call — these are only hypotheses: they say the translation *can* apply, but they do not prove it applied in this exact place. So the source and translation of each string are confirmed by a separate pass **over every object** of the interface (not over a sample) — open the element and look with your eyes. Ideally a screenshot is taken for every block (tab, group, button, menu, context menu, dialog, tooltip). Then a separate, second pass — preferably by a different, stronger model — reviews these screenshots and looks for mistakes: the first pass collects, the second verifies.
@@ -251,8 +279,8 @@ Task: fix the localization baseline of the Collabora Online project.
 
 Context:
 - The project is already running locally.
-- All supported languages of the project must be covered.
-- Writer, Calc, Impress and shared UI elements must be covered.
+- Cover all supported languages of the project.
+- Cover Writer, Calc, Impress and shared UI elements.
 - Change nothing.
 
 Result:
@@ -356,9 +384,9 @@ You are a static localization analyzer. Change nothing.
 Task: build a full occurrence map for all English strings of the Collabora UI.
 
 Context:
-- Writer, Calc, Impress and shared elements must be covered.
-- Sources must be split: frontend i18n, ui-json, uno-json, locore-json, lo-core-mo, unresolved.
-- Not only count the gaps, but list every place each msgid is used.
+- Cover Writer, Calc, Impress and shared elements.
+- Split the sources: frontend i18n, ui-json, uno-json, locore-json, lo-core-mo, unresolved.
+- Do not just count the gaps — list every place each msgid is used.
 
 Result:
 1. A Markdown report with brief statistics.
@@ -472,8 +500,8 @@ Task: collect a rendered text inventory for all target languages.
 
 Context:
 - There is a static report and an occurrence map.
-- Writer, Calc, Impress must be checked.
-- All main UI states must be walked, including ribbon, menus, context menus, sidebar, dialogs and tooltips.
+- Check Writer, Calc, Impress.
+- Walk all main UI states, including ribbon, menus, context menus, sidebar, dialogs and tooltips.
 - No edits allowed.
 
 Result:
@@ -560,9 +588,9 @@ You are a localization collision analyst.
 Task: based on the occurrence map and rendered inventory, split all English msgid into risk groups.
 
 Context:
-- You cannot propose a translation without accounting for all occurrences.
-- You must account for languages with different grammar and RTL.
-- You must separately mark composed phrases.
+- Do not propose a translation without accounting for all occurrences.
+- Account for languages with different grammar and RTL.
+- Separately mark composed phrases.
 
 Result:
 1. A collision map table.
@@ -643,7 +671,7 @@ You are a translation assistant for UI localization.
 Task: prepare translation candidates, but do not change files.
 
 Context:
-- Use only strings with risk_class single-use and same-context multi-use.
+- Use ONLY strings with risk_class single-use and same-context multi-use.
 - Do not touch mixed-context, composed-fragment, core-only and unresolved.
 - For each language give a translation with the UI context in mind.
 - If unsure, set needs human, do not guess.
@@ -728,7 +756,7 @@ Task: prepare a decision package for hard cases.
 Context:
 - We have msgid with collisions or composed phrases.
 - A simple translation added to JSON may break other places.
-- Targeted solution options must be proposed.
+- Propose targeted solution options.
 
 For each hard case give:
 1. The English msgid.
@@ -809,7 +837,7 @@ You are an executor of a targeted localization edit.
 Task: apply only safe direct ui-json translations.
 
 Context:
-- Only msgid from the approved safe-candidates list are allowed.
+- ONLY msgid from the approved safe-candidates list are allowed.
 - Do not touch mixed-context, composed-fragment, uno-json, lo-core-mo.
 - Put translations as data in editor/l10n/overrides/client/<lang>.json (merged by the deployed editor/Dockerfile.online; editor/Dockerfile is the stopgap).
 
@@ -846,7 +874,7 @@ If the agent made too wide a patch:
 ```text
 The patch is wider than the approved scope. Revert only your changes of this batch and rebuild the patch from scratch.
 
-Only keys from approved_ui_json_candidates.csv may be changed.
+ONLY keys from approved_ui_json_candidates.csv may be changed.
 Output a table:
 - approved key
 - changed file
@@ -894,7 +922,7 @@ Task: propose a minimal way to split a conflicting msgid without breaking the En
 Context:
 - One English text is used with several different meanings.
 - A simple entry in ui-json is unsafe.
-- A normal English interface must be preserved if there is no translation.
+- Preserve a normal English interface if there is no translation.
 
 Result:
 1. A proposed API/helper or use of an existing context mechanism.
@@ -963,9 +991,9 @@ You are a LibreOffice/UNO localization specialist.
 Task: prepare a plan to fix a string from uno-json or lo-core-mo.
 
 Context:
-- A simple ui-json edit is forbidden.
-- You must find the correct source: UNO map, PO, MO, UI resource or generator.
-- You must not break other commands with the same English text.
+- A simple ui-json edit is FORBIDDEN.
+- Find the correct source: UNO map, PO, MO, UI resource or generator.
+- Do not break other commands with the same English text.
 
 Result:
 1. Where the string is defined.
@@ -1082,7 +1110,7 @@ Required artifacts:
 6. reproduction commands.
 
 Acceptance:
-The work is accepted only if the counts add up and all expected rows are present.
+The work is accepted ONLY if the counts add up and all expected rows are present.
 If you cannot finish or cannot cover everything, stop and output missing_work.csv.
 ```
 
@@ -1582,11 +1610,11 @@ But there is something that cannot be checked from data: how the translation act
 
 ## Practical rollout order
 
-A realistic order:
+A realistic order (steps 1–3 are already automated, see "Inventory tooling"):
 
-1. Finish the occurrence map.
-2. Do the rendered inventory via Playwright.
-3. Build the collision map.
+1. Finish the occurrence map / translatable universe (`scripts/build-l10n-catalog.py`).
+2. Do the rendered inventory via Playwright (`e2e/scripts/editor-l10n-rendered.mjs`).
+3. Build the collision map / term map (`scripts/build-l10n-ru-terms.py`).
 4. Pick the safe candidates.
 5. Agree the glossary for frequent terms.
 6. Apply a small batch of safe `ui-json` translations.
@@ -1610,6 +1638,7 @@ A localization batch can be considered finished if:
 - translations are applied to the correct source class;
 - the active container actually contains the new values;
 - the rendered inventory after the edit shows no new English leftovers in the affected places;
+- the regression test (`scripts/l10n-regression.sh`) is green: no text changes outside the intended block and no new layout findings (overlap / clipping / viewport-exit);
 - screenshots confirm the result;
 - RTL and UI width are checked for the affected languages;
 - there is a false-positives report;
