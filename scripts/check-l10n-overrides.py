@@ -7,9 +7,15 @@ This is an analysis guardrail, not a translation validator. It answers:
   - does it intentionally change an upstream value?
   - did the active built catalog receive the override value?
 
-The upstream source must be the catalog BEFORE editor/Dockerfile.online merges
-editor/l10n/overrides/client/*.json. By default this script reads the pinned
-base image from editor/manifests/upstream.json.
+The upstream baseline MUST be the catalog the build actually merges INTO: the source-built,
+UNMERGED ui-<lang>.json. The editor image ships that exact snapshot at
+/usr/share/coolwsd/upstream-l10n (taken before the merge in editor/Dockerfile.online).
+`--upstream-from-active` reads it from the running editor, alongside the merged active catalog,
+so both come from the SAME container — that is the authoritative comparison.
+
+The pinned base image (editor/manifests/upstream.json) is only an OFFLINE APPROXIMATION: it is a
+different build (its prebuilt browser dist, not our from-source build) and can drift, so it must
+not be trusted for accept/reject. Use it only via `--upstream-image`/default when offline.
 """
 from __future__ import annotations
 
@@ -25,6 +31,7 @@ from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = "/usr/share/coolwsd/browser/dist/l10n"
+UPSTREAM_DIST = "/usr/share/coolwsd/upstream-l10n"  # unmerged source-built snapshot (Dockerfile.online)
 DEFAULT_OVERRIDES = os.path.join(ROOT, "editor/l10n/overrides/client")
 DEFAULT_MANIFEST = os.path.join(ROOT, "editor/manifests/upstream.json")
 DEFAULT_OUT_DIR = os.path.join(ROOT, ".qa/l10n-overrides")
@@ -107,11 +114,11 @@ def copy_ui_catalogs_from_image(image_ref, langs, dst_dir):
         run(["docker", "rm", "-f", cid], check=False)
 
 
-def copy_ui_catalogs_from_container(cid, langs, dst_dir):
+def copy_ui_catalogs_from_container(cid, langs, dst_dir, src_dir=DIST):
     copied = set()
     for lang in langs:
         dst = os.path.join(dst_dir, f"ui-{lang}.json")
-        res = run(["docker", "cp", f"{cid}:{DIST}/ui-{lang}.json", dst], check=False)
+        res = run(["docker", "cp", f"{cid}:{src_dir}/ui-{lang}.json", dst], check=False)
         if res.returncode == 0:
             copied.add(lang)
     return copied
@@ -212,8 +219,11 @@ def summarize(rows):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--override-dir", default=DEFAULT_OVERRIDES)
+    parser.add_argument("--upstream-from-active", action="store_true",
+                        help="authoritative: read the unmerged source-built snapshot from the running editor "
+                             "(/usr/share/coolwsd/upstream-l10n); requires the active container")
     parser.add_argument("--upstream-dir", help="directory containing unmerged ui-<lang>.json files")
-    parser.add_argument("--upstream-image", help="image containing unmerged Collabora ui-<lang>.json files")
+    parser.add_argument("--upstream-image", help="OFFLINE approximation: image with prebuilt ui-<lang>.json (can drift)")
     parser.add_argument("--manifest", default=DEFAULT_MANIFEST)
     parser.add_argument("--active-service", default="editor", help="docker compose service to verify merged active catalogs")
     parser.add_argument("--no-active-check", action="store_true")
@@ -226,29 +236,48 @@ def main():
     hard_failures = []
 
     with tempfile.TemporaryDirectory() as tmp:
-        upstream_dir = args.upstream_dir
-        upstream_source = upstream_dir or args.upstream_image or pinned_image_ref(args.manifest)
-        if upstream_dir:
+        # One active editor container serves both the merged (active) catalog and, with
+        # --upstream-from-active, the unmerged upstream snapshot baked by editor/Dockerfile.online.
+        active_cid = None
+        if args.upstream_from_active or not args.no_active_check:
+            # --upstream-from-active needs the container, so it overrides --active-optional
+            optional = args.active_optional and not args.upstream_from_active
+            active_cid = active_container(args.active_service, optional)
+
+        # --- upstream baseline ---
+        if args.upstream_from_active:
+            upstream_source = f"active:{args.active_service}:{(active_cid or '')[:12]}:{UPSTREAM_DIST}"
+            upstream_dir = os.path.join(tmp, "upstream")
+            os.makedirs(upstream_dir, exist_ok=True)
+            copied = copy_ui_catalogs_from_container(active_cid, langs, upstream_dir, src_dir=UPSTREAM_DIST)
+            missing = sorted(set(langs) - copied)
+            if missing:
+                hard_failures.append("missing upstream snapshot (rebuild editor for PO-SRC upstream-l10n): " + ", ".join(missing))
+        elif args.upstream_dir:
+            upstream_dir = args.upstream_dir
+            upstream_source = upstream_dir
             missing = [lang for lang in langs if not os.path.exists(os.path.join(upstream_dir, f"ui-{lang}.json"))]
             if missing:
                 hard_failures.append("missing upstream catalogs: " + ", ".join(missing))
         else:
+            image = args.upstream_image or pinned_image_ref(args.manifest)
+            upstream_source = f"OFFLINE-approx-image:{image}"
             upstream_dir = os.path.join(tmp, "upstream")
             os.makedirs(upstream_dir, exist_ok=True)
-            copied = copy_ui_catalogs_from_image(upstream_source, langs, upstream_dir)
+            copied = copy_ui_catalogs_from_image(image, langs, upstream_dir)
             missing = sorted(set(langs) - copied)
             if missing:
                 hard_failures.append("missing upstream catalogs: " + ", ".join(missing))
 
+        # --- active (merged) catalog ---
         active_dir = None
         active_source = None
         if not args.no_active_check:
-            cid = active_container(args.active_service, args.active_optional)
-            if cid:
-                active_source = f"docker-compose:{args.active_service}:{cid[:12]}"
+            if active_cid:
+                active_source = f"docker-compose:{args.active_service}:{active_cid[:12]}"
                 active_dir = os.path.join(tmp, "active")
                 os.makedirs(active_dir, exist_ok=True)
-                copied = copy_ui_catalogs_from_container(cid, langs, active_dir)
+                copied = copy_ui_catalogs_from_container(active_cid, langs, active_dir)
                 missing = sorted(set(langs) - copied)
                 if missing:
                     hard_failures.append("missing active catalogs: " + ", ".join(missing))

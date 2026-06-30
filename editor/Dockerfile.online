@@ -75,6 +75,14 @@ RUN ./autogen.sh \
  && make -j"$(nproc)"
 RUN mkdir -p /build/instdir && cd /build/online && DESTDIR=/build/instdir make install
 
+# Snapshot the UNMERGED, source-built client catalogs BEFORE the override merge below, into a
+# non-served path that ships in the image. This is the true upstream baseline for the override
+# overlap check (scripts/check-l10n-overrides.py): the exact catalog the merge writes into, NOT
+# the base image's prebuilt browser dist (a different build that can drift). Kept outside
+# browser/dist so it is never served as a web asset.
+RUN mkdir -p /build/instdir/usr/share/coolwsd/upstream-l10n \
+ && cp -a /build/instdir/usr/share/coolwsd/browser/dist/l10n/. /build/instdir/usr/share/coolwsd/upstream-l10n/
+
 # Merge our client-catalog translation OVERRIDES (data) into the freshly-built ui-<lang>.json.
 # This is the honest data layer (editor/l10n/overrides/client/<lang>.json) replacing the old
 # inline-sed injection; override keys win (adds missing keys, corrects the few wrong ones).

@@ -38,15 +38,23 @@ is the next localization step.
 
 ## Overlap check
 
-Run this before accepting a client override batch:
+Run this before accepting a client override batch (the editor must be built + running):
 
 ```bash
-make l10n-overlap-check
+make l10n              # authoritative
 ```
 
-The check compares `client/<lang>.json` with the pinned upstream Collabora `ui-<lang>.json`
-from `editor/manifests/upstream.json`, then verifies the active editor catalog when the
-`editor` compose service is running. It writes:
+It compares `client/<lang>.json` against the **unmerged, source-built** `ui-<lang>.json` — the
+exact catalog the build merges into — read from the running editor's snapshot at
+`/usr/share/coolwsd/upstream-l10n` (baked by `editor/Dockerfile.online` before the merge), and
+also verifies the merged active catalog from the SAME container. Both are MANDATORY: if the editor
+service is not running/reachable the check FAILS (non-zero), so a green result really means checked.
+
+Offline approximation (no running editor): `make l10n-overlap-offline` uses the pinned base-image
+catalog as upstream and skips the active check. Its report is tagged `OFFLINE-approx` — a different
+build that can drift, so treat it as a hint, not a verdict.
+
+Both write:
 
 - `.qa/l10n-overrides/overlap-report.csv`
 - `.qa/l10n-overrides/overlap-report.json`

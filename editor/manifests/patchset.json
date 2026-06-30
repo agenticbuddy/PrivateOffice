@@ -149,6 +149,16 @@
       "rationale": "Channel real source-level changes to coolwsd / the browser bundle through reviewable unified diffs applied with `git apply` right after `git clone` and before `configure` - not post-build sed on built artifacts, not runtime overrides. No-op when no .patch is present; a failed apply breaks the build on purpose. Pinned to online_from_source.ref; rebase on re-pin. See editor/patches/README.md.",
       "rollback": "Remove the `COPY patches` + `git apply` step from editor/Dockerfile.online and the editor/patches/ dir.",
       "status": "scaffold: mechanism wired + self-tested at build; no production source patches yet (README only)."
+    },
+    {
+      "id": "PO-QA-015",
+      "title": "Snapshot the unmerged source-built client catalog to /usr/share/coolwsd/upstream-l10n",
+      "type": "qa",
+      "files": ["editor/Dockerfile.online", "scripts/check-l10n-overrides.py"],
+      "render_path": "n/a (not served; QA baseline only)",
+      "rationale": "Before the override merge, copy the freshly-built ui-<lang>.json to a non-served path that ships in the image. This is the TRUE upstream baseline for the override overlap check (scripts/check-l10n-overrides.py --upstream-from-active): the exact catalog the merge writes into, read from the SAME running container as the active catalog - not the base image's prebuilt browser dist (a different build that can drift).",
+      "rollback": "Remove the cp-to-upstream-l10n RUN step; the offline base-image approximation (make l10n-overlap-offline) still works.",
+      "status": "active"
     }
   ]
 }
