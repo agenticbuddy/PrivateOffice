@@ -5,7 +5,8 @@
   "scripts": {
     "test": "playwright test",
     "sweep": "playwright test tests/lang-sweep.spec.ts",
-    "editor-l10n": "node scripts/editor-l10n-rendered.mjs"
+    "editor-l10n": "node scripts/editor-l10n-rendered.mjs",
+    "ru-term-inventory": "node scripts/editor-l10n-rendered.mjs --locales=en,ru --apps=writer,calc,impress --out=../.qa/ru-term-inventory/rendered --screenshots=main"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1"
