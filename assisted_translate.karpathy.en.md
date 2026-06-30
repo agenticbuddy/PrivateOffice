@@ -44,7 +44,7 @@ Collabora Online has more layers stacked on top of each other:
 | Layer | What lives in it | How it is usually fixed |
 | --- | --- | --- |
 | App frontend | The project's wrapper around Collabora: login, files, profile, modals | `frontend/src/i18n/messages/*.json` |
-| Collabora browser UI | Ribbon/notebookbar, part of the menus, tooltips, panels, buttons in web code | `l10n/ui-<locale>.json`, in this project via a patch in `editor/Dockerfile` |
+| Collabora browser UI | Ribbon/notebookbar, part of the menus, tooltips, panels, buttons in web code | `l10n/ui-<locale>.json`, in this project via edits to `editor/l10n/overrides/client/<lang>.json`, merged into the catalog at build by `editor/Dockerfile.online` |
 | UNO command labels | Labels of LibreOffice commands that Collabora invokes via `_UNO(...)` | `l10n/uno/<locale>.json` or the source that generates these catalogs |
 | LibreOffice-core | Dialogs, server/core UI, `.ui`, gettext, some sidebar and dialog strings | `.po` -> `.mo`, then rebuild or replace resources in the image |
 | Composed strings | Phrases assembled from several translatable or non-translatable pieces | Rewrite into a whole phrase with placeholders |
@@ -120,6 +120,16 @@ Let me pin down the vocabulary, because we'll lean on it constantly:
 ## General workflow
 
 The work splits cleanly into stages, and the order matters. The cardinal sin here is to open with a mass translation edit — don't. We build up the picture first, then we touch anything.
+
+## Inventory tooling (implemented)
+
+ok before we get into the theory, here's the practical shortcut: for Russian, the map I've been describing already exists — and, crucially, it's reproducible, not a one-off. How it's built and which commands rebuild it live in `docs/localization/term-map.md`. Underneath there are three tools, and each one corresponds to exactly one of the stages we'll walk through below:
+
+- `scripts/build-l10n-catalog.py` — the *universe of the translatable*: everything that can in principle be translated (the client `ui/uno/locore` JSON plus the LibreOffice core `.mo`), with the current RU value and the source class for each string. This is the *denominator* of completeness — the thing coverage is even measured against (Stage 2).
+- `e2e/scripts/editor-l10n-rendered.mjs` — a deep Playwright walk across every surface of every app: ribbon tabs, dropdowns, per-object context menus, dialogs (via `sendUnoCommand`) and their tabs, the sidebar, tooltips. For each string it captures the visible text, its geometry, and its context (`app/surface/path/precondition`), and whatever it couldn't reach gets honestly logged as `notReached` (Stage 3).
+- `scripts/build-l10n-ru-terms.py` — joins the render to the universe and classifies every term: simple (one place, one rendering, matches the catalog), complex (homograph / render-path-mismatch / more than one catalog value / multiple sources), composite (a fragment glued together at runtime). It emits `ru-terms.json` plus a set of CSVs (`terms / occurrences / collisions / composites / unresolved`) (Stage 4). The current map has 1874 visible terms: simple 1272, complex 588, composite 14.
+
+And here's how you actually use it, along those same three buckets. Take `terms.csv`, filter `classification=simple` — those are the safe ones, translate them pointwise; `collisions.csv` (that's the complex bucket) — decide by context, one at a time; `composites.csv` — rewrite as a whole phrase, never piece by piece. After each block of edits, run `scripts/l10n-regression.sh` (or its Workflow variant `scripts/workflows/l10n-regression.workflow.js`), and the expectations live in `expectations.json` — which is a hybrid: a golden snapshot plus per-block checks.
 
 ## Principle of provability
 
@@ -803,7 +813,7 @@ Let's start with the easy, low-risk path — the safe direct `ui-json` edit. You
 - the translation does not break width/RTL;
 - there is a render-check plan.
 
-In this project, do these edits via the existing patch in `editor/Dockerfile` rather than hand-editing an already-built file inside the container. Reason: the Dockerfile patch is reproducible on rebuild, whereas the in-container edit evaporates the moment the container is recreated. Always prefer the reproducible knob.
+In this project, do these edits in `editor/l10n/overrides/client/<lang>.json` (which is merged into the catalog at build by `editor/Dockerfile.online`) rather than hand-editing an already-built file inside the container. Reason: the source edit is reproducible on rebuild, whereas the in-container edit evaporates the moment the container is recreated. Always prefer the reproducible knob.
 
 Command to the agent:
 
@@ -815,7 +825,7 @@ Task: apply only safe direct ui-json translations.
 Context:
 - Only msgid from the approved safe-candidates list are allowed.
 - Do not touch mixed-context, composed-fragment, uno-json, lo-core-mo.
-- Follow the existing patch style in editor/Dockerfile.
+- Follow the existing edit style in editor/l10n/overrides/client/<lang>.json (merged into the catalog at build by editor/Dockerfile.online).
 
 Result:
 1. A minimal edit.
@@ -1615,6 +1625,7 @@ A localization batch is *done* — actually done, not "looks done" — when all 
 - RTL and UI width are checked for the affected languages;
 - there is a false-positives report;
 - there is a rollback plan;
+- the regression test `scripts/l10n-regression.sh` is green — meaning nothing changed textually outside the intended block, and no new layout findings appeared (overlap / clipping / viewport-exit);
 - the update-log describes what was changed and why.
 
 ## The main rule

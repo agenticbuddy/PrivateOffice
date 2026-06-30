@@ -1,29 +1,29 @@
 # Assisted localization of Collabora Online
 
-This document describes a careful workflow for fully localizing a Collabora Online–based project with the help of an AI agent. Read it slowly. It is not tied to a specific tool, and that is the first thing that should worry you, because it means the thing it describes is everywhere. "Agent" below means any assistant that can read the project, run commands, analyze code, prepare reports, propose edits, and verify the result: Codex CLI, Claude Code, an OpenRouter agent, a local LLM agent, or anything similar — anything, that is, that you have invited in and that will now go walking through your files in the dark while you sleep.
+This document describes a careful workflow for fully localizing a Collabora Online–based project with the help of an AI agent. It is not tied to a specific tool. "Agent" below means any assistant that can read the project, run commands, analyze code, prepare reports, propose edits, and verify the result: Codex CLI, Claude Code, an OpenRouter agent, a local LLM agent, or anything similar. It has access to read the project, run commands, and edit files, and when it finishes it will report that the work is done — whether or not it is.
 
-Main idea: localizing Collabora Online is not the same as filling in missing keys in JSON. It only looks that simple, the way a still pond looks shallow. You first have to understand where exactly each English string is used, by which mechanism it gets translated, whether it has different contexts, and only then make targeted edits. Skip that understanding and the work will smile at you and lie.
+Main idea: localizing Collabora Online is not the same as filling in missing keys in JSON. It only looks that simple. You first have to understand where exactly each English string is used, by which mechanism it gets translated, whether it has different contexts, and only then make targeted edits. Without that understanding, an edit produces a result that looks correct right up until you check the render.
 
-The document is deliberately written as a working manual, not a short cheat sheet. If an engineer is seeing Collabora Online for the first time, it matters not only to know the list of files, but also to understand why simple actions like "add a translation to JSON" can produce a false positive — and a false positive here is not a small thing. One screen gets fixed, another breaks somewhere you are not looking, and a grep check pats you on the shoulder and tells you, kindly, that "the translation is there." It is there. It is just not where you think, and it is not doing what you think.
+The document is deliberately written as a working manual, not a short cheat sheet. If an engineer is seeing Collabora Online for the first time, it matters not only to know the list of files, but also to understand why simple actions like "add a translation to JSON" can produce a false positive. One screen gets fixed, another stays broken somewhere you are not looking, and a grep over the files confirms that "the translation is there." It is there, in the catalog. The screen is drawn by a different layer.
 
-A separate emphasis is on controlling the AI agent. An agent can look you in the eye and say it "checked all languages" or "built a full table," and it will sound certain, and it will be wrong, because in practice it often samples: a few languages, a couple of tabs, the first grep matches, part of the catalogs — and reports the part as the whole, the way a child reports the closet is empty without opening the door. So the agent's result should be accepted only when it leaves behind verifiable artifacts: a machine-readable table, a scenario manifest, a list of input files with hashes, screenshots, DOM/text dumps, reproduction commands, and numbers that can be recomputed independently. Trust the artifacts. Never trust the smile.
+A separate emphasis is on controlling the AI agent. An agent can state with full confidence that it "checked all languages" or "built a full table," and in practice it often samples: a few languages, a couple of tabs, the first grep matches, part of the catalogs — and reports the part as the whole, without mentioning the rest. So the agent's result should be accepted only when it leaves behind verifiable artifacts: a machine-readable table, a scenario manifest, a list of input files with hashes, screenshots, DOM/text dumps, reproduction commands, and numbers that can be recomputed independently. Trust the artifacts, not the report.
 
 ## Short conclusion
 
-If a string is not translated in `ui-*.json`, that does not yet mean you can just add a translation and consider the task done. That is the comforting version. Here is the true one.
+If a string is not translated in `ui-*.json`, that does not yet mean you can just add a translation and consider the task done. The task only pretends to be done.
 
 Reasons:
 
 - One English `msgid` may appear in several places in the interface — and the same name can belong to several different things.
 - In different places the same English text may need different translations.
-- Some strings are parts of composed phrases, not standalone phrases; they are limbs, not bodies.
+- Some strings are parts of composed phrases, not standalone phrases; they reach you one fragment at a time, not as whole phrases.
 - Some labels come not from `ui-*.json`, but from UNO or LibreOffice-core, from deeper down.
-- Some English values are better left in English: format names, technical terms, function names, brands. Touch them and you break something true.
+- Some English values are better left in English: format names, technical terms, function names, brands.
 - A translation can be linguistically correct but break button width, RTL layout, a tooltip, a menu, or a dialog.
-- A translation may already be in the catalog yet still not appear on screen, if the string is rendered by a different layer. The catalog will swear it is doing its job.
-- Ready-made third-party translations (a fresh LibreOffice language pack) cannot be dropped in blindly: Collabora differs from stock LibreOffice, and some strings will not match. What looks like a gift is sometimes a thing wearing the shape of one.
+- A translation may already be in the catalog yet still not appear on screen, if the string is rendered by a different layer.
+- Ready-made third-party translations (a fresh LibreOffice language pack) cannot be dropped in blindly: Collabora differs from stock LibreOffice, some strings will not match, and you will not find out at once.
 
-The good news, though, and there is good news, so hold onto it: **almost all localization, and all UI element texts, sizes, and design, are reachable without building the LibreOffice core** — they live in the Collabora Online layer (data + CSS + a little code). Building the core is needed only to render the document itself. You do not have to go all the way down into the dark to fix what people actually see.
+The good news, though, and there is good news, so hold onto it: **almost all localization, and all UI element texts, sizes, and design, are reachable without building the LibreOffice core** — they live in the Collabora Online layer (data + CSS + a little code). Building the core is needed only to render the document itself.
 
 So the correct path is:
 
@@ -33,38 +33,38 @@ So the correct path is:
 4. Build a map of contexts and possible collisions.
 5. Translate the safe cases first.
 6. For risky cases, do context splitting or edit the correct PO/MO/UNO source.
-7. Verify every edit by rendering, not just by grep over files. Grep tells you what the files say. Only the render tells you the truth.
+7. Verify every edit by rendering, not just by grep over files. Grep shows what the files contain; only the render shows what is on screen.
 
 ## What exactly is hard
 
-In a normal application there is often a single localization layer, and you can almost relax: code calls `t("Save")`, the catalog stores the translation, the UI shows the translation. One door, one room, one light switch.
+In a normal application there is often a single localization layer, and it is predictable: code calls `t("Save")`, the catalog stores the translation, the UI shows the translation.
 
-In Collabora Online there are more layers. There are always more layers.
+In Collabora Online there are more layers, and each is fixed differently:
 
 | Layer | What lives in it | How it is usually fixed |
 | --- | --- | --- |
 | App frontend | The project's wrapper around Collabora: login, files, profile, modals | `frontend/src/i18n/messages/*.json` |
-| Collabora browser UI | Ribbon/notebookbar, part of the menus, tooltips, panels, buttons in web code | `l10n/ui-<locale>.json`, in this project via a patch in `editor/Dockerfile` |
+| Collabora browser UI | Ribbon/notebookbar, part of the menus, tooltips, panels, buttons in web code | `l10n/ui-<locale>.json` — data goes in `editor/l10n/overrides/client/<lang>.json`, merged at build by the deployed image `editor/Dockerfile.online` (`editor/Dockerfile` is only the stopgap) |
 | UNO command labels | Labels of LibreOffice commands that Collabora invokes via `_UNO(...)` | `l10n/uno/<locale>.json` or the source that generates these catalogs |
 | LibreOffice-core | Dialogs, server/core UI, `.ui`, gettext, some sidebar and dialog strings | `.po` -> `.mo`, then rebuild or replace resources in the image |
 | Composed strings | Phrases assembled from several translatable or non-translatable pieces | Rewrite into a whole phrase with placeholders |
 | System elements | Browser menus, OS-native elements, some file picker/clipboard prompts | Usually outside the app's control |
 
-Important, and this is where people get hurt: if a string belongs to `ui-json`, editing `.mo` may do nothing. If a string belongs to `lo-core-mo`, adding a key to `ui-ru.json` may do nothing. You can work for an hour on the wrong layer and the screen will not so much as flicker. So you have to determine the source first.
+Important: if a string belongs to `ui-json`, editing `.mo` may do nothing. If a string belongs to `lo-core-mo`, adding a key to `ui-ru.json` may do nothing. You can work on the wrong layer, rebuild, open the screen — and nothing changes. So you have to determine the source first.
 
-And even the source cannot be inferred from the mere fact that the string sits in some catalog. The catalog is not a confession; it is an alibi, and a bad one. Example: the string `Clipboard` is present in `ui-ru.json` with a Russian translation, sitting right there where you can see it, and yet in the ribbon it is still shown in English — because that label is drawn by the core, and the client catalog is not used there at all. So "the string is in the catalog" and "the string is actually taken from this catalog" are different things, and the gap between them is exactly where a day of work goes to die. The real source is confirmed only by experiment: change the string in the candidate catalog, rebuild, bust the cache, and see whether the screen changed. The screen is the only witness that does not lie.
+And even the source cannot be inferred from the mere fact that the string sits in some catalog. Example: the string `Clipboard` is present in `ui-ru.json` with a Russian translation, and yet in the ribbon it is still shown in English — because that label is drawn by the core, and the client catalog is not used there at all. So "the string is in the catalog" and "the string is actually taken from this catalog" are different things, and telling them apart is where the hours go. The real source is confirmed only by experiment: change the string in the candidate catalog, rebuild, bust the cache, and see whether the screen changed.
 
-Note also that the same English string can live in several layers at once — both in the client catalog and in the core `.mo`. It can be in two places, three places, looking back at you from each. So the source of a string is not necessarily a single value from the list; it is the *set* of layers where it occurs. Which layer actually draws the text on screen is decided by the render path (see below), not by the mere fact that the string is present in one of the catalogs.
+Note also that the same English string can live in several layers at once — both in the client catalog and in the core `.mo`. So the source of a string is not necessarily a single value from the list; it is the *set* of layers where it occurs. Which layer actually draws the text on screen is decided by the render path (see below), not by the mere fact that the string is present in one of the catalogs.
 
-In practice, when this was measured on a real project, most of the gaps turned out to be in the client JSON, not in the core; and some strings that were formally present in the catalog were still rendered in English, present and absent at the same time, like a name in a book nobody will read aloud. So the "what fixes what" mapping cannot be taken on faith — it has to be checked on screen. Faith is not an artifact.
+In practice, when this was measured on a real project, most of the gaps turned out to be in the client JSON, not in the core; and some strings that were formally present in the catalog were still rendered in English. So the "what fixes what" mapping cannot be taken on faith — it has to be checked on screen.
 
 ## Why adding a translation directly is dangerous
 
-Imagine the key `Illustrations`. Hold it in your hand a moment.
+Imagine the key `Illustrations`. A harmless word. For now.
 
-If it is used only as a ribbon group name, the translation `Иллюстрации` may be correct, and nothing bad happens, and you go home.
+If it is used only as a ribbon group name, the translation `Иллюстрации` may be correct.
 
-But if somewhere — and you will not know where until you look — there is a composed message like:
+But if somewhere there is a composed message like:
 
 ```text
 No + Illustrations
@@ -82,9 +82,9 @@ while the correct Russian is:
 Нет иллюстраций
 ```
 
-For English such slicing often looks fine, because English is forgiving, it tolerates short dictionary pieces and shrugs. For Russian, Ukrainian, Arabic, Hebrew, Farsi, Japanese, Korean, Thai, and many other languages such slicing may be wrong, and it will be wrong in front of a native speaker, which is the only audience that matters.
+For English such slicing often looks fine, because English tolerates short dictionary pieces. For Russian, Ukrainian, Arabic, Hebrew, Farsi, Japanese, Korean, Thai, and many other languages such slicing may be wrong — and every native speaker will see the wrongness except you.
 
-More examples of risky words. Read them as a list of things that are not what they appear to be:
+More examples of words that look simple, but the simplicity is deceptive:
 
 | English string | Why it is risky |
 | --- | --- |
@@ -97,11 +97,9 @@ More examples of risky words. Read them as a list of things that are not what th
 | `General` | The General number format, the general settings section, the normal mode |
 | `Delete` | Delete an object, delete a row, delete a sheet, delete a comment |
 
-Conclusion: a translation must be tied not only to the English text, but to the place where it is used. A word with no place is a word with no leash.
+Conclusion: a translation must be tied not only to the English text, but to the place where it is used. The same string in two different contexts is two different translations, even if the English letters match.
 
 ## Basic terms
-
-Learn these. You will be saying them to yourself later, in the quiet, while the build runs.
 
 | Term | Meaning |
 | --- | --- |
@@ -119,13 +117,27 @@ Learn these. You will be saying them to yourself later, in the quiet, while the 
 
 ## General workflow
 
-The work is best split into stages, and you must take them in order, the way you check the locks in order. You must not start with a mass translation edit. The mass edit is how it gets you.
+The work is best split into stages, taken in order. You must not start with a mass translation edit: without the map, you cannot see what it breaks, and you find out only at the render or in prod.
+
+## Inventory tooling (implemented)
+
+Here is good news. The map is already built, and built reproducibly: the term inventory for Russian as the reference language is done and is rebuilt by a command, not held in one person's head. Detail and rebuild commands are in `docs/localization/term-map.md`. There are three tools, each covering one part of the pipeline:
+
+- **Translatable universe** — `scripts/build-l10n-catalog.py`. It collects everything that can be translated at all: the client `ui/uno/locore` JSON and the LO core `.mo`, each string carrying its current RU value and source class. This is the completeness denominator, the number against which you measure how much is still uncovered (Stage 2).
+- **Deep rendered walk** — `e2e/scripts/editor-l10n-rendered.mjs`. Playwright walks every surface of every app: ribbon tabs, dropdowns, per-object context menus, dialogs via `sendUnoCommand` and their tabs, the sidebar, tooltips. It captures the visible text, the geometry, and the context (`app/surface/path/precondition`), and it writes down whatever it could not reach in `notReached` — what was not opened is unverified, not confirmed as translated (Stage 3).
+- **Term map** — `scripts/build-l10n-ru-terms.py`. It joins the render to the universe and gives every term a class: **simple** (one place, one rendering, matches the catalog), **complex** (homograph / render-path-mismatch / >1 catalog value / multi-source), **composite** (a fragment glued together at runtime). The output is `ru-terms.json` and a set of CSVs (`terms / occurrences / collisions / composites / unresolved`) (Stage 4). The current map holds 1874 visible terms: 1272 simple, 588 complex, and 14 composite — and the most dangerous are those 14, the ones there are fewest of.
+
+How to use it:
+
+- Open `terms.csv`, filter `classification=simple` — these are the safe ones; translate them pointwise, one at a time.
+- `collisions.csv` (complex) — here you cannot work blind; decide by context, because both the rendered variants and the occurrence sites are shown. `composites.csv` — rewrite as a whole phrase, never piece by piece, because the pieces reassemble in an order you did not intend.
+- After each block, run the regression test `scripts/l10n-regression.sh` (or the Workflow `scripts/workflows/l10n-regression.workflow.js`): it confirms that exactly the intended thing changed and nothing else shifted — neither text outside the block nor the geometry (overlap / clipping / viewport-exit). Expectations live in `expectations.json` — a hybrid: a golden snapshot plus a per-block check.
 
 ## Principle of provability
 
-The most reliable proof here is what is actually drawn on screen. A screenshot is the only ground truth; everything else is testimony. A JSON catalog, grep, the contents of `.mo`, and even the very fact that the code has a `_("...")` call — these are only hypotheses: they say the translation *can* apply, but they do not prove it applied in this exact place, on this exact paint, where the user is standing. So the source and translation of each string are confirmed by a separate pass **over every object** of the interface (not over a sample) — open the element and look at it with your own eyes, because the things that go wrong are the things nobody opened. Ideally a screenshot is taken for every block (tab, group, button, menu, context menu, dialog, tooltip). Then a separate, second pass — preferably by a different, stronger model — reviews these screenshots and looks for mistakes: the first pass collects, the second verifies. One watcher is never enough.
+The most reliable proof here is what is actually drawn on screen. A screenshot is the only ground truth. A JSON catalog, grep, the contents of `.mo`, and even the very fact that the code has a `_("...")` call — these are only hypotheses: they say the translation *can* apply, but they do not prove it applied in this exact place. So the source and translation of each string are confirmed by a separate pass **over every object** of the interface (not over a sample) — open the element and look at it. Ideally a screenshot is taken for every block (tab, group, button, menu, context menu, dialog, tooltip). Then a separate, second pass — preferably by a different, stronger model — reviews these screenshots and looks for mistakes: the first pass collects, the second verifies. One pass is not enough.
 
-Every stage must end not with the word "done", but with a set of artifacts from which another person or another agent can recompute the result. "Done" is a word people say to stop looking.
+Every stage must end not with the word "done", but with a set of artifacts from which another person or another agent can recompute the result. "Done" without artifacts is usually a word with nothing behind it.
 
 A bad result:
 
@@ -133,7 +145,7 @@ A bad result:
 I checked all the strings and found 20 problems.
 ```
 
-Why this is bad — and it is bad in a way that will cost you later:
+Why this is bad:
 
 - it is unclear which files were checked;
 - it is unclear which languages were in scope;
@@ -141,7 +153,7 @@ Why this is bad — and it is bad in a way that will cost you later:
 - you cannot tell a full pass from a sample;
 - you cannot reproduce the result after an image update.
 
-A good result. This one tells the truth, and tells it in a form you can check at 2 a.m. when you no longer trust your own memory:
+A good result:
 
 ```text
 Input files:
@@ -166,18 +178,18 @@ Check numbers:
 - global UNO labels: 813 unique msgid
 ```
 
-A good result can be re-verified, and re-verification is the whole point — it is you, refusing to be lied to:
+A good result can be re-verified, and that is its main virtue — it does not ask to be taken on its word:
 
 - open the input file by hash and confirm the right version was analyzed;
 - recompute the number of strings with another script;
 - check that the count in the report matches the count of rows in JSON/CSV;
 - pick any `msgid` and find all its occurrences;
 - pick any screenshot and match it to a DOM/text dump;
-- see which places are not covered. *Especially* the places not covered.
+- see which places are not covered.
 
 ### What cannot count as proof
 
-You cannot accept as proof — no matter how reasonable it sounds, no matter how late it is:
+Some things look like proof but are not. You cannot accept as proof:
 
 - a general text answer without raw tables;
 - screenshots for one language only, if "all languages" was claimed;
@@ -188,14 +200,12 @@ You cannot accept as proof — no matter how reasonable it sounds, no matter how
 - a translation for which not all occurrences are listed;
 - a patch for which it is not stated why this particular source class was chosen;
 - a Playwright check without a scenario manifest;
-- the absence of errors as proof of completeness — silence is not the same as safety;
+- the absence of errors as proof of completeness (no findings means nothing was found, not that all is clean);
 - the presence of a string/translation in a catalog (`ui/uno/locore-*.json` or `.mo`) as proof that the translation is actually visible on screen (the opposite is proven: `Clipboard` is in `ui-ru.json` but is rendered in English);
-- a render check without cache-bust/hard-reload (the cache trap: assets are cached under an unchanged hash, and an old screen can be mistaken for the result of a fix, in either direction — the cache *remembers* what you tried to make it forget);
-- a single cache bust as a guarantee of freshness: some assets (the branding script, runtime `ui-<loc>.json` catalogs) bypass the ordinary cache-bust, so verify the render in a clean browser profile and additionally cross-check with a request that bypasses the cache. One lock is not a lock.
+- a render check without cache-bust/hard-reload (the cache trap: assets are cached under an unchanged hash, and an old screen can be mistaken for the result of a fix, in either direction);
+- a single cache bust as a guarantee of freshness: some assets (the branding script, runtime `ui-<loc>.json` catalogs) bypass the ordinary cache-bust, so verify the render in a clean browser profile and additionally cross-check with a request that bypasses the cache.
 
 ### Minimal set of verifiable artifacts
-
-This is the paper trail. Keep it the way you would keep a record of who came and went.
 
 | Stage | What the agent must leave | How to verify it |
 | --- | --- | --- |
@@ -225,11 +235,11 @@ Example invariants:
 - every changed UI state has a before/after screenshot or text dump;
 - every hard case either has a human decision or is explicitly left unresolved.
 
-If the invariants do not add up, the work is not finished. Even if the agent wrote a coherent report. *Especially* if the agent wrote a coherent report — coherence is cheap, and it is exactly what a thing builds when it wants you to stop checking.
+If the invariants do not add up, the work is not finished. Even if the agent wrote a coherent report. Especially if the agent wrote a coherent report: coherence is cheap, and it is exactly what stops you from checking.
 
 ### Stage 1. Fix the baseline
 
-You need to understand what exactly we are localizing. You need to know the ground under your feet before the lights go out, because they will.
+You need to understand what exactly we are localizing. Until this is fixed, you know neither the scope of the work nor what counts as complete.
 
 Minimal baseline:
 
@@ -244,9 +254,9 @@ Minimal baseline:
 - a set of test documents for Writer, Calc, Impress;
 - a list of UI states: ribbon tabs, in-app system menus, context menu, sidebar, dialogs, tooltips, formulas, tables, charts, pivot tables, images, shapes.
 
-Record separately how a language code turns into a loaded catalog, because this is one of the quiet ones, the kind of failure that never raises its voice. The chain is: the user picks a language in the app (for example `ru`) -> the app passes the editor a code in the `lang` parameter (in this project the mapping lives in `co_lang`, `ru` -> `ru-RU`) -> the editor normalizes the region and loads a concrete file (`ru-RU` -> `ui-ru.json`). If the code is wrong or carries an extra region, the editor may silently load no catalog or the wrong one — *silently*, that is the word that matters — and then the whole language looks untranslated even though the catalog is sitting right there on disk, complete, waiting, unread. A wrong code sometimes also changes individual strings, for example the language label in the status bar or a raw placeholder like `{ru}` showing through like a bone through skin. This is a common and invisible cause of zero coverage, so the chain must be checked for each language separately. Do not assume the door is open just because you put a door there.
+Record separately how a language code turns into a loaded catalog, because this is where a language is lost silently. The chain is: the user picks a language in the app (for example `ru`) -> the app passes the editor a code in the `lang` parameter (in this project the mapping lives in `co_lang`, `ru` -> `ru-RU`) -> the editor normalizes the region and loads a concrete file (`ru-RU` -> `ui-ru.json`). If the code is wrong or carries an extra region, the editor may silently load no catalog or the wrong one, and then the whole language looks untranslated even though the catalog is sitting on disk. A wrong code sometimes also changes individual strings, for example the language label in the status bar or a raw placeholder like `{ru}`. This is a common and invisible cause of zero coverage, so the chain must be checked for each language separately.
 
-Hand the agent the instruction below exactly as written; the wording is the leash.
+Command to the agent:
 
 ```text
 You are a localization auditor. Work read-only.
@@ -272,16 +282,16 @@ Completeness control:
 - No edits to project files, except the report, if I separately allow creating it.
 ```
 
-Control not based on trusting the agent — and you must not trust the agent, not out of cruelty, but because trust is not a method:
+Control not based on trusting the agent:
 
 - Ask for `baseline_manifest.json`, where each row is a concrete input: path, source, size, hash, extraction date, container or commit.
-- Separately recompute the list of languages from the project code and compare with the manifest. If the project has 22 languages, the manifest must have 22 languages, not "the main ones". "The main ones" is where the others go to be forgotten.
-- Check that for each language it states which catalogs actually exist: `ui`, `uno`, `locore`, `.mo`. A missing catalog must also be a row in the table, not a silent skip. The silent skip is the enemy. Name the absence.
+- Separately recompute the list of languages from the project code and compare with the manifest. If the project has 22 languages, the manifest must have 22 languages, not "the main ones". "The main ones" is where the missing languages hide.
+- Check that for each language it states which catalogs actually exist: `ui`, `uno`, `locore`, `.mo`. A missing catalog must also be a row in the table, not a silent skip — what is skipped silently is what surfaces later.
 - Check that the app scope is listed explicitly. If the agent wrote "editor UI", that is not enough: it must be Writer, Calc, Impress, shared, and Draw/out of scope if needed.
-- Check that container files are taken from the active image, not from local assumptions. The proof is the extraction command and the hash of the extracted file. What you assume is on the machine and what is actually on the machine are two different machines.
-- For each language, check the chain code -> `lang` -> loaded catalog: which catalog file the browser actually requested (visible in the network), not which one was expected. If no catalog is requested for a language, that is the hidden cause of zero coverage, and it has been hiding the whole time.
+- Check that container files are taken from the active image, not from local assumptions. The proof is the extraction command and the hash of the extracted file.
+- For each language, check the chain code -> `lang` -> loaded catalog: which catalog file the browser actually requested (visible in the network), not which one was expected. If no catalog is requested for a language, that is the hidden cause of zero coverage.
 
-Signs of partial completion. These are the footprints that lead away from the work undone:
+Signs of partial completion:
 
 - The agent listed only `ru`, `uk`, `ar`, `zh-CN`, although the task is about all languages.
 - The agent did not give hashes of input files.
@@ -289,7 +299,7 @@ Signs of partial completion. These are the footprints that lead away from the wo
 - The agent wrote "LibreOffice resources present" but did not say for which languages.
 - The agent did not say which UI scenarios will be checked later.
 
-When you find the footprints, do not ask it to "try harder." Give it the delta, the narrow task it cannot wriggle out of:
+How to push to completion:
 
 ```text
 You did the baseline partially. Do not rewrite the whole report.
@@ -306,7 +316,7 @@ Done criterion: the manifest has exactly 22 locale rows, and each row has the sa
 
 ### Stage 2. Static string inventory
 
-At this stage the agent reads the code and catalogs, but does not yet prove the render. Keep that distinction sharp. Everything you learn here is a rumor about the screen, not the screen.
+At this stage the agent reads the code and catalogs, but does not yet prove the render. Here you collect an inventory of what *should* be there, but it is not yet proof of what is on screen.
 
 You need to collect:
 
@@ -319,7 +329,7 @@ You need to collect:
 - all available LibreOffice PO/MO/UI resources;
 - all places where a string appears in the code.
 
-The key result is the occurrence map. It is the map of every place a name has put down roots — and you want all of them, because the one you miss is the one that grows back.
+The key result is the occurrence map. It is the map of every place each string appears — and you want all of them, because the one you miss is the one that surfaces later.
 
 Minimal occurrence map fields:
 
@@ -338,9 +348,9 @@ Minimal occurrence map fields:
 | `render_path` | What actually draws the string: `client-_()`, `server-jsdialog-core`, `uno`. Confirmed by experiment (edit the source -> rebuild/cache-bust -> did the render change), not by assumption |
 | `notes` | What has to be checked manually |
 
-The `render_path` field must not be filled by guessing from which catalog the string lives in. Guessing here feels like knowing, which is exactly why it is dangerous. It is confirmed by experiment: change the string in the assumed source, rebuild the image, bust the browser cache, and see whether the screen changed. Changed — the source is correct; did not change (like `Clipboard`, which lives in `ui-ru.json` but is drawn by the core) — the source is different, and editing this catalog is useless, a key turning in a lock that opens nothing.
+The `render_path` field must not be filled by guessing from which catalog the string lives in. A guess from the catalog often does not match what actually draws the screen. It is confirmed by experiment: change the string in the assumed source, rebuild the image, bust the browser cache, and see whether the screen changed. Changed — the source is correct; did not change (like `Clipboard`, which lives in `ui-ru.json` but is drawn by the core) — the source is different, and editing this catalog is useless.
 
-When you match a string from the screen to a string from the catalog, you cannot compare them literally. They wear small disguises. Before comparing, both strings must be normalized to one form:
+When you match a string from the screen to a string from the catalog, you cannot compare them literally. Before comparing, both strings must be normalized to one form, otherwise the same string looks like two different ones:
 
 - strip mnemonic markers (`~`, `_`): `~Save` and `Save` are the same string;
 - strip a trailing ellipsis (`…` or `...`);
@@ -348,11 +358,11 @@ When you match a string from the screen to a string from the catalog, you cannot
 - strip a trailing colon;
 - strings with placeholders (`{1}`, `%1`) must be matched as a template via a regular expression, not as exact text.
 
-Without this normalization the same string looks like several different ones — one face in several masks — and you get a pile of false "untranslated" that will eat your week. For core strings in `.mo`, the catalog must first be unpacked into text (`msgunfmt`, needs the gettext package), otherwise there is nothing to compare against; the `.mo` keeps its contents the way a sealed box keeps its contents.
+Without this normalization the same string looks like several different ones, and you get a pile of false "untranslated". For core strings in `.mo`, the catalog must first be unpacked into text (`msgunfmt`, needs the gettext package), otherwise there is nothing to compare against.
 
-The coverage table from this stage cannot be treated as a fact. Write that on your hand. It is built from the presence of a string in a catalog: if a translation is in the catalog, the string counts as translated. But presence in the catalog does not mean it is the one that draws the text (the same `Clipboard`: it is in `ui-ru.json`, yet the screen shows English because the core draws it). So the percentage from coverage is an upper bound, a hypothesis, a hope with a number on it — not the truth; only the render pass (Stage 3) gives the truth. Required step: take a sample of strings that coverage counts as translated and check them against the real screen — this shows how far the catalog has drifted from the render, and it always drifts.
+The coverage table from this stage cannot be treated as a fact. Write that on your hand. It is built from the presence of a string in a catalog: if a translation is in the catalog, the string counts as translated. But presence in the catalog does not mean it is the one that draws the text (the same `Clipboard`: it is in `ui-ru.json`, yet the screen shows English because the core draws it). So the percentage from coverage is an upper bound, not a fact; only the render pass (Stage 3) gives the fact. Required step: take a sample of strings that coverage counts as translated and check them against the real screen — this shows how far the catalog has drifted from the render.
 
-Hand the agent the instruction below; do not soften it.
+Command to the agent:
 
 ```text
 You are a static localization analyzer. Change nothing.
@@ -384,15 +394,15 @@ Completeness control:
 
 Control not based on trusting the agent:
 
-- The main artifact is not Markdown, but `occurrences.json` or `occurrences.csv`. Markdown may be a brief report, but does not replace the full table. Prose is where things go to be hidden in plain sight.
+- The main artifact is not Markdown, but `occurrences.json` or `occurrences.csv`. Markdown may be a brief report, but does not replace the full table.
 - Each occurrence row must have a stable id, e.g. `occ_000123`. Later the patch, collision map, and verification must reference these ids. Without ids, nothing can be held to account.
-- For each `msgid` there must be an `occurrence_count` field. If the agent says a string is safe but does not show all occurrences, the conclusion cannot be accepted. "Safe" without the count is a guess in a confident voice.
+- For each `msgid` there must be an `occurrence_count` field. If the agent says a string is safe but does not show all occurrences, the conclusion cannot be accepted.
 - The extractor must save raw counts: how many `_()`, how many `_UNO(...)`, how many frontend i18n keys, how many catalog keys were found.
 - For each source class there must be a separate count. The sum per source class must explain the total or explicitly show overlap.
 - For each `msgid` save not only the file, but enough context: neighboring lines, command id, tab/group/control, if extractable.
-- For `unresolved` you cannot just write "unknown". "Unknown" is where the dangerous ones hide. You need a `why_unresolved` field: command map not found, minified dynamic call, generated text, runtime-only, source outside bundle.
+- For `unresolved` you cannot just write "unknown". You need a `why_unresolved` field: command map not found, minified dynamic call, generated text, runtime-only, source outside bundle.
 
-Independent checks. Do the arithmetic yourself; do not let it do the arithmetic and grade itself:
+Independent checks:
 
 - Recompute unique `_()` strings with another command and compare with `direct_key_count`.
 - Recompute `_UNO(...)` command ids with another command and compare with `uno_command_count`.
@@ -427,9 +437,9 @@ Done criterion: every msgid from the summary can be found in occurrences.json, a
 
 ### Stage 3. Rendered inventory via the browser
 
-Statics shows what *can* be used. But it does not prove that it is actually visible to the user, and the difference between can and is, is the whole difference between what you were told is there and what is actually there, watching from the screen. Now you go and look.
+Statics shows what *can* be used. But it does not prove that it is actually visible to the user. Between can and is lies the whole render path — and that is where what you missed turns out to be.
 
-The rendered inventory must go through all target languages and UI states. All of them. The one you skip is the one that is wrong.
+The rendered inventory must go through all target languages and UI states. All of them. The language you did not open is not "probably fine" — it is simply unchecked.
 
 What to check:
 
@@ -448,24 +458,26 @@ What to check:
 - Impress presentation modes;
 - in-Collabora system menus, if they are part of the web UI.
 
-Important: browser or OS-native menus that the app does not control must be marked out of scope, not translated through Collabora. Know what is yours and what is not. Reaching for what is not yours is how you get nothing back.
+Important: browser or OS-native menus that the app does not control must be marked out of scope, not translated through Collabora.
 
-Pulling text off the page is harder than reading `textContent`, and the reasons are the kind that ambush you:
+Pulling text off the page is harder than reading `textContent`; some text cannot be reached by ordinary reading:
 
-- tooltips are visible only on hover — they are caught by a separate hover pass; they are not in the static DOM, they only appear when something approaches them;
+- tooltips are visible only on hover — they are caught by a separate hover pass; they are not in the static DOM;
 - dialogs are drawn not as normal HTML but as a widget tree (JSDialog) — the text is taken from there;
-- some dialogs live in nested same-origin iframes — you have to go inside; you have to go in;
-- the table grid and the slide are a `<canvas>`, there is no text there at all; such text is outside the DOM and out of scope — it is painted, not written, and you cannot read a painting.
+- some dialogs live in nested same-origin iframes — you have to go inside;
+- the table grid and the slide are a `<canvas>`, there is no text there at all; such text is outside the DOM and out of scope — it is painted, not marked up, and cannot be read.
 
-To actually open a surface, clicking programmatically is not enough, and this is where many runs quietly fail while reporting success. The editor's menus and dialogs are drawn by the server and react only to real input events (real Playwright mouse and keyboard), not to events dispatched from JavaScript — a synthetic right-click or hover will not open them; it knocks and nothing answers. On top of that, many dialogs open only from a prepared state: an inserted image, chart, or table, a text cursor placed in the body, a selected cell. If you do not prepare the state, the button opens nothing, and "nothing" photographs exactly like "fine."
+To actually open a surface, clicking programmatically is not enough, and this is where many runs quietly fail while reporting success. The editor's menus and dialogs are drawn by the server and react only to real input events (real Playwright mouse and keyboard), not to events dispatched from JavaScript — a synthetic right-click or hover will not open them. On top of that, many dialogs open only from a prepared state: an inserted image, chart, or table, a text cursor placed in the body, a selected cell. If you do not prepare the state, the button opens nothing, and an empty result is easily mistaken for "fine."
 
-The easiest things to miss (check them with a separate list, because memory will tell you that you checked them):
+The easiest things to miss (check them with a separate list, because these are the ones most often forgotten):
 
 - context menus on the canvas: column header, row header, sheet tab, a shape;
 - submenus that have to be expanded as a separate step;
 - dialogs available only when there is an active selection.
 
-Two more things — the cache trap and honest accounting of misses. The cache is a thing that remembers. Editor assets are cached for a long time under a name that does not change with our edits, so "old on screen" may be not a missing translation but just the cache, faithfully showing you yesterday and calling it today. And an ordinary cache bust does not fully save you: some files are injected by the server bypassing our cache-bust query (for example the branding script), and `ui-<loc>.json` catalogs are loaded at runtime and also bypass HTML-level busting — they remember too, on their own terms. So the most reliable way to verify the render is a clean browser profile (no old cache) per run, and additionally cross-check the served file with a request that bypasses the cache (`curl` or `fetch(url, {cache: 'reload'})`) — two independent signals, because one signal can be a memory. And separately, honestly record what you could not open (`notReached`): if you did not reach some menu or dialog, write it down explicitly with a reason for each item, and treat the measured coverage percentage as an upper bound, not a fact. The unreached room is still a room.
+Two more things. The editor cache is a trap: assets are cached for a long time under a name that does not change with our edits, so "old on screen" may be not a missing translation but just the cache. And an ordinary cache bust does not fully save you: some files are injected by the server bypassing our cache-bust query (for example the branding script), and `ui-<loc>.json` catalogs are loaded at runtime and also bypass HTML-level busting. So the most reliable way to verify the render is a clean browser profile (no old cache) per run, and additionally cross-check the served file with a request that bypasses the cache (`curl` or `fetch(url, {cache: 'reload'})`) — two independent signals. And separately, honestly record what you could not open (`notReached`): if you did not reach some menu or dialog, write it down explicitly with a reason for each item, and treat the measured coverage percentage as an upper bound, not a fact.
+
+Command to the agent:
 
 ```text
 You are a localization QA auditor. Work through the browser/Playwright.
@@ -494,22 +506,22 @@ Completeness control:
 
 Control not based on trusting the agent:
 
-- Before the run there must be a `scenario_manifest.json`: the list of all `locale x app x state x action` pairs. Write down where you intend to go before you go, so that afterward the list can testify against you.
+- Before the run there must be a `scenario_manifest.json`: the list of all `locale x app x state x action` pairs. The list is made before the run, otherwise the agent will fit it after the fact to whatever it managed to do.
 - After the run there must be a `run_manifest.json`: for each scenario id a status `passed`, `failed`, `skipped`, time, screenshot path, DOM/text dump path.
-- You cannot accept "skipped" without a reason. The reason must be machine-readable: missing fixture, feature unavailable, selector timeout, known out of scope. A skip without a reason is a hole someone walked around.
-- Each screenshot must have a paired text dump. A screenshot is convenient for a human, but a text dump is needed for automatic diff. The eye tires; the diff does not.
-- Each state must have a stable name. For example `calc.formulas.function-library-open`, not `screen5`. "screen5" forgets which room it was.
-- For a dropdown and a tooltip the start screen is not enough: you need an action log showing the menu was actually opened — proof that something reached in and the thing opened.
-- For RTL languages check separately not only the text, but the direction/layout: `dir`, menu position, overflow. In RTL the whole room is mirrored, and mirrors are where wrongness likes to stand.
+- You cannot accept "skipped" without a reason. The reason must be machine-readable: missing fixture, feature unavailable, selector timeout, known out of scope.
+- Each screenshot must have a paired text dump. A screenshot is convenient for a human, but a text dump is needed for automatic diff.
+- Each state must have a stable name. For example `calc.formulas.function-library-open`, not `screen5`. "screen5" means nothing.
+- For a dropdown and a tooltip the start screen is not enough: you need an action log showing the menu was actually opened.
+- For RTL languages check separately not only the text, but the direction/layout: `dir`, menu position, overflow.
 
 Independent checks:
 
 - The number of rows in `run_manifest.json` must equal the number of rows in `scenario_manifest.json`.
 - For each row with status `passed` a screenshot and a text dump must exist.
 - For each locale there must be the same number of `passed + failed + skipped`.
-- If a language did not pass a scenario, it does not disappear from the report: it stays failed/skipped. Nothing is allowed to simply vanish; vanishing is what we are guarding against.
+- If a language did not pass a scenario, it does not disappear from the report: it stays failed/skipped. Nothing is allowed to simply vanish from the list.
 - From the text dumps you can automatically build a list of English leftovers and compare it with the manual report.
-- Randomly open several screenshots and confirm they correspond to the right language, not a reused image. A reused image is a lie that holds perfectly still.
+- Randomly open several screenshots and confirm they correspond to the right language, not a reused image — the same picture passed off as several different ones is a common substitution.
 
 Signs of partial completion:
 
@@ -537,9 +549,9 @@ Done criterion: run_manifest covers 100% of scenario_manifest, and every English
 
 ### Stage 4. Collision map
 
-After the static and rendered inventory you need to understand which strings are safe. Few of them are. "Safe" is a status you earn for a string, not one it is born with.
+After the static and rendered inventory you need to understand which strings are safe. A string's safety has to be proven, not assigned.
 
-Risk classes. Read these as a taxonomy of the ways one name can betray you:
+Risk classes:
 
 | Class | What it means | Can it be translated automatically |
 | --- | --- | --- |
@@ -553,6 +565,8 @@ Risk classes. Read these as a taxonomy of the ways one name can betray you:
 | `layout-risk` | The translation may not fit or may break RTL/bidi | Only with a visual check |
 | `render-path-mismatch` | The string is in the expected catalog but is drawn by another layer (like `Clipboard`) | No, editing the catalog does not help; fix the layer that actually renders |
 | `plural-form` | Number-dependent forms (1/2/5 in ru, 6 forms in ar) | Via gettext plural in the core; flat client JSON cannot really express them |
+
+Command to the agent:
 
 ```text
 You are a localization collision analyst.
@@ -579,19 +593,19 @@ Completeness control:
 
 Control not based on trusting the agent:
 
-- The collision map must cover all `msgid` from the occurrence map. Not only the problematic ones. The ones it calls harmless are the ones it did not look at twice.
-- Each collision-map row must reference a list of `occurrence_id`. If there are no ids, the risk class is not proven — it is an opinion in a table.
-- For `single-use` there must be exactly one occurrence id. Exactly one. If there are two, "single" was a wish.
+- The collision map must cover all `msgid` from the occurrence map. Not only the problematic ones. An unclassified string is more dangerous than a problematic one — because it was not looked at.
+- Each collision-map row must reference a list of `occurrence_id`. If there are no ids, the risk class is not proven.
+- For `single-use` there must be exactly one occurrence id.
 - For `same-context multi-use` there must be several occurrence ids and an explanation of why the context is the same.
 - For `mixed-context` the different context groups must be listed.
-- For `composed-fragment` the fragment pattern must be given: which pieces are joined and where it is visible. Show the seams.
+- For `composed-fragment` the fragment pattern must be given: which pieces are joined and where it is visible.
 - For `technical-name` state why English may be acceptable: file format, API name, function, brand, common term.
 
 Independent checks:
 
-- Compare set(`msgid`) from `occurrences.json` and set(`msgid`) from `collisions.csv`. The difference must be empty. Whatever lives in that difference, lives there unclassified, in the dark.
+- Compare set(`msgid`) from `occurrences.json` and set(`msgid`) from `collisions.csv`. The difference must be empty. Anything in that difference is an unclassified string.
 - Compare the sum of `occurrence_id` across the collision map with the occurrence map. Every occurrence must be classified.
-- Pick all rows with `occurrence_count > 1` and check they did not automatically fall into `single-use`. The automatic answer is the lazy answer, and the lazy answer is where the collisions breed.
+- Pick all rows with `occurrence_count > 1` and check they did not automatically fall into `single-use`.
 - Pick all rows where `neighbor_text` differs and check the agent explained why it is same-context or mixed-context.
 - Check that rendered leftovers also got a risk class, not just stayed in the QA report.
 
@@ -620,7 +634,7 @@ Done criterion: set(msgid) in occurrences.json is fully equal to set(msgid) in c
 
 ### Stage 5. Preparing translations
 
-Translations must be prepared not as free text, but as a controlled table. Free text is how the wrong word slips in wearing the right one's clothes.
+Translations must be prepared not as free text, but as a controlled table. In free text, mistakes pass unnoticed.
 
 For each candidate:
 
@@ -633,7 +647,9 @@ For each candidate:
 - status: safe, needs human, rejected, accepted;
 - notes on grammar, length, RTL.
 
-You cannot ask the agent to "translate everything". "Translate everything" is the door you do not open. You must ask it to "propose candidates, but do not apply them" — keep the proposing and the applying in separate rooms, with the door watched.
+You cannot ask the agent to "translate everything". You must ask it to "propose candidates, but do not apply them".
+
+Command to the agent:
 
 ```text
 You are a translation assistant for UI localization.
@@ -661,10 +677,10 @@ Completeness control:
 Control not based on trusting the agent:
 
 - `translation_candidates.csv` must reference `msgid`, `risk_class`, `occurrence_id`, `source_class` and `locale`.
-- Each row must have a status. An empty status means the work is not finished. An empty cell is not blank; it is a thing not yet decided, waiting.
-- A translation without `reason` and `source` is not accepted. Source can be `existing-locore`, `existing-uno`, `LibreOffice-po`, `glossary`, `human`, `ai-proposed`. A translation with no provenance came from nowhere, and nowhere is not a place you should ship from.
-- For `ai-proposed` a lower trust level is needed until a human approves. It is a stranger's suggestion; treat it like one.
-- You cannot mix "proposed" and "applied". The candidate table must not change files itself. The list must never be allowed to reach through and act on its own.
+- Each row must have a status. An empty status means the work is not finished.
+- A translation without `reason` and `source` is not accepted. Source can be `existing-locore`, `existing-uno`, `LibreOffice-po`, `glossary`, `human`, `ai-proposed`.
+- For `ai-proposed` a lower trust level is needed until a human approves.
+- You cannot mix "proposed" and "applied". The candidate table must not change files itself.
 - If a translation is long, a layout note is needed: possible overflow, screenshot needed, shortened variant needed.
 - For RTL a note is needed: placeholder order, punctuation, directionality.
 
@@ -674,14 +690,14 @@ Independent checks:
 - Check that there are no rows with source class `lo-core-mo` in a batch for `ui-json`. A core string in a client batch is a thing that wandered in from the wrong layer.
 - Check that each target locale has a status for each candidate.
 - Check that glossary terms are used consistently.
-- Pick 20 random translations and check, against the occurrence context, that the translation fits exactly there. Not nearby. There.
+- Pick 20 random translations and check, against the occurrence context, that the translation fits exactly there.
 
 Signs of partial completion:
 
 - The agent translated only Russian, although the task is about all target languages.
 - The agent filled only missing, but did not mark existing/keep English.
 - There is no translation provenance.
-- There is no `needs human` status; the agent pretended to be sure of everything. Certainty without doubt is not knowledge; it is the absence of looking.
+- There is no `needs human` status; the agent pretended to be sure of everything.
 - mixed-context or unresolved strings got into the safe table.
 
 How to push to completion:
@@ -701,7 +717,7 @@ Done criterion: there are no empty cells in the matrix, and no hard-case row got
 
 ### Stage 6. Handling hard cases
 
-For hard cases the agent must prepare a decision package for a human. The hard cases are the ones that were waiting for you. Do not let them be decided by anything that cannot be held responsible.
+For hard cases the agent must prepare a decision package for a human. Here the agent does not decide; it prepares the decision for a human.
 
 The package must contain:
 
@@ -714,7 +730,9 @@ The package must contain:
 - what has to change in code or catalogs;
 - how to verify.
 
-There can be many options, but it is better to limit them. If there is no simple solution, you can ask for up to 20 options, but with ranking. Twenty doors, and you must know which to open first.
+There can be many options, but it is better to limit them. If there is no simple solution, you can ask for up to 20 options, but with ranking.
+
+Command to the agent:
 
 ```text
 You are a localization architect. Change nothing.
@@ -749,15 +767,15 @@ Control not based on trusting the agent:
 - If an option proposes a split key, it must show the new map: old occurrence ids -> new key ids. Show what becomes of every old thing; nothing is allowed to fall through the gap between old and new.
 - If an option proposes a PO/MO/UNO edit, it must show why the browser `ui-json` is not the correct source.
 - If an option keeps English, it must explain why this is acceptable: term, brand, technical name, no safe context.
-- Each option must have a list of new risks: new collisions, fallback, layout, RTL, migration, rollback. Every fix breeds its own small dangers; name them before they name themselves.
+- Each option must have a list of new risks: new collisions, fallback, layout, RTL, migration, rollback. Every fix creates new risks; the ones not written down surface later.
 
 Independent checks:
 
 - Check that all occurrences of the hard case are covered by at least one option.
-- Check that the recommended option does not cover only the "easy" part of the occurrences. The easy part is bait.
+- Check that the recommended option does not cover only the "easy" part of the occurrences.
 - Check that split keys do not create technical fallback strings in the English UI.
 - Check that each option has a verification plan.
-- Check that the human explicitly chose an option before any edits. Before. Always before.
+- Check that the human explicitly chose an option before any edits.
 
 Signs of partial completion:
 
@@ -765,7 +783,7 @@ Signs of partial completion:
 - The agent does not show affected occurrence ids.
 - The agent says "better to split the key" but does not show which keys and which places.
 - The agent proposes editing `ui-json` for a core/UNO string.
-- The agent does not describe rollback. A plan with no way back is not a plan; it is a one-way door.
+- The agent does not describe rollback.
 
 How to push to completion:
 
@@ -784,9 +802,11 @@ Done criterion: a human can choose an option without asking clarifying questions
 
 ## How to make targeted edits
 
+This is where edits to files begin. Up to this point everything was read-only; from here every change is recorded in git and affects the build.
+
 ### Safe direct `ui-json`
 
-You can edit if — and only if every one of these is true, the way a door is only safe if every lock is thrown:
+You can edit if — and only if every one of these is true:
 
 - the string belongs to `ui-json`;
 - it is `single-use` or `same-context multi-use`;
@@ -795,7 +815,9 @@ You can edit if — and only if every one of these is true, the way a door is on
 - the translation does not break width/RTL;
 - there is a render-check plan.
 
-In this project such edits are best done via the existing patch in `editor/Dockerfile`, rather than manually changing an already-built file in the container. A change made by hand inside a running container is written on water — it dies the moment the container is recreated, and takes your evidence with it. Then the edit is reproducible on rebuild.
+In this project such edits go as data in `editor/l10n/overrides/client/<lang>.json`, merged at build by the deployed image `editor/Dockerfile.online` (`editor/Dockerfile` is only a stopgap/fallback), rather than manually changing an already-built file in the container. A change made by hand inside a running container lasts only until the next recreation. Through the build it is reproducible on rebuild.
+
+Command to the agent:
 
 ```text
 You are an executor of a targeted localization edit.
@@ -805,7 +827,7 @@ Task: apply only safe direct ui-json translations.
 Context:
 - Only msgid from the approved safe-candidates list are allowed.
 - Do not touch mixed-context, composed-fragment, uno-json, lo-core-mo.
-- Follow the existing patch style in editor/Dockerfile.
+- Put translations as data in editor/l10n/overrides/client/<lang>.json (merged by the deployed editor/Dockerfile.online; editor/Dockerfile is the stopgap).
 
 Result:
 1. A minimal edit.
@@ -822,9 +844,9 @@ Completeness control:
 Control not based on trusting the agent:
 
 - Before the edit there must be an approved list: `approved_ui_json_candidates.csv`.
-- The diff must change only allowed files and only allowed keys. Watch the diff the way you would watch hands near your wallet.
-- After the build, extract the active `ui-<locale>.json` from the container and check that the key is actually there, not only in the source patch. The patch saying it did the thing and the container actually holding the thing are, once again, two different claims.
-- Check that the value did not overwrite an existing newer translation. The thing you write over does not come back.
+- The diff must change only allowed files and only allowed keys.
+- After the build, extract the active `ui-<locale>.json` from the container and check that the key is actually there, not only in the source patch.
+- Check that the value did not overwrite an existing newer translation. What you write over does not come back.
 - Check that the key was not added to a language where it was already translated differently.
 - For each added key there must be a rendered scenario or a reason why render is impossible in this batch.
 
@@ -833,9 +855,9 @@ Independent checks:
 - Compare set(keys changed in diff) with set(approved candidates). The difference must be empty.
 - Compare the active container catalog before/after.
 - Check that `same-as-English` did not get wrongly counted as translated, if the translation matches English on purpose.
-- Check that the UI does not show technical keys. A technical key bleeding through to the screen is the mask slipping; the user sees the machinery.
+- Check that the UI does not show technical keys.
 
-If the agent made too wide a patch — and a patch that grows past its scope has a will of its own — pull it back hard:
+If the agent made too wide a patch:
 
 ```text
 The patch is wider than the approved scope. Revert only your changes of this batch and rebuild the patch from scratch.
@@ -853,22 +875,22 @@ Done criterion: the git diff contains only allowed keys and the update-log descr
 
 ### Context splitting in code
 
-If one `msgid` conflicts in different places, you cannot just add one translation. One name, two meanings — feed it a single translation and you starve one of the meanings.
+If one `msgid` conflicts in different places, you cannot just add one translation. One `msgid` with two meanings cannot be covered by a single translation: one of the meanings will be wrong.
 
 Possible solutions:
 
 1. Programmatic context (`msgctxt`/`pgettext`) exists only in the core (`.po`/`.mo`). In client catalogs (`ui/uno/locore-*.json`) there is none — they are flat dictionaries "English string -> translation", one value per string, and a flat dictionary cannot tell twins apart. The semantic (de-facto) context of the string exists, but there is no technical context separator on the client. So you can split a homonym on the client only with different keys (editing the call in code), while real `msgctxt` is available only at the core level.
 2. If context is not supported, add a context helper that looks up a hidden context key but, for the English fallback, shows a normal English string.
 3. If the string is composed, replace the pieces with a whole phrase with placeholders.
-4. If the string comes from UNO/core, do not split it in the browser JSON, but fix the UNO/LibreOffice source. Cut at the root, not the leaf.
+4. If the string comes from UNO/core, do not split it in the browser JSON, but fix the UNO/LibreOffice source.
 
-A bad option — and it is bad because of what the user sees when no translation exists:
+A bad option:
 
 ```text
 _("Line|shape-tool")
 ```
 
-if, when there is no translation, the user sees `Line|shape-tool`. That is the wiring showing through the wall; the context separator was never meant to be read by a human, and here it is, being read.
+if, when there is no translation, the user sees `Line|shape-tool`. That is an internal context separator leaking into the interface.
 
 Better to have a fallback:
 
@@ -876,7 +898,9 @@ Better to have a fallback:
 translateContext("shape-tool", "Line")
 ```
 
-where the English fallback stays `Line`, and the translation can use a context key. The seam stays hidden; the wall stays a wall.
+where the English fallback stays `Line`, and the translation can use a context key.
+
+Command to the agent:
 
 ```text
 You are a context-localization developer.
@@ -905,16 +929,16 @@ Completeness control:
 Control not based on trusting the agent:
 
 - Before the code edit there must be a `split_plan.csv` table: old msgid, old occurrence ids, new key, new context, fallback.
-- After the edit, rebuild the occurrence map and prove the old occurrences disappeared or were distributed over the new keys. Account for every one of the old places; a split that leaves an old place behind has not split anything, it has only made a copy.
-- Check the English UI: if there is no translation, the user must see normal English text, not `Line.shapeTool` or `shape-tool|Line`. The user must never meet the machinery.
-- Check that the new keys did not collide with existing keys of a different meaning. New collisions are the children of careless splits.
+- After the edit, rebuild the occurrence map and prove the old occurrences disappeared or were distributed over the new keys.
+- Check the English UI: if there is no translation, the user must see normal English text, not `Line.shapeTool` or `shape-tool|Line`.
+- Check that the new keys did not collide with existing keys of a different meaning.
 - Check that placeholder order works for languages with a different word order.
 
 Independent checks:
 
 - Compare old occurrence ids from the decision package with new occurrence ids after the edit.
 - Check that each new key has exactly the context it was created for.
-- Check that the old msgid is no longer used in the conflicting place. If it lingers, it lingers for a reason, and the reason is a bug.
+- Check that the old msgid is no longer used in the conflicting place.
 - Run the rendered scenarios for all old places, not just one.
 
 If the agent did an incomplete split:
@@ -933,7 +957,7 @@ Done criterion: all old occurrence ids from split_plan have a new key or an expl
 
 ### UNO and LibreOffice-core
 
-If a string belongs to `_UNO(...)` or LibreOffice-core, you have to be especially careful. This is the deep water. The strings down here are shared among more things than you can see from the surface, and changing one can move others you never meant to touch.
+If a string belongs to `_UNO(...)` or LibreOffice-core, you have to be especially careful. These strings are shared across many places, and changing one can affect others you did not see.
 
 The correct path:
 
@@ -943,9 +967,11 @@ The correct path:
 - build the `.mo` via the gettext toolchain;
 - rebuild the image or carefully replace the resource in the image build;
 - check that Collabora actually uses the new resource;
-- check all commands that could have used the same English text. All of them. The shared string has more siblings than it admits.
+- check all commands that could have used the same English text.
 
-Note: `gettext` (`msgfmt`/`msgunfmt`) is usually not in the image — it has to be installed. Do it in the build Dockerfile, not manually in a running container: in a running container everything is lost on recreate, and what is lost here is lost the way footprints are lost at high tide.
+Note: `gettext` (`msgfmt`/`msgunfmt`) is usually not in the image — it has to be installed. Do it in the build Dockerfile, not manually in a running container: in a running container everything is lost on recreate.
+
+Command to the agent:
 
 ```text
 You are a LibreOffice/UNO localization specialist.
@@ -974,21 +1000,21 @@ Completeness control:
 
 Control not based on trusting the agent:
 
-- The plan must show the source chain: visible text -> UNO command/dialog -> source catalog -> built artifact -> active container file. Follow it link by link, all the way down and all the way back up. A chain with a missing link is not a chain; it is two pieces of a chain and a guess in between.
-- If the agent cannot show the source chain, the edit must not be made. No chain, no cut.
-- For `.po`/`.mo` check msgctxt or an equivalent context. If one `msgid` appears in several contexts, you cannot change all of them in one place without analysis. One edit, many silent consequences.
-- After the build, check not only the `.mo` file, but the visible UI, because Collabora may take the string from a generated UNO JSON or another cache. The `.mo` can be perfect and the screen can still be wrong, because the screen was reading from somewhere else the whole time.
+- The plan must show the source chain: visible text -> UNO command/dialog -> source catalog -> built artifact -> active container file.
+- If the agent cannot show the source chain, the edit must not be made.
+- For `.po`/`.mo` check msgctxt or an equivalent context. If one `msgid` appears in several contexts, you cannot change all of them in one place without analysis.
+- After the build, check not only the `.mo` file, but the visible UI, because Collabora may take the string from a generated UNO JSON or another cache.
 - Check all commands where the same English text appears in UNO/core, not just one screen.
 
 Independent checks:
 
 - `msgunfmt` or another gettext tool must show the expected `msgid`/`msgstr` in the resulting `.mo`.
-- The hash of the resulting `.mo` must differ from the baseline only where expected. If the hash moved where you did not push it, something moved on its own.
+- The hash of the resulting `.mo` must differ from the baseline only where expected. Any extra difference is a change you did not plan.
 - The active container must contain the new `.mo` or the regenerated `uno/*.json`.
 - The rendered inventory must confirm the change in the right place.
 - The collision map must be updated if the PO context splits the meaning.
 
-If the agent proposed a dubious core patch — and in the deep water, dubious is the default:
+If the agent proposed a dubious core patch:
 
 ```text
 The UNO/core plan is incomplete. Do not change files.
@@ -1007,7 +1033,7 @@ Done criterion: you can explain why the edit will not affect another meaning of 
 
 ## How to control the agent
 
-The agent is useful, but it has to be constrained, the way anything stronger than you and not quite on your side has to be constrained. It does not mean you harm. It just does not know what harm is.
+The agent is useful, but it has to be constrained. Without constraints it is not malicious — it simply goes confidently in the wrong direction and brings you a tidy report on how well it got there.
 
 Good rules:
 
@@ -1020,15 +1046,15 @@ Good rules:
 - Require rendered proof for every changed UI scenario.
 - Require a separate list of false positives.
 - Require an explanation of why a particular source class is fixed in this particular way.
-- Keep edits in small batches. Small batches fail small.
+- Keep edits in small batches. A small edit is easy to roll back, a large one is not.
 
-A bad command to the agent — this is the open door, the unguarded yes:
+A bad command to the agent:
 
 ```text
 Translate all English strings into Russian.
 ```
 
-A good command to the agent — this is the door with the chain still on it:
+A good command to the agent:
 
 ```text
 Take only the approved safe candidates from translation_candidates.md.
@@ -1040,7 +1066,7 @@ If any step fails, stop and give a report, do not guess.
 
 ### Strict protocol for working with the agent
 
-So that the agent does not do 30% of the task and present it as a full result — and it will, smoothly, with a straight face — the task must be given as a contract. A contract is a thing you can hold up afterward and say: this is what we agreed.
+So that the agent does not do 30% of the task and present it as a full result, the task must be given as a contract.
 
 1. Scope is fixed before the work.
 2. The agent must create a manifest.
@@ -1078,7 +1104,7 @@ If you cannot finish or cannot cover everything, stop and output missing_work.cs
 
 ### How to catch partial completion
 
-The most common signs that the agent did not do a full pass. Learn them like the sounds a house makes when someone else is in it:
+The most common signs that the agent did not do a full pass:
 
 - "The main languages" instead of the full language list.
 - "Key screens" instead of a manifest of all screens.
@@ -1092,7 +1118,7 @@ The most common signs that the agent did not do a full pass. Learn them like the
 - No links from the patch to an approved decision/candidate.
 - No before/after evidence.
 
-If you find this, do not ask "check more carefully". That almost always gives another nice summary — another smooth lie in a fresh coat. Give a delta task, narrow and unescapable:
+If you find this, do not ask "check more carefully". That almost always gives another summary over the same incompleteness. Give a delta task:
 
 ```text
 You produced an incomplete result. Do not repeat the summary.
@@ -1108,7 +1134,7 @@ No new conclusions until the artifact is built.
 
 ### How to force completion to a full result
 
-A working strategy — and it works because it never asks the agent to judge its own thoroughness; it makes the gap visible and then makes it small:
+A working strategy — do not ask the agent to judge its own thoroughness; make the gap visible and then close it:
 
 1. First ask the agent to build the expected set.
    For example: all languages, all apps, all scenarios, all `msgid`.
@@ -1117,10 +1143,10 @@ A working strategy — and it works because it never asks the agent to judge its
    For example: what was actually checked, what is actually in the table, which screenshots were saved.
 
 3. Then ask it to build the gap set.
-   For example: `expected - actual`. This is the thing it would rather you not see.
+   For example: `expected - actual`.
 
 4. Then run only the gap set.
-   This stops the agent from doing another selective full pass — another lap around the same lit rooms.
+   This stops the agent from doing another selective full pass.
 
 5. After completion, recompute the invariant again.
 
@@ -1141,7 +1167,7 @@ Done criterion: missing_after = 0 or each remaining row has status blocked with 
 
 ### When you can trust the agent's output
 
-You can trust not "the agent", but the artifacts. The agent is a voice; the artifacts are evidence. Trust the evidence.
+You can trust not "the agent", but the artifacts. An artifact is either present and verifiable, or it is missing.
 
 The output can be accepted if:
 
@@ -1156,13 +1182,13 @@ The output can be accepted if:
 - the patch references approved ids;
 - the rendered proof covers the changed states.
 
-If even one of these is missing, the result must be considered preliminary. One missing lock is an unlocked door.
+If even one of these is missing, the result must be considered preliminary. Not "almost done" — preliminary.
 
 ## How to verify completeness
 
-One screenshot is not enough. One of anything is not enough.
+One screenshot is not enough. One screenshot shows one state out of many.
 
-You need several independent cross-checks, because a single check can be fooled, and the thing you are checking against has every reason to fool it:
+You need several independent cross-checks, because a single check can be fooled:
 
 1. Static extraction: how many strings are found in the code.
 2. Catalog coverage: how many strings exist in the catalogs per language.
@@ -1174,7 +1200,7 @@ You need several independent cross-checks, because a single check can be fooled,
 8. Visual proof: before/after screenshots.
 9. False positives: English strings that should stay.
 
-Control questions. Ask them out loud:
+Control questions:
 
 - Did all 22 languages go through the same set of scenarios?
 - Are there strings visible in the browser but absent from statics?
@@ -1185,9 +1211,9 @@ Control questions. Ask them out loud:
 - Did RTL languages break?
 - Did labels overflow buttons?
 - Did technical keys appear instead of the English fallback?
-- Did icons/tooltips/menus disappear after the edit? Things that disappear after an edit did not go nowhere; they went somewhere, and you have to find where.
+- Did icons/tooltips/menus disappear after the edit?
 
-Completeness and quality are different things, and confusing them is its own quiet disaster. All checks above answer "is there a translation and is it visible", but not "is it correct". The numbers adding up (invariants) prove nothing was missed and the result is reproducible, but do not prove the translation is correct — a thing can be present, visible, accounted for, and still wrong, and that wrongness will sit there in front of a native speaker, perfectly counted. Quality is checked by a separate pass of a strong model that knows the target language well, directly over the interface (over the render/screenshots, with context in mind). And the final polish is better done by a native speaker — more precisely, a native subject-matter expert who knows the domain terminology. Someone who would feel the wrongness the way you feel a draft from a door you thought was shut.
+Completeness and quality are different things, and it is easy to confuse them. All checks above answer "is there a translation and is it visible", but not "is it correct". The numbers adding up (invariants) prove nothing was missed and the result is reproducible, but do not prove the translation is correct. You can assemble a perfectly complete set of wrong translations. Quality is checked by a separate pass of a strong model that knows the target language well, directly over the interface (over the render/screenshots, with context in mind). And the final polish is better done by a native speaker — more precisely, a native subject-matter expert who knows the domain terminology.
 
 ### Checks by type of work
 
@@ -1207,7 +1233,7 @@ Completeness and quality are different things, and confusing them is its own qui
 
 ### Example of independent invariants
 
-Suppose the static report claims — and claims are all they are until you make them prove it:
+Suppose the static report claims:
 
 ```text
 locales = 22
@@ -1216,7 +1242,7 @@ referenced_uno_labels = 300
 global_uno_labels = 813
 ```
 
-Then independent checks must exist, and you must run them with your own hands:
+Then independent checks must exist, and you must run them yourself:
 
 ```text
 count(locales_from_project) == 22
@@ -1225,13 +1251,13 @@ count(unique resolved UNO labels from referenced commands) == 300
 count(unique labels in global UNO map) == 813
 ```
 
-If the agent cannot show how these numbers were recomputed, it is not an audit, it is a retelling. And a retelling is just a story, and a story is the thing you must not believe.
+If the agent cannot show how these numbers were recomputed, it is not an audit, it is a retelling.
 
 ### How to accept partially blocked work
 
-Sometimes a full pass is genuinely impossible: Playwright is busy, a fixture won't open, the source is minified, a `.po` is missing, the command is created dynamically. The wall is real, sometimes. The point is not to pretend it is not there.
+Sometimes a full pass is genuinely impossible: Playwright is busy, a fixture won't open, the source is minified, a `.po` is missing, the command is created dynamically. This happens. The point is not to pretend the block is not there.
 
-This is normal, but the blocked state must be explicit. An unspoken block is just a hole with a rug over it.
+This is normal, but the blocked state must be explicit. An unspoken block is not the absence of a problem, it is a hidden problem.
 
 For each blocked item you need fields:
 
@@ -1246,11 +1272,11 @@ For each blocked item you need fields:
 | `owner` | Agent, human, external tool |
 | `next_check` | How to come back to verify |
 
-The phrase "could not verify" without these fields does not count as a report. It counts as a door left open and unmentioned, which is worse than a door left open.
+The phrase "could not verify" without these fields does not count as a report.
 
 ## How to maintain final artifacts
 
-For sustainable maintenance you need not only edits, but documents. The edits fade from memory; the documents are what remembers for you, faithfully, after you have forgotten why.
+For sustainable maintenance you need not only edits, but documents. The edits are forgotten; the documents remain.
 
 Recommended files:
 
@@ -1265,46 +1291,46 @@ Recommended files:
 | `translation_verification.md` | Final checks and screenshots |
 | `translation_glossary.md` | Terms that must be translated consistently |
 
-The project already has a static report, and it is sitting there now:
+The project already has a static report:
 
 ```text
 docs/COLLABORA_LOCALIZATION_STATIC_INVENTORY.md
 ```
 
-It can be considered the first baseline artifact, but not the final proof. A first word, not the last. The next step is an occurrence map with contexts and a rendered inventory.
+It can be considered the first baseline artifact, but not the final proof. The next step is an occurrence map with contexts and a rendered inventory.
 
 After a pass there is a coverage report — for example `.qa/l10n/REPORT.md` (how many visible strings, how many translated per language, and the gaps split into "fixable in client JSON" and "core `.mo` only") and a machine-readable matrix `.qa/l10n/visible-coverage.csv` (one row per UI string, with a status per language). This is the verifiable basis for deciding what to fix and with which layer.
 
 ## Strategy for working with Collabora sources
 
-The project's goal is to **build Collabora Online from source** (the coolwsd server + the browser bundle), not to patch a ready-made image. The **LibreOffice/Collabora Office core is NOT built from source** — we take it as a pinned prebuilt binary (engine-assets) and patch its strings as data (`.po`→`.mo`). The reason, and it is a reason you arrive at the hard way: deep localization keeps surfacing things that can only be fixed in the Online source — string concatenation in JavaScript, a contextual translation API, client catalogs. You think you are done, and another one surfaces. And everything we change in the UI (texts, sizes, design) lives in the Online layer, not in the core. Here reliability and control matter more than "fast to prod." Fast to prod is how you end up not knowing what you shipped.
+The project's goal is to **build Collabora Online from source** (the coolwsd server + the browser bundle), not to patch a ready-made image. The **LibreOffice/Collabora Office core is NOT built from source** — we take it as a pinned prebuilt binary (engine-assets) and patch its strings as data (`.po`→`.mo`). The reason: deep localization keeps surfacing things that can only be fixed in the Online source — string concatenation in JavaScript, a contextual translation API, client catalogs. The deeper you dig, the more surfaces that the built image hid. And everything we change in the UI (texts, sizes, design) lives in the Online layer, not in the core. Here reliability and control matter more than "fast to prod."
 
-The quick path we are moving away from usually looks like this — and it looks so reasonable, that is the trouble with it:
+The quick path we are moving away from usually looks like this:
 
 ```text
 FROM collabora/code:latest
 ```
 
-and then the Dockerfile patches already-built `bundle.js`, `bundle.css`, `cool.html`, `l10n/ui-*.json`, and image resources with `sed`, `cp`. This is acceptable as a **temporary stopgap** (a small branding tweak, an urgent hotfix), but it is not a base for localization. A stopgap that stays becomes a foundation nobody chose.
+and then the Dockerfile patches already-built `bundle.js`, `bundle.css`, `cool.html`, `l10n/ui-*.json`, and image resources with `sed`, `cp`. This is acceptable as a **temporary stopgap** (a small branding tweak, an urgent hotfix), but it is not a base for localization. A temporary stopgap that stays becomes a foundation nobody chose.
 
 Why you cannot live on it long-term:
 
-- `latest` changes without control. Today and tomorrow may be different bytes — the same name pointing at a different thing while you sleep.
+- `latest` changes without control. Today and tomorrow may be different bytes under the same name, and you will not notice.
 - A minified `bundle.js` is a bad place to do contextual string splitting.
-- A `sed` patch against built output can break on any upstream change, silently, the next time someone pulls.
+- A `sed` patch against built output can break on any upstream change.
 - You cannot cleanly add a new contextual localization API.
 - It is hard to know which source file produced a string, or to carry a fix across updates.
-- It is hard to prove that a patch fixes the correct layer instead of masking the problem. And masking is the thing this whole document is trying to keep you from doing.
+- It is hard to prove that a patch fixes the correct layer instead of masking the problem.
 
 So we move in stages, but the endpoint is one — **building Online from pinned source** (the core stays a pinned prebuilt binary).
 
-Pin the version hard. Pin it like a specimen. Translations are made for a **specific** version: the set of strings and their `msgid`/`msgctxt` are version-dependent. Pin **a matching pair**: the Collabora Online commit/tag AND the prebuilt core/engine-assets version (both in `upstream.json`). A version update is a separate, controlled event with acceptance testing of all translations, not a "pull latest." A "pull latest" is how the floor moves under you.
+Pin the version hard. Translations are made for a **specific** version: the set of strings and their `msgid`/`msgctxt` are version-dependent. Let the version drift and the translations start detaching from the strings, one by one. Pin **a matching pair**: the Collabora Online commit/tag AND the prebuilt core/engine-assets version (both in `upstream.json`). A version update is a separate, controlled event with acceptance testing of all translations, not a "pull latest."
 
-The cost should be named honestly, because the unnamed cost is the one that ambushes the schedule: building **Online** from source is manageable — officially it is `./configure && make` on top of prebuilt engine-assets, from minutes to about half an hour, and it runs locally. Building the **core** from source, however, is heavy (tens of gigabytes, hours); we do not do it — see "When you would build the LO core from source" below. There is a door down there you do not want to open unless you must.
+The cost should be named honestly: building **Online** from source is manageable — officially it is `./configure && make` on top of prebuilt engine-assets, from minutes to about half an hour, and it runs locally. Building the **core** from source, however, is heavy (tens of gigabytes, hours); we do not do it — see "When you would build the LO core from source" below.
 
 ### Stage 1 (temporary): remove nondeterminism of the ready-made image
 
-Until the source build is in place, you cannot stay on `latest` — at least remove the nondeterminism of the ready-made image. Nondeterminism is just another word for a thing that changes when you are not looking.
+Until the source build is in place, you cannot stay on `latest`. At least remove the nondeterminism of the ready-made image.
 
 You need to:
 
@@ -1321,6 +1347,8 @@ collabora/code@sha256:<digest>
 ```
 
 or a concrete tag if a digest cannot be used for some reason.
+
+Command to the agent:
 
 ```text
 You are a localization release engineer. Do not change anything.
@@ -1343,7 +1371,7 @@ Completeness control:
 
 ### Stage 2 (interim): patches as units, not long `sed` chains
 
-While the image is still prebuilt, changes must not be kept as long `sed` chains. A long `sed` chain is a row of mousetraps in the dark; you will forget where every one of them is set. This is an interim level on the way to building from source.
+While the image is still prebuilt, changes must not be kept as long `sed` chains. A long `sed` chain is hard to read and easy to break. This is an interim level on the way to building from source.
 
 Prefer a structure like:
 
@@ -1365,7 +1393,7 @@ editor/
     patchset.json
 ```
 
-Even if a patch is still applied to a built image, it should be described as a patch unit — given a name, a reason, a place — so it cannot become an anonymous change nobody remembers making:
+Even if a patch is still applied to a built image, it should be described as a patch unit:
 
 - what it changes;
 - why this is the correct source class;
@@ -1374,11 +1402,11 @@ Even if a patch is still applied to a built image, it should be described as a p
 - which rendered scenarios verify it;
 - how to roll it back.
 
-This keeps the current repo manageable: the application stays here, and all editor-integration patches have explicit boundaries. Boundaries are what keep a thing from spreading.
+This keeps the current repo manageable: the application stays here, and all editor-integration patches have explicit boundaries.
 
 ### Target level: build from pinned source
 
-This is the project's working base, the firm ground you have been walking toward. From source we build **Collabora Online** (the coolwsd server + the browser bundle) — keep a fork or submodule of the pinned commit, not a copy. A copy forgets where it came from; a fork remembers. The **LibreOffice/Collabora Office core is NOT built from source**: we take it as a pinned prebuilt binary (engine-assets) and patch its `.mo` strings as data (our `.po`). This gives full control over the interface cheaply — everything we change in the UI lives in the Online layer.
+This is the project's working base. From source we build **Collabora Online** (the coolwsd server + the browser bundle) — keep a fork or submodule of the pinned commit, not a copy. The **LibreOffice/Collabora Office core is NOT built from source**: we take it as a pinned prebuilt binary (engine-assets) and patch its `.mo` strings as data (our `.po`). This gives full control over the interface cheaply — everything we change in the UI lives in the Online layer.
 
 What each layer lets you change:
 
@@ -1386,7 +1414,7 @@ What each layer lets you change:
 - **Element sizes** — CSS (and some JS). No core build.
 - **Element design** (colors, shapes, spacing, icons) — CSS + SVG icon replacement (deeper changes — JS). No core build; this is how the glass theme is already done.
 
-The only thing that needs building the core is rendering the document itself on the canvas (the Calc grid, the slide, in-cell text). That is document content, not UI elements (see "When you would build the LO core from source"). Stay out of the core unless the document content itself sends you down there.
+The only thing that needs building the core is rendering the document itself on the canvas (the Calc grid, the slide, in-cell text). That is document content, not UI elements (see "When you would build the LO core from source"). Stay out of the core unless the document content itself sends you there.
 
 ```text
 third_party/
@@ -1404,47 +1432,47 @@ editor/
     patchset.json
 ```
 
-The key split — translations separate from code. Keep them in separate rooms; a thing that is both data and code is a thing nobody can fully reason about:
+The key split — translations separate from code. If they are mixed in one change, they cannot be cleanly separated afterward:
 
 - **Translations are DATA.** Our translations live as files: `.po` with `msgctxt` for core strings, and JSON overlays for client strings. During the source build they are deterministically compiled and merged into `.mo` and the catalogs. Such files are easy to review, easy to hand to native speakers, and easy to scale to 30–40 languages.
-- **Patches are CODE only** (a new contextual localization API, rewriting concatenated phrases into whole strings with placeholders). Translation data and code patches are not mixed in one change. Mix them and every review becomes two reviews pretending to be one.
+- **Patches are CODE only** (a new contextual localization API, rewriting concatenated phrases into whole strings with placeholders). Translation data and code patches are not mixed in one change.
 
 Why a fork/submodule is better than a plain copy:
 
 - upstream history is preserved; you can rebase/merge;
 - it is clear which files differ from upstream;
 - it is easier to check that a fix applies to a new version;
-- there is less risk of editing generated output instead of source. Editing generated output is editing the reflection and expecting the face to change.
+- there is less risk of editing generated output instead of source. Editing generated output does not change the source, and it is lost on the next build.
 
-Where to send things upstream — do not confuse the channel, because a fix sent down the wrong channel is a fix that never arrives:
+Where to send things upstream — do not confuse the channel:
 
 - **translations go to Weblate** (the LibreOffice/Collabora translation platform), not via GitHub PR;
 - **code changes** (context API, concatenation fixes) go as a normal PR to Collabora Online or LibreOffice.
 
-Separately: building from source means you **backport upstream security fixes yourself**. That is one more reason a version update is a controlled event with acceptance, not "pull the latest and ship it." When you own the build, you own the watch; nobody else is staying up to patch your holes.
+Separately: building from source means you **backport upstream security fixes yourself**. Nobody does it for you. That is one more reason a version update is a controlled event with acceptance, not "pull the latest and ship it."
 
 ### Which layer to fix (core or client)
 
-Collabora Online does not own every string. This is the recurring truth, the one that keeps coming back. Part of the interface comes from LibreOffice-core: `.ui`, gettext `.po/.mo`, UNO command metadata, dialogs, sidebar. That is why the LO core is pinned as a prebuilt binary (engine-assets), and its strings are patched as data (`.mo` from our `.po`) — without building the core.
+Collabora Online does not own every string. Part of the interface comes from LibreOffice-core: `.ui`, gettext `.po/.mo`, UNO command metadata, dialogs, sidebar. That is why the LO core is pinned as a prebuilt binary (engine-assets), and its strings are patched as data (`.mo` from our `.po`) — without building the core.
 
-But before every fix you still have to prove which layer the string lives in, otherwise the fix lands in the wrong place (this is the same render-path attribution — the same difference between where you were told the string lives and where it actually lives, watching):
+But before every fix you still have to prove which layer the string lives in, otherwise the fix lands in the wrong place (this is the same render-path attribution — where the string *actually* is, not where the catalog says it is):
 
 - the string really comes from LO-core, not from a client `ui-json`/`uno-json`;
 - there is a concrete PO/UI/source file;
 - there is a build path to `.mo` or a generated resource;
 - there is a rendered scenario that proves the result on screen.
 
-For client strings, edit our JSON overlays; for core strings, our `.po` with `msgctxt`. The layer is chosen by proof, not by guesswork. Guesswork here is just superstition with a keyboard.
+For client strings, edit our JSON overlays; for core strings, our `.po` with `msgctxt`. The layer is chosen by proof, not by guesswork.
 
 ### When you would build the LO core from source
 
-Almost never. Say it to yourself: almost never. Building the core from source is needed only to change **how the document itself is rendered** (how the core draws the Calc grid, the slide, in-cell text) or **core C++ behavior**. That is document content, not UI elements — for texts, sizes, and UI design it is not needed.
+Almost never. Building the core from source is needed only to change **how the document itself is rendered** (how the core draws the Calc grid, the slide, in-cell text) or **core C++ behavior**. That is document content, not UI elements — for texts, sizes, and UI design it is not needed.
 
-This is the heaviest path, the one at the bottom of the stairs: "a few hours even on the fastest computer," the image balloons to ~30 GB; normally only Collabora's own CI does it. Tellingly, even the official "build CODE for Web" does NOT rebuild the core — it drops in prebuilt engine-assets. So a full core build is an optional escalation, not our default. If you find yourself reaching for it, stop and ask what dragged you down here.
+This is the heaviest path: "a few hours even on the fastest computer," the image balloons to ~30 GB; normally only Collabora's own CI does it. Tellingly, even the official "build CODE for Web" does NOT rebuild the core — it drops in prebuilt engine-assets. So a full core build is an optional escalation, not our default.
 
 ### What not to do
 
-Do not — and read this as a list of the ways people have already been hurt:
+Do not:
 
 - copy the whole Collabora source into the app repo without an upstream link;
 - keep using `latest`;
@@ -1453,7 +1481,7 @@ Do not — and read this as a list of the ways people have already been hurt:
 - mix app frontend translations, Collabora browser UI, and LibreOffice-core in one patch batch;
 - keep translations as code patches instead of data files (`.po`/JSON overlays);
 - update the editor version in prod without full acceptance of the translations ("quick hack to prod");
-- accept a patch that cannot be tied to a concrete upstream commit or image digest. An untraceable patch is a stranger in the house with no record of how it got in.
+- accept a patch that cannot be tied to a concrete upstream commit or image digest.
 
 ### Completeness control for the source strategy
 
@@ -1478,6 +1506,8 @@ Invariants:
 - every source-level split updates the occurrence map;
 - every version update passes full acceptance before promotion to prod and recomputes the release diff matrix;
 - generated output is not edited when a source-level path is available.
+
+Command to the agent:
 
 ```text
 You are the architect for a source-level Collabora localization strategy.
@@ -1509,23 +1539,25 @@ Completeness control:
 
 ## How to maintain after Collabora updates
 
-On a Collabora update you cannot just carry the old patch over. The old patch was written for a world that no longer exists; the strings have moved while you were away.
+On a Collabora update you cannot just carry the old patch over. The new version is a different set of strings; the old patch was tied to strings that may no longer exist.
 
-The same caution applies to third-party translations: Collabora is not stock LibreOffice. Collabora has its own strings and its own notebookbar, so "take a fresh LibreOffice language pack and drop it in" blindly is dangerous: some strings will not match by id or context, and some will overlay incorrectly — wrong words settling silently into the right-looking slots. Any import of third-party translations is checked against version and contexts.
+The same caution applies to third-party translations: Collabora is not stock LibreOffice. Collabora has its own strings and its own notebookbar, so "take a fresh LibreOffice language pack and drop it in" blindly is dangerous: some strings will not match by id or context, and some will overlay incorrectly, and silently — you will see it only on screen. Any import of third-party translations is checked against version and contexts.
 
-A version update is a controlled event with full acceptance, not carrying over a single patch. Treat it like opening a sealed room: slowly, with the lights on, in the right order:
+A version update is a controlled event with full acceptance, not carrying over a single patch. The order is as follows, and it must not be shortened:
 
-1. Bring up the new pinned version **in a non-prod environment first**, leaving prod untouched: the new Collabora Online commit + a **matching** prebuilt core/engine-assets version. Do not let it near production until you have looked it in the eye.
+1. Bring up the new pinned version **in a non-prod environment first**, leaving prod untouched: the new Collabora Online commit + a **matching** prebuilt core/engine-assets version.
 2. **Rebuild Online from source** of the new version (the core is taken as a prebuilt binary/engine-assets, not rebuilt).
 3. Run **full acceptance, not a smoke test**:
    - rebuild the occurrence map and coverage;
    - run the render ground-truth (a screenshot per object) across **all** target languages;
-   - produce a drift-diff of all UI strings against the previous version. The drift-diff is where you see what moved on its own.
-4. Triage what the update broke: moved or renamed `msgid`, changed `msgctxt`, new English strings, removed strings, re-introduced phrase concatenation. The phrase concatenation comes back; it always comes back.
+   - produce a drift-diff of all UI strings against the previous version.
+4. Triage what the update broke: moved or renamed `msgid`, changed `msgctxt`, new English strings, removed strings, re-introduced phrase concatenation. Concatenation you once split out can return with the new version.
 5. Re-apply (rebase) our translation data and code patches onto the new version and fix the breakage.
-6. **Only after full acceptance passes** — promote to prod. Reliability over speed. The fast promotion is the one you regret.
+6. **Only after full acceptance passes** — promote to prod. Reliability over speed.
 
-This acceptance is the gate, and a gate is only a gate if it is shut: the same coverage invariants and render drift-diff run in CI on every version bump and must pass **before** promotion. A screenshot per object plus a second verification pass (see "The proof principle") is the only basis for treating an update as accepted.
+This acceptance is the gate: the same coverage invariants and render drift-diff run in CI on every version bump and must pass **before** promotion. A screenshot per object plus a second verification pass (see "The proof principle") is the only basis for treating an update as accepted.
+
+Command to the agent:
 
 ```text
 You are a localization release auditor after a Collabora update.
@@ -1555,18 +1587,18 @@ Completeness control:
 
 ## Scaling to many languages
 
-When there are not 4 but 30-40 languages, it is important not to repeat all the work for each one. Done wrong, the work multiplies by forty and buries you.
+When there are not 4 but 30-40 languages, it is important not to repeat all the work for each one. Done wrong, the work multiplies by the number of languages.
 
 The work splits into two levels:
 
-- The surface is captured once. The list of all places where each string appears (the occurrence map) does not depend on the language — it is built once. Map the territory once; it does not change just because you change the language painted over it.
+- The surface is captured once. The list of all places where each string appears (the occurrence map) does not depend on the language — it is built once.
 - Coverage per language is computed from data. For a specific language it is enough to check the strings against its catalogs and `.mo` — this is a pure file computation, without a browser, and it scales to any number of languages.
 
-But there is something that cannot be checked from data, and it is exactly the thing that goes wrong where no file can see it: how the translation actually looks on screen — line wrapping, overflowing a button, RTL layout, context collisions. This is visible only in the render, and it must be checked per language. The browser is usually one per instance, so it is the bottleneck — the single narrow door everything has to pass through. The solution is to parallelize: spin up several virtual machines, one language per machine, each with its own editor and browser instance; then the screenshot passes run in parallel. Many eyes, many rooms, all at once.
+But there is something that cannot be checked from data: how the translation actually looks on screen — line wrapping, overflowing a button, RTL layout, context collisions. This is visible only in the render, and it must be checked per language. A file can look perfect and the screen not. The browser is usually one per instance, so it is the bottleneck. The solution is to parallelize: spin up several virtual machines, one language per machine, each with its own editor and browser instance; then the screenshot passes run in parallel.
 
 ## Practical rollout order
 
-A realistic order. Take the steps in this order; the order is the safety:
+A realistic order. Every skipped step comes back later and more expensive:
 
 1. Finish the occurrence map.
 2. Do the rendered inventory via Playwright.
@@ -1582,11 +1614,11 @@ A realistic order. Take the steps in this order; the order is the safety:
 12. Move on to hard cases.
 13. For hard cases, let a human choose the solution.
 14. Apply context split or PO/MO/UNO edits in small batches.
-15. After each batch, update the maps and the verification report. Always leave the record updated behind you, so the path back is lit.
+15. After each batch, update the maps and the verification report.
 
 ## Minimal definition of done
 
-A localization batch can be considered finished if — and only if every line below is true; a definition of done with a hole in it is a definition of not-quite-done that lets you go home anyway:
+A localization batch can be considered finished if — and only if every line below is true:
 
 - all changed strings are in the occurrence map;
 - all changed strings have a risk classification;
@@ -1594,6 +1626,7 @@ A localization batch can be considered finished if — and only if every line be
 - translations are applied to the correct source class;
 - the active container actually contains the new values;
 - the rendered inventory after the edit shows no new English leftovers in the affected places;
+- the regression test `scripts/l10n-regression.sh` is green — and green for real: not one text change outside the intended block, and not one new layout finding (overlap / clipping / viewport-exit);
 - screenshots confirm the result;
 - RTL and UI width are checked for the affected languages;
 - there is a false-positives report;
@@ -1602,7 +1635,7 @@ A localization batch can be considered finished if — and only if every line be
 
 ## The main rule
 
-An AI agent is a good fit for collecting the map, finding gaps, preparing candidates, and checking regressions. It is a tireless walker of dark corridors, and that is precisely what it is good for. But the agent must not "catch up on all translations" by itself without context. Left alone with that task, it will fill every silence with something confident and wrong.
+An AI agent is a good fit for collecting the map, finding gaps, preparing candidates, and checking regressions. But the agent must not "catch up on all translations" by itself without context. Left alone with that task, it will fill every empty cell with the same calm confidence, the correct ones and the wrong ones alike, and you will not tell them apart until it is too late.
 
 The correct role of the agent:
 
@@ -1613,11 +1646,13 @@ The correct role of the agent:
 - apply only approved targeted edits;
 - prove the result by rendering.
 
-The correct role of the human — and this is the part no artifact can do for you, the part that is yours to keep:
+The correct role of the human:
 
 - approve terminology;
 - decide mixed-context cases;
 - choose the architectural option for splitting keys;
 - accept the risk of leaving an English term;
 - finally accept the visual result;
-- check translation quality as a native subject-matter expert, not only its presence. Presence is what the machine can prove. Whether it is *right* — whether it reads true to someone who would know — that judgment stays with you, in the lit room, at the end, where it belongs.
+- check translation quality as a native subject-matter expert, not only its presence.
+
+At first everything goes right. The agent collects the map, the numbers add up, the screenshots confirm, the regression test is green — run after run, without a miss. At some point you stop re-checking every object: it does not get things wrong. That is the moment. The easy 80% the agent closes by itself, and fast. The last 20% — mixed-context, composed-fragment, render-path-mismatch — are not closed by a rule: you decide them, one at a time, with a render check. If by then you have come to trust it and stopped looking, those 20% will land the way the agent decided, not the way they should. And you won't notice at once — you'll notice in prod.
