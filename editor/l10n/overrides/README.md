@@ -35,3 +35,27 @@ prebuilt-base stopgap `editor/Dockerfile` still injects the same values via inli
 
 `core/<lang>.po` (LibreOffice-core overrides) are **not consumed yet** — compiling them into `.mo`
 is the next localization step.
+
+## Overlap check
+
+Run this before accepting a client override batch:
+
+```bash
+make l10n-overlap-check
+```
+
+The check compares `client/<lang>.json` with the pinned upstream Collabora `ui-<lang>.json`
+from `editor/manifests/upstream.json`, then verifies the active editor catalog when the
+`editor` compose service is running. It writes:
+
+- `.qa/l10n-overrides/overlap-report.csv`
+- `.qa/l10n-overrides/overlap-report.json`
+
+Interpretation:
+
+- `same_as_upstream` - redundant local override; usually delete it.
+- `changes_upstream` - local value differs from upstream; keep only with rendered proof or
+  product-specific rationale.
+- `missing_upstream` - key is absent upstream; review whether it is custom Online code, a stale
+  key, or the wrong catalog.
+- `active_mismatch` / `missing_active` - build/merge problem; the check fails.
