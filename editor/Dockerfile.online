@@ -47,6 +47,18 @@ RUN git config --global http.postBuffer 1048576000 \
     done \
  && test -d /build/online/.git
 
+# PrivateOffice SOURCE patches: unified diffs in editor/patches/*.patch applied to the freshly
+# cloned Online source before configure (source-level changes to coolwsd / the browser bundle).
+# No-op when the dir holds no .patch file. A failed apply BREAKS the build on purpose. On re-pin
+# of ONLINE_REF, rebase the patches against the new source. Catalogued in editor/manifests/patchset.json.
+COPY patches /build/patches
+RUN cd /build/online \
+ && for p in /build/patches/*.patch; do \
+      [ -e "$p" ] || continue; \
+      echo "PrivateOffice: applying source patch $(basename "$p")"; \
+      git apply --whitespace=nowarn --verbose "$p"; \
+    done
+
 # Engine (LibreOffice/Collabora Office core) from our PINNED base image — same version, not built.
 # configure detects engine/instdir (the LO install) + engine/include (LOKit headers, in source).
 COPY --from=collabora/code@sha256:75859dc9f9084d1877ce36cf96ec86600f495bade33289c9cbc27e0a0ee23b81 \

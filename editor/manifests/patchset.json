@@ -139,6 +139,16 @@
       "rationale": "Browsers holding a 128-day max-age copy won't revalidate; ?b= forces a refetch of the patched bundle.css/js + l10n catalogs + the branding.js tag (injected by PO-BRAND-011) on next open.",
       "rollback": "Remove the sed.",
       "status": "active"
+    },
+    {
+      "id": "PO-SRC-014",
+      "title": "Source-patch mechanism: apply editor/patches/*.patch to the cloned Online source",
+      "type": "code-fix",
+      "files": ["editor/patches/*.patch", "editor/Dockerfile.online"],
+      "render_path": "n/a (build-time source modification, before configure)",
+      "rationale": "Channel real source-level changes to coolwsd / the browser bundle through reviewable unified diffs applied with `git apply` right after `git clone` and before `configure` - not post-build sed on built artifacts, not runtime overrides. No-op when no .patch is present; a failed apply breaks the build on purpose. Pinned to online_from_source.ref; rebase on re-pin. See editor/patches/README.md.",
+      "rollback": "Remove the `COPY patches` + `git apply` step from editor/Dockerfile.online and the editor/patches/ dir.",
+      "status": "scaffold: mechanism wired + self-tested at build; no production source patches yet (README only)."
     }
   ]
 }
