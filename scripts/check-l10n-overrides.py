@@ -195,7 +195,7 @@ def write_outputs(rows, out_dir, meta):
     csv_path = os.path.join(out_dir, "overlap-report.csv")
     json_path = os.path.join(out_dir, "overlap-report.json")
     fields = [
-        "lang", "key", "override_value", "upstream_status", "upstream_value",
+        "mode", "lang", "key", "override_value", "upstream_status", "upstream_value",
         "active_status", "active_value", "recommendation",
     ]
     with open(csv_path, "w", newline="", encoding="utf-8") as fh:
@@ -228,7 +228,8 @@ def main():
     parser.add_argument("--active-service", default="editor", help="docker compose service to verify merged active catalogs")
     parser.add_argument("--no-active-check", action="store_true")
     parser.add_argument("--active-optional", action="store_true", help="skip active check when the service is not running")
-    parser.add_argument("--out-dir", default=DEFAULT_OUT_DIR)
+    parser.add_argument("--out-dir", default=None,
+                        help="default: .qa/l10n-overrides (authoritative) or .qa/l10n-overrides-offline (offline-approx)")
     args = parser.parse_args()
 
     overrides = load_overrides(args.override_dir)
@@ -287,8 +288,17 @@ def main():
         rows, row_failures = build_rows(overrides, upstream_dir, active_dir)
         hard_failures.extend(row_failures)
 
+    # Mode drives the OUTPUT PATH so an offline approximation can never overwrite the authoritative
+    # report, and stamps every CSV row so the artifact self-identifies even if opened in isolation.
+    offline = not (args.upstream_from_active or args.upstream_dir)
+    mode = "offline-approx" if offline else "authoritative"
+    out_dir = args.out_dir or (os.path.join(ROOT, ".qa/l10n-overrides-offline") if offline else DEFAULT_OUT_DIR)
+    for row in rows:
+        row["mode"] = mode
+
     by_upstream, by_active, by_lang = summarize(rows)
     meta = {
+        "mode": mode,
         "override_dir": os.path.relpath(args.override_dir, ROOT),
         "upstream_source": upstream_source,
         "active_source": active_source,
@@ -298,9 +308,9 @@ def main():
         "by_lang": {lang: dict(counts) for lang, counts in sorted(by_lang.items())},
         "hard_failures": hard_failures,
     }
-    csv_path, json_path = write_outputs(rows, args.out_dir, meta)
+    csv_path, json_path = write_outputs(rows, out_dir, meta)
 
-    print(f"l10n override overlap check")
+    print(f"l10n override overlap check [{mode}]")
     print(f"  overrides: {len(rows)}")
     print(f"  upstream: {upstream_source}")
     if active_source:

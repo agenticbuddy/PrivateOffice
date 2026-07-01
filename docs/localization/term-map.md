@@ -134,6 +134,6 @@ also captures per-control geometry (`rect`, horizontal-`clip`, `clickable`, view
   Invoke via the Workflow tool: `Workflow({ scriptPath: "scripts/workflows/l10n-regression.workflow.js" })`.
 
 Expectations model is **hybrid**: the golden snapshot catches any drift immediately; as each
-block is translated you add its terms to `expectations.json` (they move from expected-English to
+block is translated you add its terms to `.qa/ru-term-inventory/expectations.json` (they move from expected-English to
 translated), so the test grows from "nothing should change" toward "this is the approved state".
 The checker emits CANDIDATES; the Workflow (or a human, or Claude with Playwright) confirms each.

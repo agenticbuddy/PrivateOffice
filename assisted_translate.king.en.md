@@ -131,7 +131,7 @@ How to use it:
 
 - Open `terms.csv`, filter `classification=simple` — these are the safe ones; translate them pointwise, one at a time.
 - `collisions.csv` (complex) — here you cannot work blind; decide by context, because both the rendered variants and the occurrence sites are shown. `composites.csv` — rewrite as a whole phrase, never piece by piece, because the pieces reassemble in an order you did not intend.
-- After each block, run the regression test `scripts/l10n-regression.sh` (or the Workflow `scripts/workflows/l10n-regression.workflow.js`): it confirms that exactly the intended thing changed and nothing else shifted — neither text outside the block nor the geometry (overlap / clipping / viewport-exit). Expectations live in `expectations.json` — a hybrid: a golden snapshot plus a per-block check.
+- After each block, run the regression test `scripts/l10n-regression.sh` (or the Workflow `scripts/workflows/l10n-regression.workflow.js`): it confirms that exactly the intended thing changed and nothing else shifted — neither text outside the block nor the geometry (overlap / clipping / viewport-exit). Expectations live in `.qa/ru-term-inventory/expectations.json` — a hybrid: a golden snapshot plus a per-block check.
 
 ## Principle of provability
 

@@ -54,10 +54,11 @@ Offline approximation (no running editor): `make l10n-overlap-offline` uses the 
 catalog as upstream and skips the active check. Its report is tagged `OFFLINE-approx` — a different
 build that can drift, so treat it as a hint, not a verdict.
 
-Both write:
+Reports (each row carries a `mode` column; the two modes write to SEPARATE paths so the offline
+approximation can never overwrite the authoritative report):
 
-- `.qa/l10n-overrides/overlap-report.csv`
-- `.qa/l10n-overrides/overlap-report.json`
+- authoritative → `.qa/l10n-overrides/overlap-report.{csv,json}`
+- offline → `.qa/l10n-overrides-offline/overlap-report.{csv,json}`
 
 Interpretation:
 

@@ -144,7 +144,7 @@ Detail and rebuild commands are in `docs/localization/term-map.md`. Three tools,
 3. After each block, run the regression test `scripts/l10n-regression.sh` (or the Workflow
    `scripts/workflows/l10n-regression.workflow.js`): it confirms only the intended change happened,
    nothing broke elsewhere, and geometry is intact (overlap / clipping / viewport-exit / zero-size).
-   Expectations live in `expectations.json` (a term moves from "should stay English" to "translated") —
+   Expectations live in `.qa/ru-term-inventory/expectations.json` (a term moves from "should stay English" to "translated") —
    a hybrid model layered on top of the golden snapshot.
 
 ## Principle of provability
