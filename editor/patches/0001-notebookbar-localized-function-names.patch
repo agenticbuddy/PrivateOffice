@@ -1,0 +1,22 @@
+diff --git a/browser/src/control/jsdialog/Definitions.Menu.ts b/browser/src/control/jsdialog/Definitions.Menu.ts
+index a29bff9..80d8c20 100644
+--- a/browser/src/control/jsdialog/Definitions.Menu.ts
++++ b/browser/src/control/jsdialog/Definitions.Menu.ts
+@@ -1331,6 +1331,17 @@ const spreadsheetFunctions: Array<FunctionNameAlias> = [
+ ];
+ 
+ function getLocalizedFuncName(funcNameList: FunctionNameAlias): string {
++	// PrivateOffice: upstream localizes only de/fr/es. For every other locale, consult the
++	// full core-extracted map (window.PO_FN_NAMES from po-funcnames.js) so notebookbar function
++	// dropdowns show localized names AND insert correctly — a localized LO core only accepts the
++	// localized function name (e.g. RU needs СЕГОДНЯ, not TODAY).
++	const poNames = (window as any).PO_FN_NAMES;
++	if (poNames) {
++		const loc = String.locale.toLowerCase().replace(/-/g, '_');
++		const m = poNames[loc] || poNames[loc.split('_')[0]];
++		if (m && m[funcNameList.en]) return m[funcNameList.en];
++	}
++
+ 	if (String.locale.toLowerCase().startsWith('de') && funcNameList.de)
+ 		return funcNameList.de;
+ 	else if (String.locale.toLowerCase().startsWith('fr') && funcNameList.fr)

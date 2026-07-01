@@ -159,6 +159,28 @@
       "rationale": "Before the override merge, copy the freshly-built ui-<lang>.json to a non-served path that ships in the image. This is the TRUE upstream baseline for the override overlap check (scripts/check-l10n-overrides.py --upstream-from-active): the exact catalog the merge writes into, read from the SAME running container as the active catalog - not the base image's prebuilt browser dist (a different build that can drift).",
       "rollback": "Remove the cp-to-upstream-l10n RUN step; the offline base-image approximation (make l10n-overlap-offline) still works.",
       "status": "active"
+    },
+    {
+      "id": "PO-SRC-016",
+      "title": "Localize notebookbar function-name dropdowns for all locales (fixes insert + display in RU etc.)",
+      "type": "code-fix",
+      "files": ["editor/patches/0001-notebookbar-localized-function-names.patch", "browser/src/control/jsdialog/Definitions.Menu.ts", "editor/po-funcnames.js", "scripts/build-l10n-funcnames.py", "editor/Dockerfile.online"],
+      "source_class": "browser-source",
+      "render_path": "n/a (build-time source patch + parse-blocking head script po-funcnames.js)",
+      "rationale": "Upstream getLocalizedFuncName localizes only de/fr/es, so the Formulas-tab function dropdowns (Date & Time, Financial, Logical, Math & Trig, …) emit the ENGLISH function name both as the visible label and inside .uno:InsertFunction?FunctionName=. A localized LO core only accepts the LOCALIZED name (RU needs СЕГОДНЯ, not TODAY), so in RU and every non-en/de/fr/es locale the dropdown shows English AND fails to insert. Fix: patch getLocalizedFuncName to consult window.PO_FN_NAMES - a per-locale {english:localized} map extracted from the core for.mo (RID_STRLIST_FUNCTION_NAMES) + sca.mo (*_FUNCNAME_*) by scripts/build-l10n-funcnames.py into editor/po-funcnames.js, delivered as a parse-blocking <head> script (like po-toggle.js) that runs before the deferred bundle.js. Covers 390/398 browser-known functions across 12 locales; the 8 _ADD/_EXCEL2003 aliases fall back to English. Confirmed an upstream defect on the clean base image.",
+      "rollback": "Remove editor/patches/0001-*.patch, the po-funcnames.js COPY + cool.html inject in editor/Dockerfile.online, and editor/po-funcnames.js. Regenerate the map (scripts/build-l10n-funcnames.py) on every engine re-pin.",
+      "status": "active"
+    },
+    {
+      "id": "PO-SRC-017",
+      "title": "TreeView: treat row -1 as clear-selection, not an error (no console warn)",
+      "type": "code-fix",
+      "files": ["editor/patches/0002-treeview-clear-selection.patch", "browser/src/control/jsdialog/Widget.TreeView.ts"],
+      "source_class": "browser-source",
+      "render_path": "n/a (build-time source patch)",
+      "rationale": "The core sends jsdialogaction select position=-1 (clear selection) as the user clicks around the Calc Function Wizard tree; selectEntryByRow(-1) misses the row map and logs console.warn('TreeView onSelect: row -1 not found') on every click. Treat row<0 as a normal deselect (unselect all, return) without warning. Confirmed upstream on the clean base image; benign but noisy.",
+      "rollback": "Remove editor/patches/0002-*.patch.",
+      "status": "active"
     }
   ]
 }

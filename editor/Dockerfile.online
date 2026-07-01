@@ -117,6 +117,11 @@ RUN printf '%s\n' '/* PrivateOffice: intentionally empty branding script. Brandi
 COPY fonts/ ${DIST}/fonts/
 COPY po-logo.svg ${DIST}/images/po-logo.svg
 COPY po-toggle.js ${DIST}/po-toggle.js
+# po-funcnames.js: generated {EnglishName -> LocalizedName} Calc function-name map
+# (window.PO_FN_NAMES), consumed by the getLocalizedFuncName source patch (editor/patches/0001-*)
+# so notebookbar function dropdowns show localized names AND insert in every locale. Same delivery
+# as po-toggle.js — a parse-blocking <head> script that runs before the deferred bundle.js.
+COPY po-funcnames.js ${DIST}/po-funcnames.js
 
 # Fold the PrivateOffice glass theme into the editor's OWN stylesheet (bundle.css), correct on first
 # paint — not a separate override sheet. The theme gate (po-toggle.js) is a same-origin external
@@ -124,8 +129,9 @@ COPY po-toggle.js ${DIST}/po-toggle.js
 # sessions opt out via ?po_design.
 COPY branding-privateoffice.css /tmp/po-theme.css
 RUN cat /tmp/po-theme.css >> ${DIST}/bundle.css && rm /tmp/po-theme.css \
- && sed -i '/po-theme\.css/d; /po-theme-toggle/d; /po-toggle\.js/d' ${DIST}/cool.html \
- && sed -i "s#</head>#<script id=\"po-theme-toggle\" src=\"%SERVICE_ROOT%/browser/%VERSION%/po-toggle.js\"></script></head>#" ${DIST}/cool.html
+ && sed -i '/po-theme\.css/d; /po-theme-toggle/d; /po-toggle\.js/d; /po-funcnames\.js/d' ${DIST}/cool.html \
+ && sed -i "s#</head>#<script id=\"po-theme-toggle\" src=\"%SERVICE_ROOT%/browser/%VERSION%/po-toggle.js\"></script></head>#" ${DIST}/cool.html \
+ && sed -i "s#</head>#<script id=\"po-funcnames\" src=\"%SERVICE_ROOT%/browser/%VERSION%/po-funcnames.js\"></script></head>#" ${DIST}/cool.html
 
 # Remove the engine's DEAD bare inline dark-theme <script> (CSP rejects inline; it never runs).
 RUN sed -i '/<script>/{:a;N;/<\/script>/!ba;/Apply dark theme immediately/d;}' ${DIST}/cool.html

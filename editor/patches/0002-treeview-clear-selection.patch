@@ -1,0 +1,21 @@
+diff --git a/browser/src/control/jsdialog/Widget.TreeView.ts b/browser/src/control/jsdialog/Widget.TreeView.ts
+index 5cf7c53..15a595d 100644
+--- a/browser/src/control/jsdialog/Widget.TreeView.ts
++++ b/browser/src/control/jsdialog/Widget.TreeView.ts
+@@ -1259,6 +1259,16 @@ class TreeViewControl {
+ 		// it would blur the input and discard the edit in progress.
+ 		if (this._container.querySelector('.ui-treeview-inline-edit')) return;
+ 
++		// PrivateOffice: a negative row is the core's "clear selection" signal (e.g. Calc's
++		// Function Wizard resets the tree selection on every click). Deselect all and return
++		// without warning — it is a normal state, not an error (avoids console spam).
++		if (row < 0) {
++			this._container
++				.querySelectorAll('.ui-treeview-entry.selected')
++				.forEach((item: HTMLElement) => this.unselectEntry(item));
++			return;
++		}
++
+ 		const rowElement = this._rows.get(String(row));
+ 		if (!rowElement) {
+ 			console.warn('TreeView onSelect: row "' + row + '" not found');
