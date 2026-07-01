@@ -1,10 +1,18 @@
 {
   "Alignment": "Выравнивание",
+  "AutoSum": "Автосумма",
   "Cells": "Ячейки",
   "Chart": "Диаграмма",
   "Clipboard": "Буфер обмена",
+  "Date & Time": "Дата и время",
   "Editing": "Редактирование",
+  "Financial": "Финансовые",
   "Illustrations": "Иллюстрации",
+  "Insert Function": "Вставить функцию",
   "Insert Note": "Вставить примечание",
-  "Merge & Center": "Объединить и поместить в центре"
+  "Logical": "Логические",
+  "Lookup & Reference": "Ссылки и массивы",
+  "Math & Trig": "Математические",
+  "Merge & Center": "Объединить и поместить в центре",
+  "More Functions": "Другие функции"
 }
