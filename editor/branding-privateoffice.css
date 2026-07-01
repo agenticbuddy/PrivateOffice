@@ -148,8 +148,11 @@ html[data-po="glass"] #slide-sorter, html[data-po="glass"] #presentation-control
 html[data-po="glass"] #slide-sorter .preview-frame .preview-img-selected,
 html[data-po="glass"] .preview-frame.selected img { outline: 2px solid var(--po-accent) !important; }
 
-/* dialogs */
-html[data-po="glass"] .jsdialog-window, html[data-po="glass"] .lokdialog_container.ui-dialog, html[data-po="glass"] .ui-dialog.jsdialog {
+/* dialogs — style the real dialog container, NOT the bare .jsdialog-window.
+   .jsdialog-window is a ~2x2 native wrapper; overflow:hidden on it clipped the
+   dialog's content box and made list rows non-clickable (clicks fell through to
+   the canvas). Popups/menus keep their glass surface via the .modalpopup rule below. */
+html[data-po="glass"] .lokdialog_container.ui-dialog, html[data-po="glass"] .ui-dialog.jsdialog {
   border-radius: 14px !important;
   border: 1px solid var(--po-glass-bd) !important;
   box-shadow: 0 18px 50px rgba(17, 32, 63, 0.22) !important;
