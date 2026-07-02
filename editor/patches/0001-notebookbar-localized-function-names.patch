@@ -1,5 +1,5 @@
 diff --git a/browser/src/control/jsdialog/Definitions.Menu.ts b/browser/src/control/jsdialog/Definitions.Menu.ts
-index a29bff9..80d8c20 100644
+index a29bff9..0379da2 100644
 --- a/browser/src/control/jsdialog/Definitions.Menu.ts
 +++ b/browser/src/control/jsdialog/Definitions.Menu.ts
 @@ -1331,6 +1331,17 @@ const spreadsheetFunctions: Array<FunctionNameAlias> = [
@@ -20,3 +20,15 @@ index a29bff9..80d8c20 100644
  	if (String.locale.toLowerCase().startsWith('de') && funcNameList.de)
  		return funcNameList.de;
  	else if (String.locale.toLowerCase().startsWith('fr') && funcNameList.fr)
+@@ -1347,6 +1358,11 @@ function getFunctionsMenuArray(
+ ): Array<MenuDefinition> {
+ 	var functionsMenu: Array<MenuDefinition> = [];
+ 	for (var func of funcs) {
++		// PrivateOffice: skip Excel-import compatibility aliases (…_ADD / …_EXCEL2003). They are
++		// not real insertable functions (the core has no such name), so as menu entries they do
++		// nothing on click (empty cell / #NAME?). Their real equivalents (CUMIPMT, GCD, WEEKNUM…)
++		// are listed separately.
++		if (/_(ADD|EXCEL2003)$/.test(func.en)) continue;
+ 		const localizedFunc = getLocalizedFuncName(func);
+ 		functionsMenu.push({
+ 			text: localizedFunc,
