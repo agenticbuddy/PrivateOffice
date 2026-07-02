@@ -1,0 +1,3 @@
+# Unified-diff patch files legitimately contain space+tab context lines and
+# blank context lines; exempt them from git whitespace checks (git diff --check / apply).
+editor/patches/*.patch -whitespace
