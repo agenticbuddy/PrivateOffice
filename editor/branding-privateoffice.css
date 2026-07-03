@@ -276,3 +276,14 @@ html[data-po="glass"] .notebookbar-tabs-container, html[data-po="glass"] .notebo
 #cbWestLanguage, #cbCJKLanguage, #cbCTLLanguage {
   min-width: 150px !important;
 }
+
+/* Our theme font ("Public Sans") is a touch wider than the upstream .ui box widths, so RU
+   dialog labels overflow by a couple of px and hard-clip (e.g. "Значение ячейки"). In dialogs,
+   trim the oversized dropdown-arrow padding to reclaim room and degrade to an ellipsis instead of
+   a jarring hard cut. Scoped to .lokdialog_container so the toolbar/sidebar are untouched; the
+   collapsed alternate controls stay collapsed (their container width is unaffected). */
+.lokdialog_container .ui-listbox,
+.lokdialog_container select.ui-listbox {
+  padding-right: 10px !important;
+  text-overflow: ellipsis;
+}
