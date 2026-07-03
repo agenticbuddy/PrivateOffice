@@ -167,6 +167,20 @@ html[data-po="glass"] .jsdialog-window .ui-dialog-titlebar, html[data-po="glass"
 html[data-po="glass"] .ui-pushbutton.button-primary, html[data-po="glass"] button.button-primary, html[data-po="glass"] .ui-ok {
   background: var(--po-accent) !important; color: #fff !important; border-radius: 8px !important;
 }
+/* The DEFAULT dialog button (class .button, e.g. "Вставить" in Special Character) gets the accent-green
+   fill from the engine's --co-primary-element but keeps grey text → unreadable. Give it white text to
+   match the other primary buttons. */
+html[data-po="glass"] .ui-pushbutton.button {
+  color: #fff !important; border-radius: 8px !important;
+}
+/* …but a DISABLED default button must READ as disabled, not keep the accent-green fill (otherwise it
+   looks like an active green button with unreadable grey text — e.g. "Вставить" before a glyph is
+   picked). Force the muted disabled look; higher specificity than the plain .button green fill. */
+html[data-po="glass"] .ui-pushbutton.button[disabled] {
+  background: var(--color-background-lighter) !important;
+  color: var(--color-text-light) !important;
+  border: 1px solid var(--color-border-lighter) !important;
+}
 
 html[data-po="glass"] .leaflet-control-attribution { display: none !important; }
 
