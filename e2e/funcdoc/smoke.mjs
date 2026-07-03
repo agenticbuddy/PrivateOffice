@@ -82,17 +82,26 @@ try {
     await page.waitForTimeout(350); await clearOverlay();
   };
   // ---- method: direct typing ----
-  const directInsert = async (ru, inner) => {
-    await page.keyboard.type(`=${ru}(${inner})`, { delay: 5 });
-    await page.keyboard.press("Enter"); await page.waitForTimeout(60); await clearOverlay();
+  const readBar = async () => (await frame.locator("#sc_input_window, .inputbar_container").first().innerText().catch(() => "")).trim();
+  const directInsert = async (ru, inner, cell) => {
+    // type + commit, then VERIFY via the formula bar; retry if the keystrokes were swallowed
+    // (short names like ASC occasionally drop). Never Escape mid-edit — that would cancel the cell.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await goto(cell); await clearOverlay();
+      await page.keyboard.type(`=${ru}(${inner})`, { delay: 10 });
+      await page.keyboard.press("Enter"); await page.waitForTimeout(80); await clearOverlay();
+      await goto(cell); await page.waitForTimeout(60);
+      if ((await readBar()).startsWith("=")) return;
+    }
   };
 
   for (const sh of SHEETS) {
     await frame.locator(".spreadsheet-tab").nth(sh.tab).click();
     await page.waitForTimeout(700);
-    if (sh.method === "menu") { await frame.locator("#Formula-tab-label").first().click().catch(() => {}); await page.waitForTimeout(700); }
-    // seeds (values)
+    // seeds first (values), while on a neutral tab — switching to Формулы BEFORE typing seeds could
+    // eat the first seed keystroke (observed: $BE$1 dropped on the menu sheet -> text funcs #VALUE!)
     for (const s of plan.seeds) await typeVal(s.cell, s.text);
+    if (sh.method === "menu") { await frame.locator("#Formula-tab-label").first().click().catch(() => {}); await page.waitForTimeout(700); }
     let ok = 0, fail = [];
     for (const b of plan.blocks) {
       const items = SUBSET ? b.items.slice(0, SUBSET) : b.items;
@@ -100,10 +109,10 @@ try {
       for (const it of items) await typeVal(it.name_cell, it.ru);
       for (const it of items) {
         try {
-          await goto(it.f_cell);
+          await goto(it.f_cell); await clearOverlay();  // no stale autocomplete overlay eating input
           if (sh.method === "menu") { await menuInsert(it.btn, it.ru); await fillSel(it.ru, it.inner); }
           else if (sh.method === "wizard") await wizardInsert(it.ru, it.inner);
-          else await directInsert(it.ru, it.inner);
+          else await directInsert(it.ru, it.inner, it.f_cell);
           ok++;
         } catch (e) { fail.push(it.ru); await page.keyboard.press("Escape").catch(() => {}); await clearOverlay(); }
       }
@@ -116,4 +125,14 @@ try {
   await ctx.close();
   out.done = true;
 } catch (e) { out.error = String(e).slice(0, 200); }
-finally { await browser.close(); console.log(JSON.stringify(out)); }
+finally {
+  await browser.close();
+  console.log(JSON.stringify(out));
+  // FAIL the process if the build itself broke (error, or any sheet failed to insert a function).
+  // Computation correctness is asserted separately by check.py against the produced node.
+  const totalFailed = (out.sheets || []).reduce((n, s) => n + (s.failed ? s.failed.length : 0), 0);
+  if (out.error || !out.done || totalFailed > 0) {
+    console.error(`SMOKE BUILD FAILED — error=${out.error || "none"}, insertion failures=${totalFailed}`);
+    process.exit(1);
+  }
+}
