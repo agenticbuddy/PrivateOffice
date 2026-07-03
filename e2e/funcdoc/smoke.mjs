@@ -24,9 +24,13 @@ try {
   // upload a fresh 3-empty-named-sheet template (or reuse NODE)
   let nodeId = process.env.NODE;
   const u = await request.newContext({ baseURL: BASE });
-  await u.post("/api/auth/login", { data: { email: BOT, password: PW } });
+  const login = await u.post("/api/auth/login", { data: { email: BOT, password: PW } });
+  if (!login.ok()) throw new Error(`login failed: HTTP ${login.status()}`);
   if (!nodeId) {
     const up = await u.post("/api/nodes/upload", { multipart: { file: { name: "Проверка функций.xlsx", mimeType: MIME, buffer: fs.readFileSync("/tmp/funcdoc-template.xlsx") } } });
+    // Check the HTTP status BEFORE .json() — otherwise an upload that fails (e.g. MinIO/CO out of disk)
+    // surfaces as an opaque JSON-parse error instead of the real cause.
+    if (!up.ok()) throw new Error(`node upload failed: HTTP ${up.status()} — check storage/disk (${(await up.text()).slice(0, 120)})`);
     nodeId = (await up.json()).id;
   }
   await u.dispose();
