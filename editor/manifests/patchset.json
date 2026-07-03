@@ -192,6 +192,17 @@
       "rationale": "updateTabsVisibilityForContext has a guard meant to keep the Formulas tab selected on a Calc context change (so inserting a function from the Formulas tab doesn't jump the ribbon to Home). But it checks isTabSelected('Formulas') while the Calc tab's name is 'Formula' (Control.NotebookbarCalc.js) — so the guard never fires and the ribbon switches to Home on every function insert. Fix the name to 'Formula'. Upstream typo; became visible once RU function insertion worked.",
       "rollback": "Remove editor/patches/0003-*.patch.",
       "status": "active"
+    },
+    {
+      "id": "PO-SRC-019",
+      "title": "Localize built-in cell-style names in the sidebar Styles deck + Conditional-Formatting Apply-Style dropdown",
+      "type": "code-fix",
+      "files": ["editor/patches/0004-localized-cell-style-names.patch", "browser/src/control/jsdialog/Widget.TreeView.ts", "browser/src/control/jsdialog/Widget.Listbox.ts", "editor/po-stylenames.js", "scripts/build-l10n-stylenames.py", "editor/Dockerfile.online"],
+      "source_class": "browser-source",
+      "render_path": "sidebar StyleListDeck treeview (id 'flatview') + CF Apply-Style listbox (id 'style')",
+      "rationale": "The LO core ships translations for built-in cell-style names (sc.mo, msgctxt STR_STYLENAME_*, e.g. Good→Хорошо, Accent→Акцент) but the style-LIST path sends the internal ENGLISH name to the browser (only 'Default' is core-localized), so the sidebar Styles deck and the Conditional-Formatting Apply-Style dropdown show Accent/Good/Heading/Result/Status/Text… in English in every locale. Confirmed NOT document-data (a native ODS shows English too) and NOT client _() (the deck/dropdown paint core-sent text with no _() call — adding the names to ui-ru.json did nothing there). Fix: display-only localization via window.getPOStyleName — a per-locale {english:localized} map extracted from sc.mo STR_STYLENAME_* by scripts/build-l10n-stylenames.py into editor/po-stylenames.js, delivered as a parse-blocking <head> script like po-funcnames.js — called ONLY inside the two style widgets: treeview id 'flatview' (Widget.TreeView.ts) and listbox id 'style' (Widget.Listbox.ts). Both select by row/index, so the applied style value stays English and round-trips correctly; custom/user styles pass through unchanged (the map holds built-in names only), and scoping by widget id avoids collateral translation of unrelated lists. Covers 18 locales.",
+      "rollback": "Remove editor/patches/0004-*.patch, the po-stylenames.js COPY + cool.html inject in editor/Dockerfile.online, and editor/po-stylenames.js. Regenerate the map (scripts/build-l10n-stylenames.py) on every engine re-pin.",
+      "status": "active"
     }
   ]
 }

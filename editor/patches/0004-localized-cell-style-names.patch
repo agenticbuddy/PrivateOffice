@@ -1,0 +1,61 @@
+diff --git a/browser/src/control/jsdialog/Widget.Listbox.ts b/browser/src/control/jsdialog/Widget.Listbox.ts
+index 668bc6f..3b1941a 100644
+--- a/browser/src/control/jsdialog/Widget.Listbox.ts
++++ b/browser/src/control/jsdialog/Widget.Listbox.ts
+@@ -125,7 +125,14 @@ JSDialog.listbox = function (
+ 
+ 			const option = window.L.DomUtil.create('option', '', listbox);
+ 			option.value = index;
+-			option.innerText = data.entries[index];
++			// PrivateOffice: localize built-in cell-style names in the Conditional-Formatting
++			// "Apply Style" dropdown (listbox id 'style'). option.value stays the index and the core
++			// selects by position, so the applied style value is unchanged — only the visible text is
++			// localized. Custom styles pass through (getPOStyleName only maps built-in names).
++			option.innerText =
++				data.id === 'style' && (window as any).getPOStyleName
++					? (window as any).getPOStyleName(data.entries[index])
++					: data.entries[index];
+ 			if (isSelected) {
+ 				option.selected = true;
+ 				hasSelectedEntry = true;
+@@ -139,7 +146,10 @@ JSDialog.listbox = function (
+ 		if (title) {
+ 			const newOption = window.L.DomUtil.create('option', '', listbox);
+ 			newOption.value = ++index;
+-			newOption.innerText = title;
++			newOption.innerText =
++				data.id === 'style' && (window as any).getPOStyleName
++					? (window as any).getPOStyleName(title)
++					: title;
+ 			newOption.selected = true;
+ 		} else {
+ 			$(listbox).val('');
+diff --git a/browser/src/control/jsdialog/Widget.TreeView.ts b/browser/src/control/jsdialog/Widget.TreeView.ts
+index 5cf7c53..4b70287 100644
+--- a/browser/src/control/jsdialog/Widget.TreeView.ts
++++ b/browser/src/control/jsdialog/Widget.TreeView.ts
+@@ -622,11 +622,23 @@ class TreeViewControl {
+ 		selectionElement: HTMLInputElement,
+ 		builder: JSBuilder,
+ 	) {
+-		const text =
++		let text =
+ 			entry.columns[index].text !== undefined
+ 				? builder._cleanText(entry.columns[index].text)
+ 				: builder._cleanText(entry.text);
+ 
++		// PrivateOffice: localize built-in cell-style names shown in the sidebar Styles deck — both
++		// the flat view (treeview id 'flatview') and the default hierarchical view (id 'treeview').
++		// Display-only — the deck selects by row index, so the applied style value stays English.
++		// getPOStyleName (po-stylenames.js) only maps the built-in English style names (custom styles
++		// and any unrelated 'treeview' entry pass through unchanged); "Default" is excluded from the
++		// map so the generic 'treeview' id can be matched without mistranslating non-style entries.
++		if (
++			(treeViewData.id === 'flatview' || treeViewData.id === 'treeview') &&
++			(window as any).getPOStyleName
++		)
++			text = (window as any).getPOStyleName(text);
++
+ 		const hasRenderer =
+ 			entry.columns[index].customEntryRenderer ||
+ 			treeViewData.customEntryRenderer;
