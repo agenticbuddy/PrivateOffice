@@ -269,3 +269,10 @@ html[data-po="glass"] .notebookbar-tabs-container, html[data-po="glass"] .notebo
   transition: none !important;
   animation: none !important;
 }
+
+/* ---- Layout fixes for upstream dialog controls that render too narrow (theme-independent) ---- */
+/* Format Cells → Шрифт: the language dropdowns get a ~50px grid cell while the Style/Size
+   siblings get ~160px, clipping "Русский" to "Р". Give language pickers a usable minimum. */
+#cbWestLanguage, #cbCJKLanguage, #cbCTLLanguage {
+  min-width: 150px !important;
+}
