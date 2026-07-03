@@ -1,0 +1,113 @@
+diff --git a/browser/src/canvas/sections/FormulaErrorHelpSection.ts b/browser/src/canvas/sections/FormulaErrorHelpSection.ts
+index e3058f7..524cb63 100644
+--- a/browser/src/canvas/sections/FormulaErrorHelpSection.ts
++++ b/browser/src/canvas/sections/FormulaErrorHelpSection.ts
+@@ -76,10 +76,7 @@ class FormulaErrorHelpSection extends HTMLObjectSection {
+ 		sep.className = 'formula-error-menu-separator';
+ 		menu.appendChild(sep);
+ 
+-		// Help on this error
+-		this.addMenuItem(menu, _('Help on this error'), () => {
+-			window.open('https://help.collaboraoffice.com/', '_blank', 'noopener');
+-		});
++		// PrivateOffice: 'Help on this error' removed — it opened help.collaboraoffice.com (Collabora site).
+ 
+ 		// Inspect with Function Wizard
+ 		this.addMenuItem(menu, _('Inspect with Function Wizard'), () => {
+diff --git a/browser/src/control/Control.Menubar.ts b/browser/src/control/Control.Menubar.ts
+index 63e73d7..5dc4d6c 100644
+--- a/browser/src/control/Control.Menubar.ts
++++ b/browser/src/control/Control.Menubar.ts
+@@ -426,10 +426,6 @@ class Menubar extends window.L.Control {
+ 				{type: 'separator', iosapp: false},
+ 				{name: _('Keyboard shortcuts'), id: 'keyboard-shortcuts', type: 'action', iosapp: false},
+ 				{type: 'separator'},
+-				{name: _('Forum'), id: 'forum', type: 'action'},
+-				{name: _('Report an issue'), id: 'report-an-issue', type: 'action', iosapp: false},
+-				{name: _('Latest Updates'), id: 'latestupdates', type: 'action', iosapp: false},
+-				{name: _('Send Feedback'), id: 'feedback', type: 'action', mobileapp: false},
+ 				{type: 'separator'},
+ 				{name: _('Server audit'), id: 'serveraudit', type: 'action', mobileapp: false},
+ 				{type: 'separator'},
+@@ -615,10 +611,6 @@ class Menubar extends window.L.Control {
+ 				{type: 'separator', iosapp: false},
+ 				{name: _('Keyboard shortcuts'), id: 'keyboard-shortcuts', type: 'action', iosapp: false},
+ 				{type: 'separator'},
+-				{name: _('Forum'), id: 'forum', type: 'action'},
+-				{name: _('Report an issue'), id: 'report-an-issue', type: 'action', iosapp: false},
+-				{name: _('Latest Updates'), id: 'latestupdates', type: 'action', iosapp: false},
+-				{name: _('Send Feedback'), id: 'feedback', type: 'action', mobileapp: false},
+ 				{type: 'separator'},
+ 				{name: _('Server audit'), id: 'serveraudit', type: 'action', mobileapp: false},
+ 				{type: 'separator'},
+@@ -761,10 +753,6 @@ class Menubar extends window.L.Control {
+ 				{type: 'separator', iosapp: false},
+ 				{name: _('Keyboard shortcuts'), id: 'keyboard-shortcuts', type: 'action', iosapp: false},
+ 				{type: 'separator'},
+-				{name: _('Forum'), id: 'forum', type: 'action'},
+-				{name: _('Report an issue'), id: 'report-an-issue', type: 'action', iosapp: false},
+-				{name: _('Latest Updates'), id: 'latestupdates', type: 'action', iosapp: false},
+-				{name: _('Send Feedback'), id: 'feedback', type: 'action', mobileapp: false},
+ 				{type: 'separator'},
+ 				{name: _('Server audit'), id: 'serveraudit', type: 'action', mobileapp: false},
+ 				{type: 'separator'},
+@@ -1068,10 +1056,6 @@ class Menubar extends window.L.Control {
+ 				{type: 'separator', iosapp: false},
+ 				{name: _('Keyboard shortcuts'), id: 'keyboard-shortcuts', type: 'action', iosapp: false},
+ 				{type: 'separator'},
+-				{name: _('Forum'), id: 'forum', type: 'action'},
+-				{name: _('Report an issue'), id: 'report-an-issue', type: 'action', iosapp: false},
+-				{name: _('Latest Updates'), id: 'latestupdates', type: 'action', iosapp: false},
+-				{name: _('Send Feedback'), id: 'feedback', type: 'action', mobileapp: false},
+ 				{type: 'separator'},
+ 				{name: _('Server audit'), id: 'serveraudit', type: 'action', mobileapp: false},
+ 				{type: 'separator'},
+@@ -1143,8 +1127,6 @@ class Menubar extends window.L.Control {
+ 					uno: '.uno:Translate'
+ 				} : {},
+ 			{name: _UNO('.uno:RunMacro'), id: 'runmacro', uno: '.uno:RunMacro'},
+-			{name: _('Latest Updates'), id: 'latestupdates', type: 'action', iosapp: false},
+-			{name: _('Send Feedback'), id: 'feedback', type: 'action', mobileapp: false},
+ 			{name: _('About'), id: 'about', type: 'action'},
+ 		],
+ 
+@@ -1208,8 +1190,6 @@ class Menubar extends window.L.Control {
+ 			},
+ 			{name: _UNO('.uno:RunMacro'), id: 'runmacro', uno: '.uno:RunMacro'},
+ 			{name: _('Fullscreen presentation'), id: 'fullscreen-presentation', type: 'action'},
+-			{name: _('Latest Updates'), id: 'latestupdates', type: 'action', iosapp: false},
+-			{name: _('Send Feedback'), id: 'feedback', type: 'action', mobileapp: false},
+ 			{name: _('About'), id: 'about', type: 'action'},
+ 		],
+ 
+@@ -1263,8 +1243,6 @@ class Menubar extends window.L.Control {
+ 				{name: _UNO('.uno:DeletePage', 'presentation'), unoid: '.uno:DeletePage', id: 'deletepage', type: 'action'}]
+ 			},
+ 			{name: _UNO('.uno:RunMacro'), id: 'runmacro', uno: '.uno:RunMacro'},
+-			{name: _('Latest Updates'), id: 'latestupdates', type: 'action', iosapp: false},
+-			{name: _('Send Feedback'), id: 'feedback', type: 'action', mobileapp: false},
+ 			{name: _('About'), id: 'about', type: 'action'},
+ 		],
+ 
+@@ -1338,8 +1316,6 @@ class Menubar extends window.L.Control {
+ 					{uno: '.uno:ShowDetail'}]}
+ 			]},
+ 			{name: _UNO('.uno:RunMacro'), id: 'runmacro', uno: '.uno:RunMacro'},
+-			{name: _('Latest Updates'), id: 'latestupdates', type: 'action', iosapp: false},
+-			{name: _('Send Feedback'), id: 'feedback', type: 'action', mobileapp: false},
+ 			{name: _('About'), id: 'about', type: 'action'},
+ 		],
+ 
+@@ -2501,10 +2477,8 @@ class Menubar extends window.L.Control {
+ 			else this._map.welcome.showWelcomeDialog();
+ 		} else if (id === 'feedback' && this._map.feedback) {
+ 			this._map.feedback.showFeedbackDialog();
+-		} else if (id === 'report-an-issue') {
+-			window.open('https://github.com/CollaboraOnline/online/issues', '_blank', 'noopener');
+-		} else if (id === 'forum') {
+-			window.open('https://forum.collaboraonline.com', '_blank', 'noopener');
++		// PrivateOffice: 'report-an-issue' and 'forum' removed — they navigated to Collabora's
++		// GitHub / community forum; a self-hosted PrivateOffice must not point users to the Collabora site.
+ 		} else if (id === 'inserthyperlink') {
+ 			app.dispatcher.dispatch('hyperlinkdialog');
+ 		} else if (id === 'keyboard-shortcuts' || id === 'online-help') {

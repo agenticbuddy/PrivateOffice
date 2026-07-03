@@ -214,6 +214,17 @@
       "rationale": "The Format-tab Themes gallery shows built-in document colour-theme preset names (Retro/Forest/Sunset/Breeze/Classic/Rainbow/Red/Office/Chalk/Green/Chart Classic/Beach/Ocean/Purple/Orange/Blue/Grey) in English. Unlike cell styles, the LO engine ships NO translations for these preset names (absent from every .mo) — they are proper preset names kept English upstream. Per user decision, localize them: a HAND-MAINTAINED curated {english:localized} map (window.PO_THEME_NAMES + getPOThemeName in editor/po-themenames.js, <head> script) is consulted DISPLAY-ONLY inside _iconViewEntry scoped to the gallery id 'iconview_theme_colors' (Widget.IconView.ts) via a localized copy of the entry — the gallery selects by row index so the applied theme value stays English; unknown/custom theme names pass through, and the id scope leaves every other iconview (e.g. stylesview) untouched. Also fixes the 'Add Theme...' button: it is _UNO('.uno:AddTheme') = client _('Add Theme...'), so the ru.json key is corrected from 'Add Theme' to 'Add Theme...'. RU only for now (other locales fall back to English); add locales by hand in po-themenames.js.",
       "rollback": "Remove editor/patches/0005-*.patch, the po-themenames.js COPY + cool.html inject in editor/Dockerfile.online, and editor/po-themenames.js; revert the ru.json 'Add Theme...' key.",
       "status": "active"
+    },
+    {
+      "id": "PO-SRC-021",
+      "title": "Remove Help links that navigate to the Collabora site (Forum / Report an issue / Latest Updates / Send Feedback / formula-error help)",
+      "type": "code-fix",
+      "files": ["editor/patches/0006-remove-collabora-external-links.patch", "browser/src/control/Control.Menubar.ts", "browser/src/canvas/sections/FormulaErrorHelpSection.ts"],
+      "source_class": "browser-source",
+      "render_path": "Help menu (all app contexts) + formula-error popup",
+      "rationale": "A self-hosted, rebranded PrivateOffice should not point users to the Collabora site. Removed the Help-menu items Forum (forum.collaboraonline.com), Report an issue (github.com/CollaboraOnline/online/issues), Latest Updates + Send Feedback (Collabora welcome/feedback), and the 'Help on this error' formula-error item (help.collaboraoffice.com); also neutralized the forum/report-an-issue window.open handler branches so no path navigates to a Collabora domain. KEPT the OFFLINE, self-contained items: Online Help + Keyboard shortcuts (bundled cool-help.html, no external nav), Server audit, About. Per user request ('не переходить на сайт CO'). NOTE: fully localizing the offline cool-help.html content to RU is a separate, larger task.",
+      "rollback": "Remove editor/patches/0006-*.patch.",
+      "status": "active"
     }
   ]
 }
