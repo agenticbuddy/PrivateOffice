@@ -203,6 +203,17 @@
       "rationale": "The LO core ships translations for built-in cell-style names (sc.mo, msgctxt STR_STYLENAME_*, e.g. Good→Хорошо, Accent→Акцент) but the style-LIST path sends the internal ENGLISH name to the browser (only 'Default' is core-localized), so the sidebar Styles deck and the Conditional-Formatting Apply-Style dropdown show Accent/Good/Heading/Result/Status/Text… in English in every locale. Confirmed NOT document-data (a native ODS shows English too) and NOT client _() (the deck/dropdown paint core-sent text with no _() call — adding the names to ui-ru.json did nothing there). Fix: display-only localization via window.getPOStyleName — a per-locale {english:localized} map extracted from sc.mo STR_STYLENAME_* by scripts/build-l10n-stylenames.py into editor/po-stylenames.js, delivered as a parse-blocking <head> script like po-funcnames.js — called ONLY inside the two style widgets: treeview id 'flatview' (Widget.TreeView.ts) and listbox id 'style' (Widget.Listbox.ts). Both select by row/index, so the applied style value stays English and round-trips correctly; custom/user styles pass through unchanged (the map holds built-in names only), and scoping by widget id avoids collateral translation of unrelated lists. Covers 18 locales.",
       "rollback": "Remove editor/patches/0004-*.patch, the po-stylenames.js COPY + cool.html inject in editor/Dockerfile.online, and editor/po-stylenames.js. Regenerate the map (scripts/build-l10n-stylenames.py) on every engine re-pin.",
       "status": "active"
+    },
+    {
+      "id": "PO-SRC-020",
+      "title": "Localize document-theme preset names in the Format-tab Themes gallery",
+      "type": "code-fix",
+      "files": ["editor/patches/0005-localized-theme-names.patch", "browser/src/control/jsdialog/Widget.IconView.ts", "editor/po-themenames.js", "editor/Dockerfile.online", "editor/l10n/overrides/client/ru.json"],
+      "source_class": "browser-source",
+      "render_path": "Format-tab Themes gallery iconview (id 'iconview_theme_colors') + 'Add Theme...' _UNO label (ru.json)",
+      "rationale": "The Format-tab Themes gallery shows built-in document colour-theme preset names (Retro/Forest/Sunset/Breeze/Classic/Rainbow/Red/Office/Chalk/Green/Chart Classic/Beach/Ocean/Purple/Orange/Blue/Grey) in English. Unlike cell styles, the LO engine ships NO translations for these preset names (absent from every .mo) — they are proper preset names kept English upstream. Per user decision, localize them: a HAND-MAINTAINED curated {english:localized} map (window.PO_THEME_NAMES + getPOThemeName in editor/po-themenames.js, <head> script) is consulted DISPLAY-ONLY inside _iconViewEntry scoped to the gallery id 'iconview_theme_colors' (Widget.IconView.ts) via a localized copy of the entry — the gallery selects by row index so the applied theme value stays English; unknown/custom theme names pass through, and the id scope leaves every other iconview (e.g. stylesview) untouched. Also fixes the 'Add Theme...' button: it is _UNO('.uno:AddTheme') = client _('Add Theme...'), so the ru.json key is corrected from 'Add Theme' to 'Add Theme...'. RU only for now (other locales fall back to English); add locales by hand in po-themenames.js.",
+      "rollback": "Remove editor/patches/0005-*.patch, the po-themenames.js COPY + cool.html inject in editor/Dockerfile.online, and editor/po-themenames.js; revert the ru.json 'Add Theme...' key.",
+      "status": "active"
     }
   ]
 }

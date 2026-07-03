@@ -1,0 +1,24 @@
+diff --git a/browser/src/control/jsdialog/Widget.IconView.ts b/browser/src/control/jsdialog/Widget.IconView.ts
+index 4188e80..86c1f54 100644
+--- a/browser/src/control/jsdialog/Widget.IconView.ts
++++ b/browser/src/control/jsdialog/Widget.IconView.ts
+@@ -272,6 +272,19 @@ JSDialog.iconView = function (
+ 	data: IconViewJSON,
+ 	builder: JSBuilder,
+ ) {
++	// PrivateOffice: localize built-in document-theme preset names (Retro/Forest/Sunset/…) in the
++	// Format-tab Themes gallery (id 'iconview_theme_colors'). Mutate the entry text at the SOURCE, up
++	// front, so every render path shows the localized name — initial build AND the on-demand server
++	// re-render (updateRendersImpl reads data.entries[pos], which bypasses any per-entry copy). This
++	// also feeds the cache signature below so it stays consistent. Display-only: the gallery selects
++	// by row index, so the applied theme value is unchanged; getPOThemeName (po-themenames.js) maps
++	// only known preset names (unknown/custom pass through) and the id scope leaves other iconviews alone.
++	if (data.id === 'iconview_theme_colors' && data.entries && (window as any).getPOThemeName) {
++		for (const e of data.entries) {
++			if (e && e.text) e.text = (window as any).getPOThemeName(e.text);
++		}
++	}
++
+ 	// The renders cache is keyed by visual position, so it is only valid
+ 	// while the entry at each position stays the same. If the entries
+ 	// have shifted since the last render (e.g. the Theme dialog reopens
