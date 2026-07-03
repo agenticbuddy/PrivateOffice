@@ -1,0 +1,513 @@
+{
+ "Сохранить": [
+  "Файл:file-save6-button:tip"
+ ],
+ "Раскрывающийся список диалога": [
+  "Файл:Data-Print7:tip"
+ ],
+ "Печать": [
+  "Файл:Data-Print7-button:tip"
+ ],
+ "Выпадающий список": [
+  "Файл:downloadas:tip",
+  "Главная:home-paste15:tip",
+  "Главная:home-set-border-style30:tip",
+  "Главная:overflow-button-home-style69:tip",
+  "Вставка:overflow-button-insert-illustrations87:tip",
+  "Вставка:overflow-button-insert-text97:tip",
+  "Разметка:Layout-MarginMenu:tip",
+  "Разметка:Layout-SizeMenu:tip",
+  "Разметка:Layout-OrientationMenu:tip",
+  "Разметка:Layout-PrintRangesMenu:tip",
+  "Разметка:overflow-button-layout-grid104:tip",
+  "Разметка:Data-RowMenuHeight:tip",
+  "Разметка:Data-ColumnMenuWidth:tip",
+  "Формулы:Formula-AutoSumMenu128:tip",
+  "Формулы:Formula-FinancialFunctions:tip",
+  "Формулы:Formula-LogicalFunctions:tip",
+  "Формулы:Formula-TextFunctions:tip",
+  "Формулы:Formula-DateAndTimeFunctions:tip",
+  "Формулы:Formula-LookupAndRefFunctions:tip",
+  "Формулы:Formula-MathAndTrigFunctions:tip",
+  "Формулы:Formula-MoreFunctions:tip",
+  "Данные:overflow-button-data-group161:tip",
+  "Данные:Data-StatisticsMenu:tip",
+  "Формат:FormatMenu178:tip",
+  "Формат:format-conditional-format-menu184:tip",
+  "Вид:overflow-button-view-freeze297:tip",
+  "Вид:overflow-button-view-zoom300:tip"
+ ],
+ "Скачать": [
+  "Файл:downloadas-button:tip"
+ ],
+ "Восстановить": [
+  "Файл:repair-button:tip"
+ ],
+ "Свойства": [
+  "Файл:properties10-button:tip"
+ ],
+ "Подпись": [
+  "Файл:signature12-button:tip"
+ ],
+ "Отменить": [
+  "Главная:home-undo13-button:tip"
+ ],
+ "Вернуть": [
+  "Главная:home-redo14-button:tip"
+ ],
+ "Вставить": [
+  "Главная:home-paste15-button:tip"
+ ],
+ "Вырезать": [
+  "Главная:home-cut17-button:tip"
+ ],
+ "Копировать формат": [
+  "Главная:home-format-paint-brush18-button:tip"
+ ],
+ "Копировать": [
+  "Главная:home-copy19-button:tip"
+ ],
+ "Очистить форматирование": [
+  "Главная:home-reset-attributes20-button:tip"
+ ],
+ "Буфер обмена": [
+  "Главная:home-clipboard-label:label"
+ ],
+ "Гарнитура": [
+  "Главная:fontnamecombobox-input-notebookbar:tip"
+ ],
+ "Кегль": [
+  "Главная:fontsizecombobox-input-notebookbar:tip"
+ ],
+ "Увеличить кегль": [
+  "Главная:home-grow22-button:tip"
+ ],
+ "Уменьшить кегль": [
+  "Главная:home-shrink23-button:tip"
+ ],
+ "Жирный": [
+  "Главная:home-bold24-button:tip"
+ ],
+ "Курсив": [
+  "Главная:home-italic25-button:tip"
+ ],
+ "Подчёркивание": [
+  "Главная:home-underline26-button:tip"
+ ],
+ "Зачёркивание": [
+  "Главная:home-strikeout27-button:tip"
+ ],
+ "Нижний индекс": [
+  "Главная:home-subscript28-button:tip"
+ ],
+ "Верхний индекс": [
+  "Главная:home-superscript29-button:tip"
+ ],
+ "Обрамление (Shift для перезаписи)": [
+  "Главная:home-set-border-style30-button:tip"
+ ],
+ "Раскрывающийся список действий": [
+  "Главная:home-background-color31:tip",
+  "Главная:home-color32:tip",
+  "Главная:overflow-button-home-number-format54:tip",
+  "Главная:overflow-button-home-insert-table61:tip",
+  "Главная:overflow-button-home-find-n-filter:tip",
+  "Разметка:overflow-button-layout-insert-table112:tip",
+  "Разметка:overflow-button-layout-arrange125:tip",
+  "Данные:data-data-sort144:tip",
+  "Рецензирование:review-insert-threaded-comment172:tip"
+ ],
+ "Фоновый цвет": [
+  "Главная:home-background-color31-button:tip"
+ ],
+ "Цвет шрифта": [
+  "Главная:home-color32-button:tip"
+ ],
+ "Шрифт": [
+  "Главная:home-font-label:label"
+ ],
+ "Больше настроек для Шрифт": [
+  "Главная:home-font-more-button:tip"
+ ],
+ "Выровнять по верхнему краю": [
+  "Главная:home-align-top34-button:tip"
+ ],
+ "Центрировать вертикально": [
+  "Главная:home-align-vertical-center35-button:tip"
+ ],
+ "Выровнять по нижнему краю": [
+  "Главная:home-align-bottom36-button:tip"
+ ],
+ "Слева направо": [
+  "Главная:home-para-left-to-right37-button:tip"
+ ],
+ "Справа налево": [
+  "Главная:home-para-right-to-left38-button:tip",
+  "Разметка:layout-sheet-right-to-left100-button:tip"
+ ],
+ "Выровнять по левому краю": [
+  "Главная:home-align-left39-button:tip"
+ ],
+ "Выровнять по центру": [
+  "Главная:home-align-horizontal-center40-button:tip"
+ ],
+ "Выровнять по правому краю": [
+  "Главная:home-align-right41-button:tip"
+ ],
+ "По ширине": [
+  "Главная:home-align-block42-button:tip"
+ ],
+ "Увеличить отступ": [
+  "Главная:home-increment-indent43-button:tip"
+ ],
+ "Уменьшить отступ": [
+  "Главная:home-decrement-indent44-button:tip"
+ ],
+ "Переносить текст": [
+  "Главная:home-wrap-text46-button:tip"
+ ],
+ "Объединить и поместить в центре": [
+  "Главная:home-merge-cells47-button:tip"
+ ],
+ "Выравнивание": [
+  "Главная:home-alignment-label:label",
+  "Разметка:overflow-button-layout-align120-button:tip"
+ ],
+ "Больше настроек для Выравнивание": [
+  "Главная:home-alignment-more-button:tip"
+ ],
+ "Числовой": [
+  "Главная:overflow-button-home-number-format54-button:tip"
+ ],
+ "Ячейки": [
+  "Главная:overflow-button-home-insert-table61-button:tip"
+ ],
+ "Стиль": [
+  "Главная:overflow-button-home-style69-button:tip",
+  "Формат:format-style-label:label"
+ ],
+ "Редактирование": [
+  "Главная:overflow-button-home-find-n-filter-button:tip"
+ ],
+ "Сводная таблица": [
+  "Вставка:insert-data-pilot-run74-button:tip",
+  "Вставка:insert-pivot-table-label:label"
+ ],
+ "Pivot Calculated Field": [
+  "Вставка:insert-calculated-field-run75-button:tip"
+ ],
+ "Обновить": [
+  "Вставка:insert-recalc-pivot-table76-button:tip"
+ ],
+ "Удалить": [
+  "Вставка:insert-delete-pivot-table77-button:tip"
+ ],
+ "Table": [
+  "Вставка:insert-insert-calc-table79-button:tip"
+ ],
+ "Таблица": [
+  "Вставка:insert-calc-table-label:label"
+ ],
+ "Иллюстрации": [
+  "Вставка:overflow-button-insert-illustrations87-button:tip"
+ ],
+ "Гиперссылка": [
+  "Вставка:HyperlinkDialog88-button:tip"
+ ],
+ "Дата": [
+  "Вставка:insert-insert-current-date90-button:tip"
+ ],
+ "Время": [
+  "Вставка:insert-insert-current-time91-button:tip"
+ ],
+ "Задать": [
+  "Вставка:insert-add-name92-button:tip",
+  "Формулы:formula-add-name134-button:tip"
+ ],
+ "Управление": [
+  "Вставка:insert-define-name93-button:tip",
+  "Формулы:data-define-name135-button:tip"
+ ],
+ "Текст": [
+  "Вставка:overflow-button-insert-text97-button:tip",
+  "Формулы:Formula-TextFunctions-button:tip"
+ ],
+ "Колонтитулы": [
+  "Вставка:insert-edit-header-and-footer98-button:tip"
+ ],
+ "Символ": [
+  "Вставка:CharmapControl-button:tip"
+ ],
+ "Комментарий": [
+  "Вставка:insert-insert-threaded-comment-button:tip",
+  "Рецензирование:review-insert-threaded-comment172-button:tip"
+ ],
+ "Note": [
+  "Вставка:insert-insert-annotation99-button:tip"
+ ],
+ "Поля": [
+  "Разметка:Layout-MarginMenu-button:tip"
+ ],
+ "Размер": [
+  "Разметка:Layout-SizeMenu-button:tip"
+ ],
+ "Ориентация": [
+  "Разметка:Layout-OrientationMenu-button:tip"
+ ],
+ "Диапазоны печати": [
+  "Разметка:Layout-PrintRangesMenu-button:tip"
+ ],
+ "Параметры страницы": [
+  "Разметка:layout-page-label:label"
+ ],
+ "Больше настроек для Параметры страницы": [
+  "Разметка:layout-page-more-button:tip"
+ ],
+ "Сетка": [
+  "Разметка:overflow-button-layout-grid104-button:tip"
+ ],
+ "Высота строки": [
+  "Разметка:Data-RowMenuHeight-button:tip"
+ ],
+ "Ширина колонки": [
+  "Разметка:Data-ColumnMenuWidth-button:tip"
+ ],
+ "Вставка": [
+  "Разметка:overflow-button-layout-insert-table112-button:tip"
+ ],
+ "Выбрать всё": [
+  "Разметка:layout-select-all113-button:tip"
+ ],
+ "Раскрывающийся список": [
+  "Разметка:overflow-button-layout-align120:tip"
+ ],
+ "Расположение": [
+  "Разметка:overflow-button-layout-arrange125-button:tip"
+ ],
+ "Вставить функцию": [
+  "Формулы:Formula-InsertFunction126-button:tip"
+ ],
+ "Автосумма": [
+  "Формулы:Formula-AutoSumMenu128-button:tip"
+ ],
+ "Финансовые": [
+  "Формулы:Formula-FinancialFunctions-button:tip"
+ ],
+ "Логические": [
+  "Формулы:Formula-LogicalFunctions-button:tip"
+ ],
+ "Дата и время": [
+  "Формулы:Formula-DateAndTimeFunctions-button:tip"
+ ],
+ "Ссылки и массивы": [
+  "Формулы:Formula-LookupAndRefFunctions-button:tip"
+ ],
+ "Математические": [
+  "Формулы:Formula-MathAndTrigFunctions-button:tip"
+ ],
+ "Другие функции": [
+  "Формулы:Formula-MoreFunctions-button:tip"
+ ],
+ "Библиотека функций": [
+  "Формулы:formula-function-library-label:label"
+ ],
+ "Задать диапазон": [
+  "Формулы:formula-define-range136-button:tip"
+ ],
+ "Выбрать диапазон": [
+  "Формулы:formula-select-range138-button:tip"
+ ],
+ "Обновить диапазон": [
+  "Формулы:formula-refresh-range139-button:tip"
+ ],
+ "Диапазон": [
+  "Формулы:formula-range-label:label"
+ ],
+ "Формулу в значение": [
+  "Формулы:formula-convert-formula-to-value142-button:tip"
+ ],
+ "Пересчитать": [
+  "Формулы:formula-calculate143-button:tip"
+ ],
+ "Сортировка": [
+  "Данные:data-data-sort144-button:tip",
+  "Данные:data-sort-label:label"
+ ],
+ "Сортировать по возрастанию": [
+  "Данные:data-sort-ascending146-button:tip"
+ ],
+ "Сортировать по убыванию": [
+  "Данные:data-sort-descending147-button:tip"
+ ],
+ "Автофильтр": [
+  "Данные:data-data-filter-auto-filter149-button:tip"
+ ],
+ "Стандартный фильтр": [
+  "Данные:data-data-filter-standart-filter151-button:tip"
+ ],
+ "Расширенный фильтр": [
+  "Данные:data-data-filter-special-filter152-button:tip"
+ ],
+ "Скрыть автофильтр": [
+  "Данные:data-data-filter-hide-auto-filter154-button:tip"
+ ],
+ "Удалить фильтр": [
+  "Данные:data-data-filter-remove-filter155-button:tip"
+ ],
+ "Фильтр": [
+  "Данные:data-filter-label:label"
+ ],
+ "Группа": [
+  "Данные:overflow-button-data-group161-button:tip"
+ ],
+ "Показать подробности": [
+  "Данные:data-show-detail163-button:tip"
+ ],
+ "Скрыть подробности": [
+  "Данные:data-hide-detail164-button:tip"
+ ],
+ "Подбор параметра": [
+  "Данные:data-goal-seek-dialog166-button:tip"
+ ],
+ "Проверка": [
+  "Данные:data-validation167-button:tip"
+ ],
+ "Статистика": [
+  "Данные:Data-StatisticsMenu-button:tip"
+ ],
+ "Проверка орфографии": [
+  "Рецензирование:review-spell-dialog168-button:tip"
+ ],
+ "Язык": [
+  "Рецензирование:LanguageMenu-button:tip"
+ ],
+ "Автопроверка орфографии": [
+  "Рецензирование:review-spell-online169-button:tip"
+ ],
+ "Расстановка переносов": [
+  "Рецензирование:review-hyphenate170-button:tip"
+ ],
+ "Правописание": [
+  "Рецензирование:review-proofing-label:label"
+ ],
+ "Удалить все комментарии": [
+  "Рецензирование:review-delete-all-notes173-button:tip"
+ ],
+ "Удалить комментарий": [
+  "Рецензирование:review-delete-note174-button:tip"
+ ],
+ "Комментарии": [
+  "Рецензирование:review-comments-label:label"
+ ],
+ "Защитить лист": [
+  "Рецензирование:review-protect-sheet176-button:tip"
+ ],
+ "Защита": [
+  "Рецензирование:review-protect-label:label"
+ ],
+ "Символы": [
+  "Формат:format-font-dialog177-button:tip"
+ ],
+ "Формат": [
+  "Формат:FormatMenu178-button:tip"
+ ],
+ "Абзац": [
+  "Формат:format-paragraph-dialog179-button:tip"
+ ],
+ "Список стилей": [
+  "Формат:format-style-dialog180-button:tip"
+ ],
+ "Формат страницы": [
+  "Формат:format-page-format-dialog182-button:tip"
+ ],
+ "Формат ячеек": [
+  "Формат:format-format-cell-dialog183-button:tip"
+ ],
+ "Условное": [
+  "Формат:format-conditional-format-menu184-button:tip"
+ ],
+ "Формат Ячеек": [
+  "Формат:format-cells-label:label"
+ ],
+ "Линия": [
+  "Формат:format-format-line186-button:tip"
+ ],
+ "Положение и размер": [
+  "Формат:format-transform-dialog187-button:tip"
+ ],
+ "Спарклайн": [
+  "Формат:Format-Sparkline188-button:tip"
+ ],
+ "Прокрутить вверх": [
+  "Формат:iconview_theme_colors-iconview-list-scroll-up-button:tip"
+ ],
+ "Прокрутить вниз": [
+  "Формат:iconview_theme_colors-iconview-list-scroll-down-button:tip"
+ ],
+ "Другие параметры": [
+  "Формат:iconview_theme_colors-iconview-list-expand-button:tip"
+ ],
+ "Темы": [
+  "Формат:themes-group-label:label"
+ ],
+ "Add Theme": [
+  "Формат:add-theme-dialog189-button:tip"
+ ],
+ "Режим просмотра листа": [
+  "Вид:sheetview_combobox-input:tip"
+ ],
+ "Открыть список представлений": [
+  "Вид:selectsheetview288-button:tip"
+ ],
+ "Новое представление листа": [
+  "Вид:newsheetview289-button:tip"
+ ],
+ "Удалить представление листа": [
+  "Вид:removesheetview290-button:tip"
+ ],
+ "Выйти из представления листа": [
+  "Вид:exitsheetview291-button:tip"
+ ],
+ "Представление листа": [
+  "Вид:view-sheetview-label:label"
+ ],
+ "Закрепить": [
+  "Вид:overflow-button-view-freeze297-button:tip"
+ ],
+ "Фокус на ячейку": [
+  "Вид:colrowhighlight-button:tip"
+ ],
+ "Масштаб": [
+  "Вид:overflow-button-view-zoom300-button:tip"
+ ],
+ "Компактный вид": [
+  "Вид:toggleuimode-button:tip"
+ ],
+ "Свернуть вкладки": [
+  "Вид:collapsenotebookbar-button:tip"
+ ],
+ "Строка состояния": [
+  "Вид:showstatusbar-label:label"
+ ],
+ "Темная тема": [
+  "Вид:toggledarktheme-button:tip"
+ ],
+ "Боковая панель": [
+  "Вид:view-sidebardeck302-button:tip"
+ ],
+ "Навигатор": [
+  "Вид:view-navigator303-button:tip"
+ ],
+ "Справка": [
+  "Справка:online-help312-button:tip"
+ ],
+ "Комбинации клавиш": [
+  "Справка:keyboard-shortcuts313-button:tip"
+ ],
+ "Аудит сервера": [
+  "Справка:server-audit-button:tip"
+ ],
+ "О программе": [
+  "Справка:about316-button:tip"
+ ]
+}
