@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Verify a 3-sheet functions-check workbook AS A TEST: exit non-zero on any regression.
 
-Fails (exit 1) if, for a formula that is filled on at least one sheet:
+Fails (exit 1) if, for a formula the smoke was SUPPOSED to insert (the PLAN, subset-aware — not merely the
+ones that happened to fill, so "failed on every sheet" is caught):
   • MISSING   — some sheet did not fill it (dropped insertion / seed),
-  • DIVERGE   — sheets disagree (ok on one, error on another → build artifact, not a core bug),
+  • DIVERGE   — sheets disagree: ok on one & error on another, OR all ok but the computed VALUE differs
+                (⇒ a method inserted a different formula — a silent build artifact, not a core bug),
   • UNEXPECTED— it errors on ALL sheets but is not in ALLOWLIST (a genuinely new failure).
-Errors that are identical across all sheets AND allowlisted (inherently non-computable) are OK.
+Errors that are identical across all sheets AND allowlisted (inherently non-computable) are OK; value
+comparison is skipped for VOLATILE functions (time/random) whose value legitimately differs per sheet.
 Usage: check.py <node_id>   →  prints a PASS/FAIL report, exits 0 (pass) or 1 (fail).
 """
-import sys, json, subprocess, zipfile
+import sys, os, json, subprocess, zipfile
 from xml.etree import ElementTree as ET
 
 # Inherently non-computable in a static, offline, single-cell sheet — expected to error identically
@@ -37,21 +40,43 @@ rels = {r.get("Id"): r.get("Target") for r in ET.fromstring(z.read("xl/_rels/wor
 name2file = {s.get("name"): ("xl/" + rels[s.get(RNS + "id")].lstrip("/"))
              for s in ET.fromstring(z.read("xl/workbook.xml")).iter(NS + "sheet")}
 
-# per-sheet state for every formula cell: "ok" | "err" | "empty"
-sheets = list(name2file)
+# Only the three method sheets are under test — ignore any stray sheet (e.g. a leftover "Лист4") so it
+# can't spuriously mark every formula MISSING; fail if a method sheet is absent.
+METHOD_SHEETS = ["Через меню", "Через мастер", "Прямой ввод"]
+missing_sheets = [s for s in METHOD_SHEETS if s not in name2file]
+if missing_sheets:
+    print(f"FAIL — method sheet(s) absent: {missing_sheets} (found {list(name2file)})")
+    sys.exit(1)
+
+# per-sheet state ("ok"|"err"|"empty") + cached VALUE for every formula cell
+sheets = [s for s in name2file if s in METHOD_SHEETS]
 state = {name: {} for name in sheets}
-for name, part in name2file.items():
+value = {name: {} for name in sheets}
+for name in sheets:
+    part = name2file[name]
     cells = {}
     for c in ET.fromstring(z.read(part)).iter(NS + "c"):
         v = c.find(NS + "v")
         cells[c.get("r")] = {"t": c.get("t"), "v": (v.text if v is not None else None)}
     for ref in info:
         c = cells.get(ref)
-        state[name][ref] = "empty" if (c is None or c["v"] is None) else ("err" if c["t"] == "e" else "ok")
+        if c is None or c["v"] is None:
+            state[name][ref], value[name][ref] = "empty", None
+        elif c["t"] == "e":
+            state[name][ref], value[name][ref] = "err", None
+        else:
+            state[name][ref], value[name][ref] = "ok", c["v"]
 
 filled = {name: sum(1 for ref in info if state[name][ref] != "empty") for name in sheets}
-expected = [ref for ref in info if any(state[name][ref] != "empty" for name in sheets)]
+# EXPECTED = the cells the smoke ATTEMPTED (the PLAN, subset-aware) — NOT "filled on ≥1 sheet". Otherwise a
+# formula that failed to insert on EVERY sheet is silently dropped and the test passes green (reviewer bug 1).
+SUBSET = int(os.environ.get("SUBSET", "0"))
+plan = json.load(open("/tmp/funcdoc-ui-plan.json", encoding="utf-8"))
+expected = [it["f_cell"] for b in plan["blocks"] for it in (b["items"][:SUBSET] if SUBSET else b["items"])]
+expected = [ref for ref in expected if ref in info]  # guard against plan/info drift
 
+# Functions whose computed value legitimately differs across sheets (time / randomness) — value-compare skipped.
+VOLATILE = {"СЛЧИС", "СЛУЧМЕЖДУ", "СЛЧИСМАССИВ", "ТДАТА", "СЕГОДНЯ"}
 missing, diverge, unexpected, allowed = [], [], [], []
 for ref in expected:
     st = [state[name][ref] for name in sheets]
@@ -62,6 +87,12 @@ for ref in expected:
         diverge.append((nm, ref, dict(zip(sheets, st))))
     elif st[0] == "err":
         (allowed if nm in ALLOWLIST else unexpected).append((nm, ref))
+    elif nm not in VOLATILE:
+        # all three sheets computed WITHOUT error — the same formula must yield the same value on each.
+        # A differing value ⇒ a method inserted a DIFFERENT formula (silent build artifact) → DIVERGE.
+        vals = [value[name][ref] for name in sheets]
+        if len(set(vals)) > 1:
+            diverge.append((nm, ref, dict(zip(sheets, vals))))
 
 print(f"node {NODE}")
 for name in sheets:

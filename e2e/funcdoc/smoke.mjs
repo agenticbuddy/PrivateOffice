@@ -93,6 +93,9 @@ try {
       await goto(cell); await page.waitForTimeout(60);
       if ((await readBar()).startsWith("=")) return;
     }
+    // all 3 attempts were swallowed — THROW so the caller counts a failure (not ok++). Otherwise a
+    // silently-empty direct-insert cell would pass the smoke green (reviewer bug 1).
+    throw new Error(`directInsert failed after 3 attempts: ${ru} @ ${cell}`);
   };
 
   for (const sh of SHEETS) {
