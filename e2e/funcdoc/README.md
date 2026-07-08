@@ -21,11 +21,14 @@ cd e2e/funcdoc
 python3 gen.py            # funcs.json + menu-map.json -> /tmp/funcdoc-ui-plan.json + /tmp/funcdoc.json
 python3 template.py       # -> /tmp/funcdoc-template.xlsx (3 empty named sheets)
 SUBSET=3 node smoke.mjs   # fast smoke: 3 funcs/category on each sheet; prints {"file": <node-id>, ...}
-python3 check.py <node-id>   # ASSERTS correctness — exits 1 on any regression
+SUBSET=3 python3 check.py <node-id>   # ASSERTS correctness — exits 1 on any regression
 ```
 
 - `SUBSET=N` limits to N functions per category (fast). Omit `SUBSET` to build **all 448** on every sheet
   (~80 min). `NODE=<id>` builds into an existing node instead of a fresh upload.
+- **Pass the SAME `SUBSET` to `check.py` as to `smoke.mjs`** — check.py derives the expected set from the
+  plan (subset-aware); running it without `SUBSET` against a subset node false-FAILs with hundreds of
+  "MISSING" cells that were never supposed to be inserted.
 - Auth: uploads/edits as the controlled bot `functions-check.bot…@example.com`; verification downloads via
   the admin API. See the source headers for the exact endpoints.
 
