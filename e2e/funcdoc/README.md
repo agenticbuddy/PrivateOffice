@@ -16,6 +16,19 @@ produce identical values.
 
 ## Run
 
+One command (recommended — cleans up after itself):
+
+```bash
+cd e2e/funcdoc
+SUBSET=3 ./run.sh   # gen + template + smoke + check; DELETES its own node on PASS, KEEPS it on FAIL
+```
+
+The node the smoke uploads is the gate's own temp artifact: `run.sh` deletes it when the gate PASSES
+(so runs don't pile test nodes up in storage) and keeps it (printing the id) when anything FAILS, for
+debugging. A pre-existing node passed via `NODE=<id>` is never deleted.
+
+Manual steps (same thing, no cleanup):
+
 ```bash
 cd e2e/funcdoc
 python3 gen.py            # funcs.json + menu-map.json -> /tmp/funcdoc-ui-plan.json + /tmp/funcdoc.json
