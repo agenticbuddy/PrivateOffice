@@ -95,7 +95,8 @@ try {
       await page.keyboard.type(`=${ru}(${inner})`, { delay: 10 });
       await page.keyboard.press("Enter"); await page.waitForTimeout(80); await clearOverlay();
       await goto(cell); await page.waitForTimeout(60);
-      if ((await readBar()).startsWith("=")) return;
+      // array formulas (ФУРЬЕ…) show as {=…} in the bar — "{=" is a SUCCESSFUL insert, not a miss
+      if (/^\{?=/.test(await readBar())) return;
     }
     // all 3 attempts were swallowed — THROW so the caller counts a failure (not ok++). Otherwise a
     // silently-empty direct-insert cell would pass the smoke green (reviewer bug 1).
