@@ -47,6 +47,12 @@ function isActive(key: string) {
   return false;
 }
 function clickNav(n: any) { if (n.soon) { toast.push(t("common.comingSoon")); return; } go(n.to); }
+// "+" creates a new document in the CURRENT context — stay in the folder (add ?new=1 to the current
+// route). Only the read-only "Shared with me" view can't host new docs, so there fall back to root.
+function newHere() {
+  if (route.name === "shared") { router.push({ name: "files", query: { new: "1" } }); return; }
+  router.push({ query: { ...route.query, new: "1" } });
+}
 async function logout() {
   menu.value = false;
   await auth.logout();
@@ -124,7 +130,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       >
         <Icon :name="n.icon" :size="18" :fill="isActive(n.key)" /><span>{{ n.label }}</span>
       </button>
-      <button class="tabadd" :title="t('files.newDocument')" @click="go({ name: 'files', query: { new: '1' } })">
+      <button class="tabadd" :title="t('files.newDocument')" @click="newHere">
         <Icon name="add" :size="20" />
       </button>
     </nav>
