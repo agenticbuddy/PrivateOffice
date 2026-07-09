@@ -656,6 +656,13 @@ html[data-po="glass2"] .ui-tab.jsdialog {
 html[data-po="glass2"] .ui-tabs-content .ui-tabs.jsdialog.ui-widget {
   border-block-start-color: var(--po-line) !important;
 }
+/* treeview CONTAINER (font lists, chart data, etc.) — engine ships a #b6b6b6 border + 4px radius,
+   off-theme vs every other field. Normalise to the theme line + 8px on a clean white panel. */
+html[data-po="glass2"] .ui-treeview {
+  border: 1px solid var(--po-line) !important;
+  border-radius: 8px !important;
+  background: var(--po-glass-strong) !important;
+}
 /* treeview selected row (default engine cyan → accent) */
 html[data-po="glass2"] .ui-treeview-entry.selected {
   background-color: var(--po-accent-soft) !important;
@@ -796,6 +803,22 @@ html[data-po="glass2"] .notebookbar .ui-listbox:hover,
 html[data-po="glass2"] .notebookbar .ui-combobox:hover {
   background: rgba(255, 255, 255, 0.75) !important;
   border-color: var(--po-accent) !important;
+}
+/* Combobox = ONE field. Previously BOTH the .ui-combobox wrapper AND the inner .ui-combobox-content
+   carried a bg + 8px radius, so the content rendered as a narrower rounded box nested inside the
+   wrapper: an uneven "border" around it in dialogs, and (in the ribbon) the browser's default focus
+   outline drew a NARROW blue ring over the wide field. Fix: the wrapper is the field (bg+border+radius);
+   the content is transparent, flush, no radius, no own outline; focus shows on the whole field. */
+html[data-po="glass2"] .ui-combobox { background: var(--po-glass-strong) !important; }
+html[data-po="glass2"] .notebookbar .ui-combobox { background: rgba(255, 255, 255, 0.55) !important; }
+html[data-po="glass2"] .ui-combobox-content {
+  background: transparent !important; border: none !important; border-radius: 0 !important; outline: none !important;
+}
+html[data-po="glass2"] .ui-combobox-content:focus,
+html[data-po="glass2"] .ui-combobox-content:focus-visible,
+html[data-po="glass2"] .ui-combobox-content input:focus { outline: none !important; box-shadow: none !important; }
+html[data-po="glass2"] .ui-combobox:focus-within {
+  border-color: var(--po-accent) !important; box-shadow: 0 0 0 2px var(--po-accent-soft) !important;
 }
 /* group separators */
 html[data-po="glass2"] .notebookbar.ui-separator.vertical {
@@ -1065,6 +1088,12 @@ html[data-po="glass"] .ui-tab.jsdialog {
 html[data-po="glass"] .ui-tabs-content .ui-tabs.jsdialog.ui-widget {
   border-block-start-color: var(--po-line) !important;
 }
+/* treeview CONTAINER — normalise the engine's #b6b6b6/4px to the theme line + 8px, white panel. */
+html[data-po="glass"] .ui-treeview {
+  border: 1px solid var(--po-line) !important;
+  border-radius: 8px !important;
+  background: var(--po-glass-strong) !important;
+}
 /* treeview selected row (default engine cyan → accent) */
 html[data-po="glass"] .ui-treeview-entry.selected {
   background-color: var(--po-accent-soft) !important;
@@ -1205,6 +1234,19 @@ html[data-po="glass"] .notebookbar .ui-listbox:hover,
 html[data-po="glass"] .notebookbar .ui-combobox:hover {
   background: rgba(255, 255, 255, 0.75) !important;
   border-color: var(--po-accent) !important;
+}
+/* Combobox = ONE field (see the glass2 note above): wrapper is the field, inner content transparent
+   and flush, focus on the whole field — fixes the nested-box border (dialogs) + narrow focus ring (ribbon). */
+html[data-po="glass"] .ui-combobox { background: var(--po-glass-strong) !important; }
+html[data-po="glass"] .notebookbar .ui-combobox { background: rgba(255, 255, 255, 0.55) !important; }
+html[data-po="glass"] .ui-combobox-content {
+  background: transparent !important; border: none !important; border-radius: 0 !important; outline: none !important;
+}
+html[data-po="glass"] .ui-combobox-content:focus,
+html[data-po="glass"] .ui-combobox-content:focus-visible,
+html[data-po="glass"] .ui-combobox-content input:focus { outline: none !important; box-shadow: none !important; }
+html[data-po="glass"] .ui-combobox:focus-within {
+  border-color: var(--po-accent) !important; box-shadow: 0 0 0 2px var(--po-accent-soft) !important;
 }
 /* group separators */
 html[data-po="glass"] .notebookbar.ui-separator.vertical {
