@@ -18,7 +18,7 @@ from xml.etree import ElementTree as ET
 # on all three sheets (by-design #N/A, external, dynamic-array, exotic add-ins, strict signatures).
 ALLOWLIST = {
     "НД", "ТЕКУЩ", "ТИП.ОШИБКИ", "ТИПОШИБКИ",                       # by-design #N/A
-    "ВЕБСЛУЖБА", "DDE", "ДСВТ",                                     # external / pivot
+    "ВЕБСЛУЖБА", "ФИЛЬТР.XML", "DDE", "ДСВТ",                       # external (network/XML) / pivot
     "ФИЛЬТР", "СОРТПО", "LET",                                      # dynamic array / name-scope
     "ФУРЬЕ",                                                        # complex-array transform
     "ПРЕДСКАЗ.ETS.ADD", "ПРЕДСКАЗ.ETS.MULT", "ПРЕДСКАЗ.ETS.PI.ADD",
@@ -26,6 +26,9 @@ ALLOWLIST = {
     "ПРЕДСКАЗ.ETS.СЕЗОННОСТЬ",                                      # time-series (need a timeline)
     "OPT_BARRIER", "OPT_PROB_HIT", "OPT_PROB_INMONEY", "OPT_TOUCH", # option-pricing add-ins
     "ЦЕНАПЕРВНЕРЕГ", "ДОХОДПЕРВНЕРЕГ",                              # odd-first-coupon bonds
+    "НАКОПДОХОД", "НАКОПДОХОДПОГАШ",                                # ACCRINT/ACCRINTM — need real
+    #                                                                issue<first<settlement dates; the
+    #                                                                generic offline seeds error identically
     "Б", "CONVERT_OOO", "ВЕРОЯТНОСТЬ", "ДСТОТКЛ", "ДДИСП",          # strict-signature (see WAL)
 }
 
@@ -75,8 +78,13 @@ plan = json.load(open("/tmp/funcdoc-ui-plan.json", encoding="utf-8"))
 expected = [it["f_cell"] for b in plan["blocks"] for it in (b["items"][:SUBSET] if SUBSET else b["items"])]
 expected = [ref for ref in expected if ref in info]  # guard against plan/info drift
 
-# Functions whose computed value legitimately differs across sheets (time / randomness) — value-compare skipped.
-VOLATILE = {"СЛЧИС", "СЛУЧМЕЖДУ", "СЛЧИСМАССИВ", "ТДАТА", "СЕГОДНЯ"}
+# Functions whose computed value legitimately differs across sheets — value-compare skipped:
+#  • VOLATILE   — time / randomness: every RAND* variant (incl. .ДВ / RANDARRAY) + NOW/TODAY.
+#  • POSITIONAL — depends on WHICH sheet it sits on: ЛИСТ()=SHEET() returns the sheet index (1/2/3),
+#                 so "differs across sheets" is CORRECT, not a build artifact.
+VOLATILE = {"СЛЧИС", "СЛЧИС.ДВ", "СЛУЧМАССИВ", "СЛУЧМЕЖДУ", "СЛУЧМЕЖДУ.ДВ", "ТДАТА", "СЕГОДНЯ"}
+POSITIONAL = {"ЛИСТ"}
+NO_VALUE_COMPARE = VOLATILE | POSITIONAL
 missing, diverge, unexpected, allowed = [], [], [], []
 for ref in expected:
     st = [state[name][ref] for name in sheets]
@@ -87,7 +95,7 @@ for ref in expected:
         diverge.append((nm, ref, dict(zip(sheets, st))))
     elif st[0] == "err":
         (allowed if nm in ALLOWLIST else unexpected).append((nm, ref))
-    elif nm not in VOLATILE:
+    elif nm not in NO_VALUE_COMPARE:
         # all three sheets computed WITHOUT error — the same formula must yield the same value on each.
         # A differing value ⇒ a method inserted a DIFFERENT formula (silent build artifact) → DIVERGE.
         vals = [value[name][ref] for name in sheets]
