@@ -950,6 +950,402 @@ html[data-po="glass2"] #sidebar-dock-wrapper {
   scrollbar-color: rgba(37, 99, 217, 0.30) transparent !important;
 }
 
+/* ============================================================
+   glass (green) — ADDITIONS (mirror of the glass2 additions, green tokens): full liquid-glass coverage for remaining
+   menu / dropdown / dialog / popup / picker / sidebar chrome.
+   Append verbatim to the html[data-po="glass"] section.
+   ============================================================ */
+
+/* ---- Classic menubar dropdown flyout (File/Edit/View/… panel) ---- */
+html[data-po="glass"] .lo-menu ul {
+  background: var(--po-glass-strong) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  border: 1px solid var(--po-glass-bd) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.18) !important;
+  padding: 6px !important;
+  color: var(--po-ink) !important;
+}
+/* top-level menubar entry hover/open — clear the grey box + square border-bottom */
+html[data-po="glass"] .lo-menu > li > a:hover,
+html[data-po="glass"] .lo-menu > li > a:focus,
+html[data-po="glass"] .lo-menu > li > a:active,
+html[data-po="glass"] .lo-menu > li > a.highlighted {
+  background-color: var(--po-accent-soft) !important;
+  color: var(--po-accent-ink) !important;
+  border-color: transparent !important;
+  border-bottom-color: transparent !important;
+  border-radius: 8px !important;
+}
+/* menu separator hairline */
+html[data-po="glass"] .lo-menu a.separator {
+  background-color: var(--po-line) !important;
+  margin: 5px 6px !important;
+}
+/* disabled menu items — don't punch an opaque white patch into the glass */
+html[data-po="glass"] .lo-menu a.disabled,
+html[data-po="glass"] .lo-menu > li .disabled {
+  background: transparent !important;
+  color: var(--po-ink-2) !important;
+  opacity: 0.5;
+}
+/* keyboard-shortcut text (Ctrl+S) */
+html[data-po="glass"] .lo-menu ul a > span.shortcut {
+  color: var(--po-ink-2) !important;
+}
+
+/* ---- Right-click context menus + submenus ---- */
+/* row highlight fill needs a radius so it doesn't paint a square band */
+html[data-po="glass"] .context-menu-hover { border-radius: 8px; }
+html[data-po="glass"] .context-menu-hover > span > a { color: var(--po-ink) !important; }
+/* disabled row — remapped --color-background-lighter would paint opaque white */
+html[data-po="glass"] .context-menu-item.context-menu-disabled {
+  background-color: transparent !important;
+  color: var(--po-ink-2);
+}
+/* submenu expand arrow → accent */
+html[data-po="glass"] .context-menu-submenu:after {
+  border-color: transparent transparent transparent var(--po-accent-ink) !important;
+}
+html[data-po="glass"] [dir='rtl'] .context-menu-submenu:after {
+  border-color: transparent var(--po-accent-ink) transparent transparent !important;
+}
+/* checkmark / radio glyph → accent */
+html[data-po="glass"] .context-menu-icon::before { color: var(--po-accent-ink) !important; }
+
+/* ---- JSDialog inner widgets ---- */
+/* notebook tab strip inside dialogs */
+html[data-po="glass"] .ui-tab.selected.jsdialog {
+  background-color: var(--po-accent-soft) !important;
+  color: var(--po-accent-ink) !important;
+  border-radius: 8px 8px 0 0 !important;
+  -webkit-text-decoration: underline 2px solid var(--po-accent) !important;
+  text-decoration: underline 2px solid var(--po-accent) !important;
+  text-underline-offset: 6px;
+}
+html[data-po="glass"] .ui-tab.jsdialog {
+  color: var(--po-ink-2) !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+html[data-po="glass"] .ui-tabs-content .ui-tabs.jsdialog.ui-widget {
+  border-block-start-color: var(--po-line) !important;
+}
+/* treeview selected row (default engine cyan → accent) */
+html[data-po="glass"] .ui-treeview-entry.selected {
+  background-color: var(--po-accent-soft) !important;
+  color: var(--po-accent-ink) !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px;
+}
+html[data-po="glass"] .ui-treeview-entry:hover {
+  color: var(--po-ink) !important;
+  border-color: transparent !important;
+  border-radius: 6px;
+}
+/* treeview grid cell-active / focus (ChartData) + sheet-list selection */
+html[data-po="glass"] #ChartDataDialog .ui-treeview-entry > [role='gridcell'].ui-treeview-cell-active,
+html[data-po="glass"] #ChartDataDialog .ui-treeview-entry > [role='rowheader'].ui-treeview-cell-active,
+html[data-po="glass"] #ChartDataDialog .ui-treeview-entry > [role='gridcell']:focus-visible,
+html[data-po="glass"] #ChartDataDialog .ui-treeview-entry > [role='rowheader']:focus-visible {
+  background-color: var(--po-accent-soft) !important;
+  color: var(--po-accent-ink) !important;
+  outline: 2px solid var(--po-accent) !important;
+  outline-offset: -2px;
+}
+html[data-po="glass"] #sheetlist-entries .ui-combobox-entry.selected span {
+  background-color: var(--po-accent-soft) !important;
+  color: var(--po-accent-ink) !important;
+  border: 1px solid var(--po-accent) !important;
+}
+/* treeview sticky header strip (was flat white) */
+html[data-po="glass"] #AcceptRejectChangesDialog .ui-treeview-headers {
+  background-color: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(12px) saturate(var(--po-glass-sat));
+  color: var(--po-ink) !important;
+  border-bottom: 1px solid var(--po-line);
+}
+html[data-po="glass"] .ui-treeview-header-button,
+html[data-po="glass"] .ui-treeview-header-text {
+  color: var(--po-ink) !important;
+}
+/* checkbox / radio checked accent (jQuery-UI default is orange) */
+html[data-po="glass"] .ui-icon-background,
+html[data-po="glass"] .ui-state-active .ui-icon-background {
+  border-color: var(--po-accent) !important;
+  background-color: var(--po-accent) !important;
+}
+html[data-po="glass"] .ui-checkboxradio-radio-label.ui-checkboxradio-checked .ui-icon,
+html[data-po="glass"] .ui-checkboxradio-radio-label.ui-checkboxradio-checked:hover .ui-icon {
+  border-color: var(--po-accent) !important;
+}
+html[data-po="glass"] .jsdialog input[type='checkbox'],
+html[data-po="glass"] .jsdialog input[type='radio']:not(.ui-color-picker-entry) {
+  accent-color: var(--po-accent);
+}
+/* text input / textarea focus ring */
+html[data-po="glass"] .jsdialog.ui-edit,
+html[data-po="glass"] .jsdialog.ui-textarea {
+  border-radius: 8px !important;
+  border-color: var(--po-line) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .jsdialog.ui-edit:focus-visible,
+html[data-po="glass"] .jsdialog.ui-textarea:focus-visible {
+  outline: 2px solid var(--po-accent) !important;
+  outline-offset: -1px;
+  border-color: var(--po-accent) !important;
+}
+html[data-po="glass"] .jsdialog.ui-edit:not([disabled]):hover,
+html[data-po="glass"] .jsdialog.ui-textarea:not([disabled]):hover {
+  border-color: var(--po-accent-ink) !important;
+}
+/* listbox / combobox control (closed picker) */
+html[data-po="glass"] .ui-listbox,
+html[data-po="glass"] .ui-combobox,
+html[data-po="glass"] .ui-timefield,
+html[data-po="glass"] .ui-combobox-content {
+  border-radius: 8px !important;
+  border-color: var(--po-line) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .ui-combobox-content { background-color: var(--po-glass-strong) !important; }
+html[data-po="glass"] .ui-listbox:not([disabled]):hover,
+html[data-po="glass"] .jsdialog.menubutton:not([disabled]):hover {
+  border-color: var(--po-accent-ink) !important;
+}
+/* default (non-primary) dialog buttons */
+html[data-po="glass"] .ui-button-box .jsdialog.ui-pushbutton,
+html[data-po="glass"] :not(.main-nav) .button-secondary,
+html[data-po="glass"] .jsdialog.ui-pushbutton:not(.button-primary):not(.button):not(.ui-ok) {
+  border-radius: 8px !important;
+  border-color: var(--po-line) !important;
+}
+html[data-po="glass"] body button:not(.ui-corner-all):not(.button):not(.button-primary):not(.unobutton):not(.form-field-button):not(.notebookbar.ui-tab):not(.ui-expander-btn):not(.arrowbackground):not(.ui-combobox-button):not(.inserttable-grid .col):not(.spinfieldbutton-up):not(.spinfieldbutton-down):hover {
+  color: var(--po-accent-ink) !important;
+}
+
+/* ---- Ribbon / notebookbar chrome ---- */
+/* selected-tab underline → accent instead of doc-type colour */
+html[data-po="glass"] .ui-tab.selected.notebookbar,
+html[data-po="glass"] .main-nav.hasnotebookbar .ui-tabs > .ui-tab.selected.notebookbar {
+  color: var(--po-ink) !important;
+  font-weight: 700;
+  border: 1px solid transparent !important;
+  box-shadow: inset 0 -2px var(--po-accent) !important;
+}
+html[data-po="glass"] .ui-tab.selected.notebookbar:hover {
+  box-shadow: inset 0 -2px var(--po-accent) !important;
+}
+html[data-po="glass"] .ui-tab.notebookbar:hover {
+  color: var(--po-ink) !important;
+  box-shadow: inset 0 -2px var(--po-line) !important;
+}
+html[data-po="glass"] .ui-tab.notebookbar { color: var(--po-ink-2) !important; }
+/* ribbon overflow / group popup (was flat white) */
+html[data-po="glass"] .ui-overflow-group-popup {
+  background: var(--po-glass-strong) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  border: 1px solid var(--po-glass-bd) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.18) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .ui-overflow-group-label { color: var(--po-ink-2) !important; }
+/* in-ribbon font/style pickers (grey pills → glass) */
+html[data-po="glass"] .notebookbar.ui-listbox,
+html[data-po="glass"] .notebookbar.ui-combobox,
+html[data-po="glass"] .notebookbar .ui-listbox,
+html[data-po="glass"] .notebookbar .ui-combobox,
+html[data-po="glass"] .notebookbar .ui-timefield {
+  background: rgba(255, 255, 255, 0.55) !important;
+  color: var(--po-ink) !important;
+  border: 1px solid var(--po-line) !important;
+  border-radius: 8px !important;
+}
+html[data-po="glass"] .notebookbar.ui-listbox:hover,
+html[data-po="glass"] .notebookbar.ui-combobox:hover,
+html[data-po="glass"] .notebookbar .ui-listbox:hover,
+html[data-po="glass"] .notebookbar .ui-combobox:hover {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-color: var(--po-accent) !important;
+}
+/* group separators */
+html[data-po="glass"] .notebookbar.ui-separator.vertical {
+  background-color: var(--po-line) !important;
+}
+/* split/dropdown button hover halves → rounded blue chip */
+html[data-po="glass"] .notebookbar .splitbutton .arrowbackground:hover,
+html[data-po="glass"] .notebookbar.splitbutton .arrowbackground:hover {
+  background-color: var(--po-accent-soft) !important;
+  border-radius: 0 8px 8px 0;
+}
+html[data-po="glass"] .notebookbar .splitbutton > .ui-content.unobutton:hover {
+  background-color: var(--po-accent-soft) !important;
+  border-radius: 8px 0 0 8px;
+}
+/* labeled toolbutton hover/selected (hard-coded grey → accent) */
+html[data-po="glass"] .hasnotebookbar .ui-content.unotoolbutton.has-label:hover,
+html[data-po="glass"] .hasnotebookbar .ui-content.unotoolbutton.selected:hover,
+html[data-po="glass"] .hasnotebookbar .ui-content.unotoolbutton.selected:not(.has-label):not(.inline):hover,
+html[data-po="glass"] .ui-overflow-group-more.unotoolbutton:hover,
+html[data-po="glass"] .notebookbar.unotoolbutton.selected:hover {
+  background-color: var(--po-accent-soft) !important;
+  color: var(--po-accent-ink) !important;
+  border-radius: 8px;
+}
+
+/* ---- Floating popups & pickers ---- */
+/* Calc auto-filter dropdown container (was flat white) */
+html[data-po="glass"] .autofilter-container {
+  background: var(--po-glass-strong) !important;
+  background-color: var(--po-glass-strong) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  border: 1px solid var(--po-glass-bd) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.18) !important;
+  color: var(--po-ink) !important;
+  overflow: hidden;
+}
+html[data-po="glass"] .autofilter-container-submenu > .autofilter-container {
+  border-radius: 12px !important;
+}
+/* auto-filter inner list: selected row (engine teal → accent) + search input */
+html[data-po="glass"] .autofilter .ui-treeview-entry.selected,
+html[data-po="glass"] .autofilter-container .ui-treeview-entry.selected {
+  background-color: var(--po-accent) !important;
+  border-color: var(--po-accent) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+html[data-po="glass"] .autofilter .ui-treeview-entry:hover {
+  border-color: transparent !important;
+  border-radius: 8px !important;
+}
+html[data-po="glass"] .autofilter .ui-treeview-search-input.jsdialog.ui-edit {
+  border-radius: 8px !important;
+  border: 1px solid var(--po-line) !important;
+  background: rgba(255, 255, 255, 0.55) !important;
+  color: var(--po-ink) !important;
+}
+/* tooltips (flat white → glass) */
+html[data-po="glass"] .ui-tooltip,
+html[data-po="glass"] .ui-tooltip-content,
+html[data-po="glass"] [data-title]:after {
+  background: var(--po-glass-strong) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(14px) saturate(var(--po-glass-sat));
+  border: 1px solid var(--po-glass-bd) !important;
+  border-radius: 8px !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .ui-tooltip.ui-widget-shadow,
+html[data-po="glass"] .ui-tooltip {
+  box-shadow: 0 8px 24px rgba(17, 32, 63, 0.18) !important;
+}
+/* hyperlink hover preview bubble (flat white → glass) */
+html[data-po="glass"] .hyperlink-pop-up-container {
+  background: var(--po-glass-strong) !important;
+  background-color: var(--po-glass-strong) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  border: 1px solid var(--po-glass-bd) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.18) !important;
+}
+html[data-po="glass"] .hyperlink-pop-up-container a { color: var(--po-accent-ink) !important; }
+html[data-po="glass"] #hyperlink-pop-up-preview p { color: var(--po-ink-2) !important; }
+/* colour picker swatch focus/hover ring (engine teal → accent) + labels */
+html[data-po="glass"] .ui-color-picker-entry:hover,
+html[data-po="glass"] .ui-color-picker-entry:focus-visible {
+  outline: 2px solid var(--po-accent) !important;
+}
+html[data-po="glass"] .ui-color-picker-header,
+html[data-po="glass"] #ui-color-picker-custom-label,
+html[data-po="glass"] #ui-color-picker-recent-label {
+  color: var(--po-ink) !important;
+}
+/* combobox entry checkmark + selected image border (engine teal → accent) + text */
+html[data-po="glass"] .ui-combobox-entry.checked::before {
+  color: var(--po-accent) !important;
+}
+html[data-po="glass"] .ui-combobox-entry.selected:not(.checked):not(.notchecked) img:not(:hover) {
+  border-color: var(--po-accent) !important;
+}
+html[data-po="glass"] .ui-combobox-entry span { color: var(--po-ink) !important; }
+/* snackbar toast — keep dark, round the corners + on-accent action link */
+html[data-po="glass"] .snackbar.jsdialog-container .ui-dialog-content {
+  border-radius: 12px !important;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.28) !important;
+  overflow: hidden;
+}
+html[data-po="glass"] .snackbar.jsdialog-container [id$='button'].ui-pushbutton.jsdialog {
+  color: #6fd0a8 !important;
+}
+
+/* ---- Property sidebar / deck ---- */
+/* dock wrapper left divider (grey → glass line) */
+html[data-po="glass"] #sidebar-dock-wrapper.visible,
+html[data-po="glass"] [data-userinterfacemode='classic'] #document-container:not(.mobile) + #sidebar-dock-wrapper,
+html[data-po="glass"] [data-docType='spreadsheet'] #document-container:not(.mobile) + #sidebar-dock-wrapper {
+  border-inline-start: 1px solid var(--po-line) !important;
+}
+/* deck panel header divider hairline */
+html[data-po="glass"] .jsdialog.ui-expander,
+html[data-po="glass"] .ui-expander.jsdialog.sidebar {
+  box-shadow: 0 1px 0 0 var(--po-line) !important;
+}
+/* expand/collapse chevron: drop the grey brightness filter, accent when open */
+html[data-po="glass"] .ui-expander-label::before,
+html[data-po="glass"] .ui-expander-label.expanded::before {
+  filter: none !important;
+}
+html[data-po="glass"] .ui-expander-label.expanded {
+  color: var(--po-accent-ink) !important;
+}
+/* sidebar numeric/text spinfields (flat grey → glass) */
+html[data-po="glass"] .sidebar.spinfieldcontainer input,
+html[data-po="glass"] .sidebar .spinfieldcontainer input {
+  background-color: rgba(255, 255, 255, 0.55) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass"] .sidebar.spinfieldcontainer,
+html[data-po="glass"] .sidebar .spinfieldcontainer {
+  background-color: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid var(--po-line) !important;
+  border-radius: 8px !important;
+}
+/* sidebar listboxes / comboboxes (flat grey → glass) */
+html[data-po="glass"] .sidebar.jsdialog.ui-listbox,
+html[data-po="glass"] .sidebar .jsdialog.ui-listbox,
+html[data-po="glass"] .sidebar .ui-combobox {
+  background-color: rgba(255, 255, 255, 0.55) !important;
+  color: var(--po-ink) !important;
+  border: 1px solid var(--po-line) !important;
+  border-radius: 8px !important;
+}
+html[data-po="glass"] .sidebar.jsdialog.ui-listbox:hover,
+html[data-po="glass"] .sidebar .jsdialog.ui-listbox:hover {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--po-ink) !important;
+  border-color: var(--po-accent) !important;
+}
+/* sidebar scrollbar → accent tint */
+html[data-po="glass"] .sidebar-panel::-webkit-scrollbar-thumb {
+  background-color: var(--po-accent-soft) !important;
+  border-radius: 8px;
+}
+html[data-po="glass"] .sidebar-panel::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(10, 127, 94, 0.28) !important;
+}
+html[data-po="glass"] #sidebar-dock-wrapper {
+  scrollbar-color: rgba(10, 127, 94, 0.30) transparent !important;
+}
+
+
 /* ---- Layout fixes for upstream dialog controls that render too narrow (theme-independent) ---- */
 /* Format Cells → Шрифт: the language dropdowns get a ~50px grid cell while the Style/Size
    siblings get ~160px, clipping "Русский" to "Р". Give language pickers a usable minimum. */
