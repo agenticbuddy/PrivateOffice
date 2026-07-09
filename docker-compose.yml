@@ -52,7 +52,9 @@ services:
       - DONT_GEN_SSL_CERT=true
       # Privacy: no phone-home. Disable the update check (fetch_update_check=0) and the
       # update popup; welcome/feedback/buyproduct are neutralized in the image build.
-      - extra_params=--o:ssl.enable=false --o:ssl.termination=false --o:net.frame_ancestors=${PUBLIC_ORIGIN} --o:logging.level=warning --o:fetch_update_check=0 --o:allow_update_popup=false --o:product_name=PrivateOffice
+      # help_url empty → Collabora hides ALL Help buttons (function wizard / dialogs /
+      # "Help on this error"), so nothing links out to help.collaboraoffice.com.
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=false --o:net.frame_ancestors=${PUBLIC_ORIGIN} --o:logging.level=warning --o:fetch_update_check=0 --o:allow_update_popup=false --o:product_name=PrivateOffice --o:help_url=
     cap_add:
       - MKNOD
     tty: true
