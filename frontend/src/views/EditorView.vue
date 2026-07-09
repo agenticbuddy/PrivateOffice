@@ -89,6 +89,9 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
         <Icon name="home" :size="22" /><span class="rlabel">{{ t("nav.home") }}</span>
       </button>
       <div class="grow" />
+      <button class="railbtn" :title="t('nav.profile')" @click="go({ name: 'profile' })">
+        <Icon name="settings" :size="22" /><span class="rlabel">{{ t("nav.profile") }}</span>
+      </button>
       <div class="userwrap">
         <button class="userbtn" @click="menu = !menu" :title="auth.user?.full_name">
           <Avatar v-if="auth.user" :name="auth.user.full_name" :id="auth.user.id" :size="34" />
@@ -118,6 +121,8 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
           <Badge v-if="session && !session.can_write" tone="reader">{{ t("editor.readonly") }}</Badge>
         </div>
         <div class="spacer" />
+        <a v-if="node?.type === 'file'" class="tbicon" :href="'/api/nodes/' + node.id + '/download'" :title="t('common.download')"><Icon name="download" :size="20" /></a>
+        <div v-if="auth.user" class="collab"><Avatar :name="auth.user.full_name" :id="auth.user.id" :size="30" /></div>
         <BaseButton v-if="canShare()" size="sm" variant="primary" @click="showShare = true">
           <Icon name="group_add" :size="18" />{{ t("common.share") }}
         </BaseButton>
@@ -187,6 +192,9 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 .nm { font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sync { display: flex; align-items: center; gap: 3px; font-size: 11.5px; color: var(--accent); font-weight: 600; }
 .spacer { flex: 1; }
+.tbicon { border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 36px; height: 36px; border-radius: var(--r-full); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.tbicon:hover { background: var(--accent-soft); color: var(--accent-ink); }
+.collab { display: flex; margin-inline: var(--s-1) var(--s-2); }
 
 /* ---- stage / iframe ---- */
 .stage { flex: 1; min-height: 0; position: relative; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--glass-bd); background: rgba(255, 255, 255, 0.4); }
