@@ -70,7 +70,7 @@
   "Note": "Примечание",
   "Open Views List": "Открыть список представлений",
   "PDF Document (.pdf) with options": "Документ PDF (.pdf) с параметрами",
-  "Pivot Calculated Field": "Вычисляемое поле сводной таблицы",
+  "Pivot Calculated Field": "Вычисляемое поле",
   "Pivot Table": "Сводная таблица",
   "Press Ctrl + Enter to post": "Нажмите Ctrl + Enter для отправки",
   "Proofing": "Правописание",
@@ -645,5 +645,7 @@
   "Select a cell range first to insert a styled table": "Сначала выделите диапазон ячеек для вставки таблицы со стилем",
   "Table styles are only available in .xlsx files": "Стили таблиц доступны только в файлах .xlsx",
   "No data found in selection.": "В выделении нет данных.",
-  "Referenced cells": "Ячейки-ссылки"
+  "Referenced cells": "Ячейки-ссылки",
+  "Validate Dialog": "Проверить диалог",
+  "Validate Sidebar": "Проверить боковую панель"
 }
