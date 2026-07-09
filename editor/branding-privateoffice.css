@@ -138,8 +138,18 @@ html[data-po="glass"] .unotoolbutton:hover, html[data-po="glass"] .w2ui-button:h
   background: rgba(20, 32, 56, 0.07) !important;
 }
 html[data-po="glass"] .unotoolbutton.selected, html[data-po="glass"] .w2ui-button.checked,
-html[data-po="glass"] .ui-pushbutton.selected, html[data-po="glass"] .unotoolbutton.checked {
+html[data-po="glass"] .ui-pushbutton.selected, html[data-po="glass"] .unotoolbutton.checked,
+html[data-po="glass"] .unobutton.selected, html[data-po="glass"] .unobutton.checked {
   background: var(--po-accent-soft) !important; color: var(--po-accent-ink) !important;
+}
+/* Sidebar "Properties" toggle pills — pronounced OUTLINED selected state, matching the mockup:
+   accent tint + inset accent ring (box-shadow → no layout shift) instead of the stock grey-blue fill.
+   Scoped to the sidebar so the dense ribbon keeps its lighter tint-only selected look. */
+html[data-po="glass"] #sidebar-panel .unobutton.selected, html[data-po="glass"] .sidebar .unobutton.selected,
+html[data-po="glass"] #sidebar-panel .unobutton.checked, html[data-po="glass"] .sidebar .unobutton.checked {
+  background: var(--po-accent-soft) !important;
+  box-shadow: inset 0 0 0 1.5px var(--po-accent) !important;
+  color: var(--po-accent-ink) !important;
 }
 
 /* formula bar */
@@ -426,8 +436,18 @@ html[data-po="glass2"] .unotoolbutton:hover, html[data-po="glass2"] .w2ui-button
   background: rgba(20, 32, 56, 0.07) !important;
 }
 html[data-po="glass2"] .unotoolbutton.selected, html[data-po="glass2"] .w2ui-button.checked,
-html[data-po="glass2"] .ui-pushbutton.selected, html[data-po="glass2"] .unotoolbutton.checked {
+html[data-po="glass2"] .ui-pushbutton.selected, html[data-po="glass2"] .unotoolbutton.checked,
+html[data-po="glass2"] .unobutton.selected, html[data-po="glass2"] .unobutton.checked {
   background: var(--po-accent-soft) !important; color: var(--po-accent-ink) !important;
+}
+/* Sidebar "Properties" toggle pills — pronounced OUTLINED selected state, matching the mockup:
+   accent tint + inset accent ring (box-shadow → no layout shift) instead of the stock grey-blue fill.
+   Scoped to the sidebar so the dense ribbon keeps its lighter tint-only selected look. */
+html[data-po="glass2"] #sidebar-panel .unobutton.selected, html[data-po="glass2"] .sidebar .unobutton.selected,
+html[data-po="glass2"] #sidebar-panel .unobutton.checked, html[data-po="glass2"] .sidebar .unobutton.checked {
+  background: var(--po-accent-soft) !important;
+  box-shadow: inset 0 0 0 1.5px var(--po-accent) !important;
+  color: var(--po-accent-ink) !important;
 }
 
 /* formula bar */
