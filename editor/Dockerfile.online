@@ -194,6 +194,14 @@ RUN cp ${DIST}/images/lc_paste.svg ${DIST}/images/lc_pastespecial.svg \
 # Don't request an empty images/ URL for icon-less entries (stray 404 guard).
 RUN sed -i 's#getImageURL=function(imgName){var _a;#getImageURL=function(imgName){var _a;if(!imgName)return"";#' ${DIST}/bundle.js
 
+# #61: the save-status tooltip ("Last saved: …") formats elapsed time via
+# Intl.RelativeTimeFormat with style:"narrow". For ru (and fr) the CLDR narrow relative form is a terse
+# SIGNED number ("-36 мин" / "-36 min") — reads as a broken "negative time". style:"short" renders a
+# proper "36 мин. назад" / "36 min. ago" for every locale (and correct sec/min/hour units). Our WOPI
+# LastModifiedTime is correct (updated_at, UTC); this is purely the client's narrow-style formatting.
+# Target string is UNIQUE in the bundle, so this anchored sed is safe.
+RUN sed -i 's#new Intl.RelativeTimeFormat(String.locale,{style:"narrow"})#new Intl.RelativeTimeFormat(String.locale,{style:"short"})#' ${DIST}/bundle.js
+
 # Privacy + rebrand of coolwsd's SERVE-TIME placeholders. Name -> PrivateOffice, product URL ->
 # about:blank; empty feedback/welcome/buyproduct; disable auto-welcome. Also REPLACE the %BRANDING_JS%
 # AND %BRANDING_CSS% placeholders with our OWN <script>/<link> tags: coolwsd otherwise expands these at
