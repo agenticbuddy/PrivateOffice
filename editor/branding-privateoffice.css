@@ -30,32 +30,25 @@
 
 /* ============================================================================
    POPUP OVERLAY FIX — applies to BOTH glass themes.
-   The notebookbar glass rules set `backdrop-filter` via the bare `.notebookbar`
-   class, which ALSO matches the deeply-nested ribbon CONTENT wrappers
-   (.ui-tabs-root / .ui-tabs-content / .ui-tabpage / .ui-content.level-0 /
-   .ui-overflow-manager). A backdrop-filter turns each into a CONTAINING BLOCK for
-   its position:fixed descendants, so ribbon dropdown / overflow / group popups that
-   render inside the notebookbar are positioned relative to that wrapper instead of
-   the viewport → they render clipped / on top of their own button (seen on Insert →
-   «Иллюстрации» and many other ribbon dropdowns, in BOTH glass and glass2).
-   Neutralise backdrop-filter on those inner wrappers (and the popups themselves):
-   the visible glass stays on the top bar + tabs strip, and popups keep their glass
-   look via their opaque-ish background + border + shadow.
+   The notebookbar glass rules set `backdrop-filter` on the whole top chrome. A
+   backdrop-filter makes an element a CONTAINING BLOCK for its position:fixed
+   descendants AND is clipped by any `overflow:hidden` ancestor. Ribbon dropdown /
+   overflow / group popups render INSIDE the notebookbar DOM (inside a
+   `.notebookbar-scroll-wrapper` that has `overflow:hidden`), so as soon as a
+   backdrop-filter ancestor exists, the popup is positioned relative to that ancestor
+   AND clipped by the scroll-wrapper → it renders as a broken card over its own
+   button (Insert → «Иллюстрации» and many other ribbon dropdowns, in BOTH glass and
+   glass2). With NO backdrop-filter ancestor the popup is fixed to the VIEWPORT, which
+   escapes the overflow clip and positions correctly — exactly how plain Collabora works.
+   Fix: drop backdrop-filter from the entire notebookbar / header chrome (the tint
+   background stays, and at the top of the window there is little behind it to blur, so
+   the visual cost is negligible). Glass blur is kept on the sidebar / status bar /
+   dialogs, whose popups are handled elsewhere.
    ============================================================================ */
-html[data-po="glass"] .ui-tabs-root.notebookbar,
-html[data-po="glass"] .ui-tabs-content.notebookbar,
-html[data-po="glass"] .ui-tabpage.notebookbar,
-html[data-po="glass"] .ui-content.level-0.notebookbar,
-html[data-po="glass"] .notebookbar.ui-overflow-manager,
-html[data-po="glass"] .ui-overflow-group.notebookbar,
-html[data-po="glass"] .ui-overflow-group-popup,
-html[data-po="glass2"] .ui-tabs-root.notebookbar,
-html[data-po="glass2"] .ui-tabs-content.notebookbar,
-html[data-po="glass2"] .ui-tabpage.notebookbar,
-html[data-po="glass2"] .ui-content.level-0.notebookbar,
-html[data-po="glass2"] .notebookbar.ui-overflow-manager,
-html[data-po="glass2"] .ui-overflow-group.notebookbar,
-html[data-po="glass2"] .ui-overflow-group-popup {
+html[data-po="glass"] .notebookbar, html[data-po="glass"] .main-nav, html[data-po="glass"] .hasnotebookbar,
+html[data-po="glass"] #toolbar-up, html[data-po="glass"] .ui-overflow-group-popup,
+html[data-po="glass2"] .notebookbar, html[data-po="glass2"] .main-nav, html[data-po="glass2"] .hasnotebookbar,
+html[data-po="glass2"] #toolbar-up, html[data-po="glass2"] .ui-overflow-group-popup {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
