@@ -151,3 +151,24 @@ button { font-family: inherit; color: inherit; }
 }
 /* flatten the decorative diagonal-hatch thumbnails in classic */
 [data-design="classic"] .thumb { background: var(--surface-2) !important; }
+
+/* ---- NEW shells (Enterprise doc-centre + Liquid editor) flattened for classic ----
+   .docshell / .edshell hardcode their own blue/green gradient + glass surfaces + accent, so classic
+   (which is not .glass-based) wouldn't otherwise apply. Force a flat, solid, classic-indigo look here.
+   html[...] prefix out-specifies the components' scoped rules. */
+html[data-design="classic"] .docshell,
+html[data-design="classic"] .edshell {
+  background: #f7f8fa !important;
+  --accent: #4c6fff; --accent-ink: #3a57d6; --accent-soft: #ecf0ff;
+  --accent-grad: linear-gradient(140deg, #4c6fff, #3a57d6);
+}
+html[data-design="classic"] .docshell .sidebar,
+html[data-design="classic"] .docshell .main,
+html[data-design="classic"] .docshell .search,
+html[data-design="classic"] .edshell .edrail,
+html[data-design="classic"] .edshell .bar,
+html[data-design="classic"] .edshell .stage {
+  background: #ffffff !important;
+  border-color: var(--line) !important;
+}
+html[data-design="classic"] .docshell .tab.active { background: #ffffff !important; box-shadow: var(--shadow-1) !important; }

@@ -316,7 +316,10 @@ const formatOptions = computed(() => formats.value.map((f) => ({ value: f.format
 .cchev { margin-inline-start: auto; }
 .sec-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); padding: var(--s-3) var(--s-2) var(--s-1); }
 .navrow { width: 100%; display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2); border: none; background: transparent; border-radius: var(--r-md); cursor: pointer; color: var(--ink); font-size: 14px; font-weight: 500; text-align: start; }
-.navrow span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* only the TEXT span grows — NOT the Icon (which also renders as <span class="ms">), else the icon
+   flex-grows and pushes the label into the middle (the "hole in the centre" bug). */
+.navrow span:not(.ms) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navrow .ms { flex: 0 0 auto; }
 .navrow em { font-style: normal; color: var(--ink-3); font-size: 12.5px; font-weight: 600; }
 .navrow:hover { background: rgba(37, 99, 217, 0.08); }
 .navrow.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }

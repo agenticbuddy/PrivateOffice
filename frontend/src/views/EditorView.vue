@@ -80,7 +80,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 <template>
   <div class="edshell" :class="{ collapsed }">
     <!-- LEFT RAIL -->
-    <nav class="rail">
+    <nav class="edrail">
       <div class="logo" @click="go({ name: 'start' })">P</div>
       <button class="railbtn" :title="t('editor.back')" @click="go({ name: 'files' })">
         <Icon name="folder" :size="22" /><span class="rlabel">{{ t("nav.myFiles") }}</span>
@@ -153,14 +153,14 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 }
 
 /* ---- left rail (green, collapsible) ---- */
-.rail {
+.edrail {
   flex: 0 0 var(--rail-w); border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.6); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-bd);
   display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px;
   position: relative; z-index: 50; transition: flex-basis 0.18s ease, opacity 0.14s ease;
 }
-.edshell.collapsed .rail { flex-basis: 0; padding: 0; border-width: 0; opacity: 0; overflow: hidden; }
+.edshell.collapsed .edrail { flex-basis: 0; padding: 0; border-width: 0; opacity: 0; overflow: hidden; }
 .logo { width: 38px; height: 38px; border-radius: var(--r-md); background: var(--accent-grad); color: #fff; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(10, 127, 94, 0.34); margin-bottom: 6px; flex: none; }
 .railbtn { width: 100%; min-height: 48px; padding: 6px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: none; background: transparent; border-radius: var(--r-md); cursor: pointer; color: var(--ink-2); flex: none; }
 .railbtn:hover { background: var(--accent-soft); color: var(--accent-ink); }
@@ -205,8 +205,8 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 
 @media (max-width: 720px) {
   .edshell { flex-direction: column; padding: 4px; gap: 4px; }
-  .rail { flex: 0 0 auto; min-height: 52px; flex-direction: row; width: 100%; justify-content: space-around; }
-  .edshell.collapsed .rail { display: none; }
+  .edrail { flex: 0 0 auto; min-height: 52px; flex-direction: row; width: 100%; justify-content: space-around; }
+  .edshell.collapsed .edrail { display: none; }
   .logo { display: none; }
   .grow { display: none; }
   .rlabel { display: none; }
