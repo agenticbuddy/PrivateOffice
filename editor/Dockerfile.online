@@ -129,6 +129,12 @@ RUN printf '%s\n' '/* PrivateOffice: intentionally empty branding script. Brandi
 COPY fonts/ ${DIST}/fonts/
 COPY po-logo.svg ${DIST}/images/po-logo.svg
 COPY po-toggle.js ${DIST}/po-toggle.js
+# Russian keyboard-shortcuts help. cool-help.html (the built-in "Комбинации клавиш" reference, opened via
+# showHelp("keyboard-shortcuts-content")) ships English-only. cool-help.ru.html is the fully-translated
+# version (527 text nodes -> RU, key-combos preserved), generated from the pinned engine's cool-help.html
+# via editor/l10n/help/ru.json (regenerate on engine re-pin). Placed before the rebrand/cache-bust steps
+# so it flows through the same pipeline.
+COPY cool-help.ru.html ${DIST}/cool-help.html
 # po-funcnames.js: generated {EnglishName -> LocalizedName} Calc function-name map
 # (window.PO_FN_NAMES), consumed by the getLocalizedFuncName source patch (editor/patches/0001-*)
 # so notebookbar function dropdowns show localized names AND insert in every locale. Same delivery
