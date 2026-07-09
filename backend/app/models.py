@@ -38,7 +38,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String(200))
     locale: Mapped[str] = mapped_column(String(16), default="en")
-    design: Mapped[str] = mapped_column(String(16), default="glass")  # 'glass' | 'classic'
+    design: Mapped[str] = mapped_column(String(16), default="glass")  # 'glass' | 'glass2' | 'classic'
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)

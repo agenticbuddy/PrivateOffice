@@ -22,6 +22,7 @@ const savingPw = ref(false);
 
 const designOptions = [
   { value: "glass", label: t("profile.designGlass") },
+  { value: "glass2", label: t("profile.designGlass2") },
   { value: "classic", label: t("profile.designClassic") },
 ];
 

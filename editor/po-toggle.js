@@ -2,11 +2,13 @@
    external script (allowed by the editor's CSP `script-src 'self'`, unlike an inline script),
    so it runs BEFORE the body renders — the glass theme is active on the first paint with no
    runtime DOM patching afterwards. The session's design is passed in the iframe URL as
-   ?po_design=glass|classic by the app; classic opts out and keeps the default editor look. */
+   ?po_design=glass|glass2|classic by the app; classic opts out and keeps the default editor
+   look, glass = the original Liquid Glass, glass2 = "Liquid glass updated". */
 (function () {
   try {
-    if (new URLSearchParams(location.search).get("po_design") === "classic") return;
-    document.documentElement.setAttribute("data-po", "glass");
+    var d = new URLSearchParams(location.search).get("po_design");
+    if (d === "classic") return;
+    document.documentElement.setAttribute("data-po", d === "glass2" ? "glass2" : "glass");
   } catch (e) {
     /* noop */
   }

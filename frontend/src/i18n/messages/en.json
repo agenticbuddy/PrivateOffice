@@ -114,6 +114,7 @@
     "appearance": "Appearance",
     "appearanceHint": "Choose how the interface and editor look",
     "designGlass": "Liquid Glass (new)",
+    "designGlass2": "Liquid Glass (updated)",
     "designClassic": "Classic (flat)"
   },
   "editor": {

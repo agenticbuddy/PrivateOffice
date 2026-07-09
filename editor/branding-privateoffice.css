@@ -284,6 +284,253 @@ html[data-po="glass"] .notebookbar-tabs-container, html[data-po="glass"] .notebo
   animation: none !important;
 }
 
+/* ============================================================================
+   "Liquid glass updated" (glass2) — the refreshed Liquid Glass design.
+   Same architecture as the glass block above (build-time, scoped, native-var
+   driven, correct on first paint, NO override sheet / NO runtime DOM patching),
+   diverging only in DESIGN LANGUAGE per the "Collabora Liquid Glass" mockup:
+     • BLUE accent #2563d9 (glass is green),
+     • deeper glass — 22px blur, 1.6 saturation, gentler shadow,
+     • coloured ambient blobs behind the app (layered radial gradients — no DOM),
+     • accent buttons with a gradient fill + a soft blue glow.
+   Selected via po_design=glass2 → data-po="glass2". Kept as a self-contained
+   block so the original glass theme cannot regress. Blur/saturation are read from
+   --po-glass-blur / --po-glass-sat so this block's surfaces pick up the deeper glass.
+   ============================================================================ */
+html[data-po="glass2"] {
+  --po-accent: #2563d9;
+  --po-accent-ink: #1d4fb8;
+  --po-accent-soft: rgba(37, 99, 217, 0.12);
+  --po-glass: rgba(255, 255, 255, 0.60);
+  --po-glass-strong: rgba(255, 255, 255, 0.90);
+  --po-glass-bd: rgba(255, 255, 255, 0.72);
+  --po-ink: #1b2433;
+  --po-ink-2: #5d6b80;
+  --po-line: rgba(20, 32, 56, 0.10);
+  --po-glass-blur: 22px;
+  --po-glass-sat: 1.6;
+  --po-accent-grad: linear-gradient(140deg, #2563d9, #1d4fb8);
+  --po-accent-glow: 0 4px 12px rgba(37, 99, 217, 0.34);
+  /* hover/active fills across every editor menu, list and dropdown (blue palette) */
+  --color-background-darker: rgba(37, 99, 217, 0.12);
+  --color-background-hover: rgba(37, 99, 217, 0.12);
+  --color-background-dark: rgba(20, 32, 56, 0.06);
+  --color-background-lighter: #ffffff;
+  --color-main-background: #ffffff;
+  --color-text-darker: #1b2433;
+  --color-main-text: #1b2433;
+  --color-border-darker: rgba(20, 32, 56, 0.14);
+  --co-primary-element: #2563d9;
+}
+
+/* typography */
+html[data-po="glass2"] body, html[data-po="glass2"] #main-document-content, html[data-po="glass2"] .notebookbar,
+html[data-po="glass2"] #toolbar-up, html[data-po="glass2"] #toolbar-down, html[data-po="glass2"] .ui-content,
+html[data-po="glass2"] .unotoolbutton, html[data-po="glass2"] .ui-text, html[data-po="glass2"] .jsdialog,
+html[data-po="glass2"] .menubar {
+  font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+html[data-po="glass2"] .formulabar input, html[data-po="glass2"] #formulabar, html[data-po="glass2"] .lokformula {
+  font-family: "IBM Plex Mono", monospace !important;
+}
+
+/* app background — the mockup's gradient PLUS three soft ambient blobs, layered as
+   transparent-falloff radial gradients (no absolutely-positioned DOM orbs needed). */
+html[data-po="glass2"], html[data-po="glass2"] body, html[data-po="glass2"] #main-document-content,
+html[data-po="glass2"] #document-container {
+  background:
+    radial-gradient(46vw 46vw at 12% -10%, rgba(185, 210, 255, 0.55), transparent 68%),
+    radial-gradient(42vw 42vw at 98% 114%, rgba(216, 202, 255, 0.50), transparent 70%),
+    radial-gradient(34vw 34vw at 90% -8%, rgba(191, 240, 223, 0.45), transparent 72%),
+    linear-gradient(158deg, #e9f0fb 0%, #f1eefb 46%, #eaf6f1 100%) !important;
+  background-attachment: fixed !important;
+}
+
+/* top chrome: colored notebookbar header → glass */
+html[data-po="glass2"]:not([data-theme="dark"]) .main-nav.hasnotebookbar,
+html[data-po="glass2"]:not([data-theme="dark"]) .main-nav.hasnotebookbar.hasnotebookbar,
+html[data-po="glass2"]:not([data-theme="dark"]) body .main-nav,
+html[data-po="glass2"] nav.main-nav, html[data-po="glass2"] .main-nav.hasnotebookbar, html[data-po="glass2"] .main-nav {
+  background: var(--po-glass) !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
+  border-bottom: 1px solid var(--po-line) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass2"]:not([data-theme="dark"]) .main-nav #document-header,
+html[data-po="glass2"]:not([data-theme="dark"]) .main-nav .document-title,
+html[data-po="glass2"]:not([data-theme="dark"]) .main-nav #document-titlebar,
+html[data-po="glass2"] .main-nav #closebuttonwrapper, html[data-po="glass2"] .main-nav #permissionmode {
+  background: transparent !important; color: var(--po-ink) !important;
+}
+html[data-po="glass2"]:not([data-theme="dark"]) #document-header,
+html[data-po="glass2"] .main-nav .editorlogo, html[data-po="glass2"] #document-header { background: transparent !important; }
+
+html[data-po="glass2"] .notebookbar, html[data-po="glass2"] #toolbar-wrapper, html[data-po="glass2"] #toolbar-up,
+html[data-po="glass2"] #formulabar-row, html[data-po="glass2"] #topToolbar, html[data-po="glass2"] .notebookbar-tabs-container {
+  background: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
+  border-color: var(--po-line) !important;
+}
+
+/* nav text / menubar / doc title → dark ink */
+html[data-po="glass2"] .main-nav a, html[data-po="glass2"] .main-nav button, html[data-po="glass2"] .main-nav .ui-tab,
+html[data-po="glass2"] .main-nav span, html[data-po="glass2"] .document-title input, html[data-po="glass2"] #document-name-input,
+html[data-po="glass2"] .main-menu a, html[data-po="glass2"] .menubar a, html[data-po="glass2"] .document-titlebar,
+html[data-po="glass2"] .document-title {
+  color: var(--po-ink) !important;
+}
+html[data-po="glass2"] .main-menu, html[data-po="glass2"] #main-menu, html[data-po="glass2"] .menubar { background: transparent !important; }
+html[data-po="glass2"] .menubar a:hover, html[data-po="glass2"] .main-menu a:hover, html[data-po="glass2"] .lo-menu .has-submenu:hover {
+  background: var(--po-accent-soft) !important; border-radius: 8px;
+}
+
+/* ribbon tabs (selected → blue underline) */
+html[data-po="glass2"] .ui-tabs.notebookbar .ui-tab, html[data-po="glass2"] .notebookbar .ui-tab, html[data-po="glass2"] .main-nav .ui-tab {
+  color: var(--po-ink-2) !important; border-radius: 8px 8px 0 0; background: transparent !important;
+}
+html[data-po="glass2"] .ui-tabs.notebookbar .ui-tab.selected, html[data-po="glass2"] .notebookbar .ui-tab.selected,
+html[data-po="glass2"] .main-nav .ui-tab.selected {
+  color: var(--po-ink) !important; font-weight: 700; background: transparent !important;
+  border-bottom: 2px solid var(--po-accent) !important;
+}
+
+/* toolbar buttons */
+html[data-po="glass2"] .unotoolbutton:hover, html[data-po="glass2"] .w2ui-button:hover, html[data-po="glass2"] .ui-pushbutton:hover {
+  background: rgba(20, 32, 56, 0.07) !important;
+}
+html[data-po="glass2"] .unotoolbutton.selected, html[data-po="glass2"] .w2ui-button.checked,
+html[data-po="glass2"] .ui-pushbutton.selected, html[data-po="glass2"] .unotoolbutton.checked {
+  background: var(--po-accent-soft) !important; color: var(--po-accent-ink) !important;
+}
+
+/* formula bar */
+html[data-po="glass2"] #formulabar, html[data-po="glass2"] .inputbar_container { background: rgba(255, 255, 255, 0.55) !important; }
+
+/* right sidebar */
+html[data-po="glass2"] #sidebar-panel, html[data-po="glass2"] #sidebar-dock-wrapper, html[data-po="glass2"] .sidebar {
+  background: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
+  border-color: var(--po-line) !important;
+}
+
+/* status bar */
+html[data-po="glass2"] #toolbar-down {
+  background: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
+  border-top: 1px solid var(--po-line) !important;
+  color: var(--po-ink-2) !important;
+}
+
+/* Calc sheet tabs */
+html[data-po="glass2"] .spreadsheet-tab { border-radius: 7px !important; color: var(--po-ink-2) !important; }
+html[data-po="glass2"] .spreadsheet-tab.spreadsheet-tab-selected, html[data-po="glass2"] .spreadsheet-tab.selected {
+  background: var(--po-accent-soft) !important; color: var(--po-accent-ink) !important; font-weight: 700;
+}
+
+/* Impress slide panel */
+html[data-po="glass2"] #slide-sorter, html[data-po="glass2"] #presentation-controls-wrapper { background: var(--po-glass) !important; }
+html[data-po="glass2"] #slide-sorter .preview-frame .preview-img-selected,
+html[data-po="glass2"] .preview-frame.selected img { outline: 2px solid var(--po-accent) !important; }
+
+/* dialogs — style the real dialog container, not the bare .jsdialog-window (see glass note above) */
+html[data-po="glass2"] .lokdialog_container.ui-dialog, html[data-po="glass2"] .ui-dialog.jsdialog {
+  border-radius: 14px !important;
+  border: 1px solid var(--po-glass-bd) !important;
+  box-shadow: 0 18px 50px rgba(17, 32, 63, 0.20) !important;
+  overflow: hidden;
+}
+html[data-po="glass2"] .jsdialog-window .ui-dialog-titlebar, html[data-po="glass2"] .ui-dialog-titlebar {
+  background: var(--po-glass) !important;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--po-line) !important;
+  color: var(--po-ink) !important;
+}
+/* accent buttons — gradient fill + soft blue glow (the mockup's signature button) */
+html[data-po="glass2"] .ui-pushbutton.button-primary, html[data-po="glass2"] button.button-primary, html[data-po="glass2"] .ui-ok,
+html[data-po="glass2"] .ui-pushbutton.button {
+  background: var(--po-accent-grad) !important; color: #fff !important;
+  border-radius: 8px !important; border: none !important;
+  box-shadow: var(--po-accent-glow) !important;
+}
+html[data-po="glass2"] .ui-pushbutton.button[disabled] {
+  background: var(--color-background-lighter) !important;
+  color: var(--color-text-light) !important;
+  border: 1px solid var(--color-border-lighter) !important;
+  box-shadow: none !important;
+}
+html[data-po="glass2"] .leaflet-control-attribution { display: none !important; }
+
+/* JSDialog popup surfaces (toolbar dropdowns, listboxes, the wizard) */
+html[data-po="glass2"] .jsdialog-container,
+html[data-po="glass2"] .modalpopup,
+html[data-po="glass2"] .ui-menu,
+html[data-po="glass2"] .ui-listbox-container,
+html[data-po="glass2"] .mobile-wizard {
+  background: var(--po-glass-strong) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  border: 1px solid var(--po-glass-bd) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.18) !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass2"] .ui-listbox, html[data-po="glass2"] .ui-combobox,
+html[data-po="glass2"] .ui-menu-item, html[data-po="glass2"] .lo-menu a {
+  color: var(--po-ink) !important;
+}
+html[data-po="glass2"] .ui-menu-item:hover,
+html[data-po="glass2"] .ui-menu-item.selected,
+html[data-po="glass2"] .lo-menu a:hover,
+html[data-po="glass2"] .lo-menu a.highlighted,
+html[data-po="glass2"] .lo-menu > li > a:hover,
+html[data-po="glass2"] .ui-listbox-container li:hover,
+html[data-po="glass2"] .ui-listbox:hover,
+html[data-po="glass2"] #jsd-context-menu-entries .ui-combobox-entry:hover {
+  background: var(--po-accent-soft) !important;
+  color: var(--po-ink) !important;
+  border-radius: 8px;
+}
+
+/* right-click context menus + submenus */
+html[data-po="glass2"] .context-menu-list {
+  background: var(--po-glass-strong);
+  -webkit-backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  backdrop-filter: blur(16px) saturate(var(--po-glass-sat));
+  border: 1px solid var(--po-glass-bd);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(17, 32, 63, 0.18);
+  padding: 6px;
+  color: var(--po-ink);
+}
+html[data-po="glass2"] .context-menu-item { border-radius: 8px; color: var(--po-ink); }
+html[data-po="glass2"] .context-menu-separator { border-color: var(--po-line); }
+
+/* property sidebar inner panels */
+html[data-po="glass2"] .sidebar, html[data-po="glass2"] .sidebar-panel,
+html[data-po="glass2"] .ui-expander, html[data-po="glass2"] .ui-expander-content,
+html[data-po="glass2"] .ui-expander-label, html[data-po="glass2"] .unospan {
+  background: transparent !important;
+  color: var(--po-ink) !important;
+}
+html[data-po="glass2"] .ui-expander-label:hover { background: rgba(20, 32, 56, 0.05) !important; }
+
+/* anti-FOUC: snap glass styles in without the default-fill flash */
+html[data-po="glass2"] .main-nav, html[data-po="glass2"] .main-nav *,
+html[data-po="glass2"] .notebookbar, html[data-po="glass2"] .notebookbar *,
+html[data-po="glass2"] #toolbar-up, html[data-po="glass2"] #toolbar-up *,
+html[data-po="glass2"] .lo-menu, html[data-po="glass2"] .lo-menu *,
+html[data-po="glass2"] .ui-menu, html[data-po="glass2"] .ui-menu *,
+html[data-po="glass2"] .context-menu-list, html[data-po="glass2"] .context-menu-list *,
+html[data-po="glass2"] .notebookbar-tabs-container, html[data-po="glass2"] .notebookbar-tabs-container * {
+  transition: none !important;
+  animation: none !important;
+}
+
 /* ---- Layout fixes for upstream dialog controls that render too narrow (theme-independent) ---- */
 /* Format Cells → Шрифт: the language dropdowns get a ~50px grid cell while the Style/Size
    siblings get ~160px, clipping "Русский" to "Р". Give language pickers a usable minimum. */

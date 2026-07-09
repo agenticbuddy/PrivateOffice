@@ -36,7 +36,7 @@ class LocaleIn(BaseModel):
 
 class MePatchIn(BaseModel):
     locale: str | None = Field(default=None, min_length=2, max_length=16)
-    design: str | None = Field(default=None, pattern="^(glass|classic)$")
+    design: str | None = Field(default=None, pattern="^(glass|glass2|classic)$")
 
 
 # ---- Admin ----
