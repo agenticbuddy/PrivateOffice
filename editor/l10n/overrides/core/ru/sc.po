@@ -23,3 +23,49 @@ msgstr "Диапазон"
 msgctxt "definetablerangedialog|containscolumnlabels"
 msgid "Co_ntains column labels"
 msgstr "Со_держит подписи столбцов"
+
+#. Calc "Table Style Options" sidebar panel (scalc/ui/sidebardatabase.ui). These toggle labels are
+#. untranslated in the pinned engine's ru sc.mo (newer strings) and are rendered SERVER-SIDE from the
+#. .ui, so a client override can't reach them (the sidebar shows raw English). RU values are LibreOffice's
+#. own (mirrored from the client ui-ru catalog). Merged into sc.mo (see editor/Dockerfile.online).
+msgctxt "sidebardatabase|chk_header_row"
+msgid "Header Row"
+msgstr "Строка заголовка"
+
+msgctxt "sidebardatabase|chk_total_row"
+msgid "Total Row"
+msgstr "Строка итогов"
+
+msgctxt "sidebardatabase|chk_filter_buttons"
+msgid "Filter Buttons"
+msgstr "Кнопки фильтра"
+
+msgctxt "sidebardatabase|chk_banded_rows"
+msgid "Banded Rows"
+msgstr "Чередующиеся строки"
+
+msgctxt "sidebardatabase|chk_banded_cols"
+msgid "Banded Columns"
+msgstr "Чередующиеся столбцы"
+
+msgctxt "sidebardatabase|chk_first_column"
+msgid "First Column"
+msgstr "Первый столбец"
+
+msgctxt "sidebardatabase|chk_last_column"
+msgid "Last Column"
+msgstr "Последний столбец"
+
+msgctxt "sidebardatabase|lbl_styles"
+msgid "Table Styles"
+msgstr "Стили таблицы"
+
+msgctxt "sidebardatabase|none"
+msgid "None"
+msgstr "Нет"
+
+#. Calc number-format sidebar panel (scalc/ui/sidebarnumberformat.ui): the "Category" combobox label,
+#. untranslated in the pinned engine's ru sc.mo. The leading "_" is the mnemonic marker.
+msgctxt "sidebarnumberformat|numberformatcomboboxlabel"
+msgid "_Category"
+msgstr "_Категория"
