@@ -265,6 +265,14 @@ def colname(n):
         n, r = divmod(n - 1, 26); s = chr(65 + r) + s
     return s
 
+# The "Матричные" (ARRAY) functions AUTO-ARRAY-ENTER (Calc force-arrays matrix functions even on a plain
+# Enter), so each spills DOWN several rows (e.g. FREQUENCY over 10 data + 10 bins spills 11 rows). Packed one
+# row apart they overwrite the next function's cell → «нельзя изменить часть массива». Space THIS category
+# out vertically so every spill lands in empty rows. ARRAY is the last category (rightmost cols), so its 2D
+# spills (LINEST → col+1) fall into empty space too. Applied identically to the info grid and the UI plan.
+def cat_stride(cat):
+    return 20 if cat == "ARRAY" else 1
+
 # grid: cellref (no $) -> ("num"|"str"|"formula", value). formula value has NO leading '='.
 grid = {}
 info = {}  # cellref -> {"name": display, "formula": ru-display-formula}  (for the error parser)
@@ -290,7 +298,7 @@ for cat in CAT_ORDER:
         grid[f"{ncol}{row}"] = ("str", f["ru"])          # localized name (text)
         grid[f"{fcol}{row}"] = ("formula", f["en"] + args)  # English formula (displays localized)
         info[f"{fcol}{row}"] = {"name": f["ru"], "formula": "=" + f["ru"] + build_arg(f)}
-        row += 1
+        row += cat_stride(cat)
     c += 2
 
 # ---- write a minimal raw .xlsx (no deps) ----
@@ -387,7 +395,7 @@ for cat in CAT_ORDER:
         btn = menu_map.get(f["ru"], CAT_BTN[cat][0])
         items.append({"ru": f["ru"], "en": f["en"], "inner": inner, "btn": [btn],
                       "name_cell": f"{ncol}{row}", "f_cell": f"{fcol}{row}"})
-        row += 1
+        row += cat_stride(cat)
     blocks.append({"cat": cat, "label": CAT_LABEL.get(cat, cat), "btn": CAT_BTN[cat],
                    "name_col": ncol, "f_col": fcol, "header_cell": f"{ncol}1", "items": items})
     c += 2
