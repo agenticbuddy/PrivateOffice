@@ -69,3 +69,47 @@ msgstr "Нет"
 msgctxt "sidebarnumberformat|numberformatcomboboxlabel"
 msgid "_Category"
 msgstr "_Категория"
+
+#. Data Validation dialog, "Error Alert" tab (scalc/ui/erroralerttabpage.ui). These labels/button and the
+#. Action dropdown items are untranslated in the pinned engine's ru sc.mo and are rendered server-side from
+#. the .ui, so a client override can't reach them (the tab shows raw English, e.g. "Handle invalid values").
+#. RU per LibreOffice terminology; the leading "_" is the mnemonic marker.
+msgctxt "erroralerttabpage|tsbshow"
+msgid "Handle invalid values"
+msgstr "Обработка недопустимых значений"
+
+msgctxt "erroralerttabpage|action_label"
+msgid "_Action:"
+msgstr "_Действие:"
+
+msgctxt "erroralerttabpage|title_label"
+msgid "_Title:"
+msgstr "За_головок:"
+
+msgctxt "erroralerttabpage|errormsg_label"
+msgid "_Error message:"
+msgstr "_Сообщение об ошибке:"
+
+msgctxt "erroralerttabpage|browseBtn"
+msgid "_Browse..."
+msgstr "_Обзор…"
+
+msgctxt "erroralerttabpage|actionCB"
+msgid "Stop"
+msgstr "Стоп"
+
+msgctxt "erroralerttabpage|actionCB"
+msgid "Warning"
+msgstr "Предупреждение"
+
+msgctxt "erroralerttabpage|actionCB"
+msgid "Information"
+msgstr "Сведения"
+
+msgctxt "erroralerttabpage|actionCB"
+msgid "Macro"
+msgstr "Макрос"
+
+msgctxt "erroralerttabpage|actionCB"
+msgid "Reject silently"
+msgstr "Отклонять без сообщения"
