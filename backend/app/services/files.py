@@ -57,7 +57,7 @@ async def create_blank(
     fmt: str,
 ) -> Node:
     locale = user.locale or "en"
-    data = templates.blank_document(fmt)
+    data = templates.blank_document(fmt, locale)
     if not name.lower().endswith("." + fmt):
         name = f"{name}.{fmt}"
     node = Node(
