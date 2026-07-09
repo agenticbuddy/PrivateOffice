@@ -153,8 +153,8 @@ RUN sed -i '/<script>/{:a;N;/<\/script>/!ba;/Apply dark theme immediately/d;}' $
 # source build has no branding.js, so only admin-bundle.js gets the bare-word pass.
 RUN PHRASES='s/Collabora Online Development Edition (CODE)/PrivateOffice/g; s/Collabora Online Development Edition/PrivateOffice/g; s/Collabora Online/PrivateOffice/g; s/Collabora Office/PrivateOffice/g; s/Collabora Productivity Limited/PrivateOffice/g; s/Collabora Productivity/PrivateOffice/g' \
  && grep -rIl 'Collabora' ${DIST} --include='*.js' --include='*.html' --include='*.json' --include='*.css' 2>/dev/null | xargs -r sed -i "$PHRASES" \
- && grep -rIl 'Collabora' ${DIST} --include='*.html' --include='*.json' --include='*.css' 2>/dev/null | xargs -r sed -i 's/Collabora/PrivateOffice/g' \
- && sed -i 's/Collabora/PrivateOffice/g' ${DIST}/admin-bundle.js
+ && grep -rIl 'Collabora' ${DIST} --include='*.html' --include='*.json' --include='*.css' 2>/dev/null | xargs -r sed -E -i 's/Collabora([^a-z]|$)/PrivateOffice\1/g' \
+ && sed -E -i 's/Collabora([^a-z]|$)/PrivateOffice\1/g' ${DIST}/admin-bundle.js
 
 # Localize the ribbon group "more options" expander at source (de-concatenate aria/tooltip).
 RUN sed -i "s#\"More options for \"+id#_(\"More options for {1}\").replace(\"{1}\",groupLabel\&\&groupLabel.textContent?groupLabel.textContent:id)#g" ${DIST}/bundle.js
@@ -195,6 +195,30 @@ RUN sed -i 's/%FEEDBACK_URL%//g; s/%WELCOME_URL%//g; s/%BUYPRODUCT_URL%//g; s/%A
 # Per-build cache-bust: stamp BUILD_ID into ver_suffix (fresh ETag) + ?b= on cool.html assets.
 RUN sed -i "s#\(<ver_suffix [^>]*>\)</ver_suffix>#\1${BUILD_ID}</ver_suffix>#" /etc/coolwsd/coolwsd.xml
 RUN sed -i -E "s#(%SERVICE_ROOT%/browser/%VERSION%/[A-Za-z0-9._/-]+\.(css|js|json))#\1?b=${BUILD_ID}#g" ${DIST}/cool.html
+
+# ---------- CORE l10n overrides: merge into the engine's per-locale .mo BEFORE systemplate-setup ----------
+# Some newer Calc dialogs (e.g. definetablerangedialog "Create Table") are untranslated in the pinned
+# engine's ru catalog and are translated SERVER-SIDE from .ui files, so a client/browser override can't
+# reach them. Merge editor/l10n/overrides/core/<lang>/<module>.po into /opt/collaboraoffice's
+# <module>.mo via gettext (existing catalog FIRST so its Plural-Forms header is preserved; our new keys
+# are appended). gettext is installed only for this step and purged. MUST run before the systemplate
+# regen below so the per-document jail template ships the corrected catalogs.
+COPY l10n/overrides/core /tmp/core-overrides
+RUN if ls /tmp/core-overrides/*/*.po >/dev/null 2>&1; then \
+      apt-get update && apt-get install -y --no-install-recommends gettext; \
+      for po in /tmp/core-overrides/*/*.po; do \
+        lang="$(basename "$(dirname "$po")")"; mod="$(basename "$po" .po)"; \
+        mo="/opt/collaboraoffice/program/resource/${lang}/LC_MESSAGES/${mod}.mo"; \
+        if [ -f "$mo" ]; then \
+          msgunfmt "$mo" -o /tmp/ex.po \
+            && msgcat --use-first "$po" /tmp/ex.po -o /tmp/mg.po \
+            && msgfmt -o /tmp/new.mo /tmp/mg.po \
+            && cp /tmp/new.mo "$mo" \
+            && echo "core-l10n: merged $po -> $mo"; \
+        else echo "core-l10n: WARN no engine catalog $mo"; fi; \
+      done; \
+      apt-get purge -y gettext && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*; \
+    fi; rm -rf /tmp/core-overrides
 
 # Re-apply capabilities (lost when binaries were replaced) and regenerate the jail systemplate so
 # it matches the from-source coolwsd.

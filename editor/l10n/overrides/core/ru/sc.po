@@ -1,0 +1,25 @@
+#. PrivateOffice core-catalog overrides for the Calc (sc) module, Russian.
+#. These strings are untranslated in the pinned engine's ru sc.mo (upstream gap) and are
+#. translated SERVER-SIDE by the engine from its .ui files, so a client/browser override cannot
+#. reach them — they must be merged into the engine's sc.mo (see editor/Dockerfile.online).
+#. msgctxt values are the GtkBuilder `context` attributes from
+#. share/config/soffice.cfg/modules/scalc/ui/definetablerangedialog.ui ("Create Table" dialog).
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+msgctxt "definetablerangedialog|DefineTableRangeDialog"
+msgid "Create Table"
+msgstr "Создать таблицу"
+
+msgctxt "definetablerangedialog|range"
+msgid "Range"
+msgstr "Диапазон"
+
+msgctxt "definetablerangedialog|containscolumnlabels"
+msgid "Co_ntains column labels"
+msgstr "Со_держит подписи столбцов"
