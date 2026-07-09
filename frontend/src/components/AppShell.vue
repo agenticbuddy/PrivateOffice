@@ -6,23 +6,28 @@ import { useAuth } from "@/stores/auth";
 import Avatar from "./ui/Avatar.vue";
 import Icon from "./ui/Icon.vue";
 
+// Enterprise-Style document centre shell (per the "Collabora Enterprise Style" mockup, rebranded
+// PrivateOffice): a top bar (brand + search + user), a horizontal section nav, and a collapsible left
+// sidebar filled by the page via the #sidebar slot. Blue accent is scoped to this shell only, so the
+// document centre reads as the blue "Enterprise" surface while the editor keeps its green Liquid Glass.
 const { t } = useI18n();
 const auth = useAuth();
 const router = useRouter();
 const route = useRoute();
 const menu = ref(false);
+// sidebar collapse persists across navigations (localStorage), per the user's "сворачиваемый/разворачиваемый"
+const collapsed = ref(localStorage.getItem("po.sidebar.collapsed") === "1");
+watch(collapsed, (v) => localStorage.setItem("po.sidebar.collapsed", v ? "1" : "0"));
 
 const nav = computed(() => [
-  { name: "start", to: { name: "start" }, icon: "space_dashboard", label: t("nav.home") },
+  { name: "start", to: { name: "start" }, icon: "home", label: t("nav.home") },
   { name: "files", to: { name: "files" }, icon: "folder", label: t("nav.myFiles") },
   { name: "shared", to: { name: "shared" }, icon: "group", label: t("nav.sharedWithMe") },
 ]);
-
 function isActive(name: string) {
   if (name === "files") return route.name === "files" || route.name === "folder";
   return route.name === name;
 }
-
 async function logout() {
   menu.value = false;
   await auth.logout();
@@ -32,10 +37,6 @@ function go(target: any) {
   menu.value = false;
   router.push(target);
 }
-
-// Esc-to-close: the trigger button keeps focus, so a template @keydown.esc on the
-// non-focusable menu/scrim would never fire — listen at the document level instead,
-// only while the menu is open (mirrors BaseModal's e.key === "Escape" idiom).
 function onKey(e: KeyboardEvent) {
   if (e.key === "Escape") menu.value = false;
 }
@@ -46,138 +47,169 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 </script>
 
 <template>
-  <div class="shell">
-    <!-- LEFT RAIL -->
-    <nav class="rail glass">
-      <div class="logo" @click="go({ name: 'start' })">P</div>
-      <button
-        v-for="n in nav"
-        :key="n.name"
-        class="railbtn"
-        :class="{ active: isActive(n.name) }"
-        :title="n.label"
-        @click="go(n.to)"
-      >
-        <Icon :name="n.icon" :size="22" :fill="isActive(n.name)" />
-        <span class="rlabel">{{ n.label }}</span>
+  <div class="docshell" :class="{ collapsed }">
+    <!-- TOP BAR: brand · search · status/user -->
+    <header class="topbar">
+      <button class="collapse" :title="t('nav.toggleSidebar')" @click="collapsed = !collapsed">
+        <Icon name="menu" :size="20" />
       </button>
+      <div class="brand" @click="go({ name: 'start' })">
+        <div class="mark">P</div>
+        <span class="bname"><strong>Private</strong>Office</span>
+      </div>
 
-      <div class="grow" />
+      <div class="search">
+        <Icon name="search" :size="18" class="sicon" />
+        <input type="text" :placeholder="t('nav.searchPlaceholder')" />
+      </div>
+
+      <div class="spacer" />
+
+      <div class="synced"><Icon name="cloud_done" :size="18" /><span>{{ t("nav.allSynced") }}</span></div>
 
       <div class="userwrap">
         <button class="userbtn" @click="menu = !menu" :title="auth.user?.full_name">
           <Avatar v-if="auth.user" :name="auth.user.full_name" :id="auth.user.id" :size="34" />
         </button>
         <Transition name="pop">
-          <div v-if="menu" class="menu glass" @click.stop>
+          <div v-if="menu" class="menu" @click.stop>
             <div class="muser">
               <strong>{{ auth.user?.full_name }}</strong>
               <span class="t-faint t-small">{{ auth.user?.email }}</span>
             </div>
-            <button class="mitem" @click="go({ name: 'profile' })">
-              <Icon name="person" :size="18" />{{ t("nav.profile") }}
-            </button>
-            <a v-if="auth.user?.is_admin" class="mitem" href="/admin">
-              <Icon name="shield_person" :size="18" />{{ t("nav.admin") }}
-            </a>
-            <button class="mitem danger" @click="logout">
-              <Icon name="logout" :size="18" />{{ t("nav.logout") }}
-            </button>
+            <button class="mitem" @click="go({ name: 'profile' })"><Icon name="person" :size="18" />{{ t("nav.profile") }}</button>
+            <a v-if="auth.user?.is_admin" class="mitem" href="/admin"><Icon name="shield_person" :size="18" />{{ t("nav.admin") }}</a>
+            <button class="mitem danger" @click="logout"><Icon name="logout" :size="18" />{{ t("nav.logout") }}</button>
           </div>
         </Transition>
       </div>
+    </header>
+
+    <!-- SECTION NAV -->
+    <nav class="tabs">
+      <button
+        v-for="n in nav"
+        :key="n.name"
+        class="tab"
+        :class="{ active: isActive(n.name) }"
+        @click="go(n.to)"
+      >
+        <Icon :name="n.icon" :size="18" :fill="isActive(n.name)" /><span>{{ n.label }}</span>
+      </button>
     </nav>
 
-    <!-- SCRIM for menu -->
-    <div v-if="menu" class="scrim" @click="menu = false" />
+    <!-- BODY: sidebar · main -->
+    <div class="body">
+      <aside class="sidebar"><slot name="sidebar" /></aside>
+      <main class="main"><slot /></main>
+    </div>
 
-    <!-- MAIN -->
-    <main class="main"><slot /></main>
+    <div v-if="menu" class="scrim" @click="menu = false" />
   </div>
 </template>
 
 <style scoped>
-.shell { height: 100%; display: flex; padding: 6px; gap: 6px; min-height: 0; }
-
-.rail {
-  flex: 0 0 var(--rail-w);
-  border-radius: var(--r-lg);
+/* Blue "Enterprise" accent scoped to the document centre; the rest of the app / editor stays green. */
+.docshell {
+  --accent: #2563d9;
+  --accent-ink: #1d4fb8;
+  --accent-soft: rgba(37, 99, 217, 0.12);
+  --accent-grad: linear-gradient(140deg, #2563d9, #1d4fb8);
+  height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 6px;
-  /* own stacking context above the content so the user menu is never covered by
-     the (backdrop-filtered) content panels that come later in the DOM */
-  position: relative;
-  z-index: 50;
+  min-height: 0;
+  background:
+    radial-gradient(50vw 50vw at 100% -10%, rgba(185, 210, 255, 0.42), transparent 66%),
+    radial-gradient(40vw 40vw at -6% 8%, rgba(216, 226, 255, 0.40), transparent 70%),
+    linear-gradient(160deg, #eef2fb 0%, #f4f6fc 55%, #eef4fb 100%);
 }
-.logo {
-  width: 38px; height: 38px; border-radius: var(--r-md);
-  background: var(--accent-grad); color: #fff; font-weight: 800; font-size: 16px;
-  display: flex; align-items: center; justify-content: center; cursor: pointer;
-  box-shadow: 0 4px 12px rgba(10, 127, 94, 0.34); margin-bottom: 6px; flex: none;
-}
-.railbtn {
-  width: 100%; min-height: 48px; padding: 6px 2px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  border: none; background: transparent; border-radius: var(--r-md);
-  cursor: pointer; color: var(--ink-2); flex: none;
-  transition: background 0.12s ease, color 0.12s ease;
-}
-.railbtn:hover { background: rgba(20, 32, 56, 0.06); color: var(--ink); }
-.railbtn.active { background: var(--accent-soft); color: var(--accent-ink); }
-/* Wrap to at most 2 centred lines so wide labels ("Shared with me" in EN/RU/AR/…)
-   stay fully readable instead of single-line ellipsis. break-word lets the rare
-   unbreakable long token wrap rather than clip. */
-.rlabel {
-  font-size: 9.5px; font-weight: 600; letter-spacing: 0.01em;
-  text-align: center; line-height: 1.15; overflow-wrap: break-word;
-  white-space: normal; overflow: hidden;
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-}
-.grow { flex: 1; }
 
-.userwrap { position: relative; flex: none; }
+/* ---- top bar ---- */
+.topbar {
+  flex: 0 0 auto; height: 60px;
+  display: flex; align-items: center; gap: var(--s-3);
+  padding: 0 var(--s-4);
+}
+.collapse {
+  border: none; background: transparent; cursor: pointer; color: var(--ink-2);
+  width: 36px; height: 36px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center;
+}
+.collapse:hover { background: rgba(20, 32, 56, 0.06); color: var(--ink); }
+.brand { display: flex; align-items: center; gap: var(--s-2); cursor: pointer; user-select: none; }
+.mark {
+  width: 34px; height: 34px; border-radius: var(--r-md);
+  background: var(--accent-grad); color: #fff; font-weight: 800; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 217, 0.34);
+}
+.bname { font-size: 18px; color: var(--ink); font-weight: 500; }
+.bname strong { font-weight: 800; }
+
+.search {
+  flex: 0 1 460px; margin-inline-start: var(--s-4);
+  display: flex; align-items: center; gap: var(--s-2);
+  height: 40px; padding: 0 var(--s-3);
+  background: rgba(255, 255, 255, 0.75); border: 1px solid var(--line);
+  border-radius: var(--r-full);
+}
+.search:focus-within { border-color: var(--accent); background: #fff; }
+.search .sicon { color: var(--ink-3); flex: none; }
+.search input { border: none; background: transparent; outline: none; width: 100%; font: inherit; font-size: 14px; color: var(--ink); }
+.spacer { flex: 1; }
+.synced { display: flex; align-items: center; gap: var(--s-1); color: var(--accent); font-size: 13px; font-weight: 600; }
+
+.userwrap { position: relative; }
 .userbtn { border: none; background: transparent; padding: 2px; cursor: pointer; border-radius: var(--r-full); display: flex; }
 .menu {
-  position: absolute;
-  inset-inline-start: calc(100% + 8px);
-  bottom: 0;
-  min-width: 210px;
-  border-radius: var(--r-lg);
-  padding: var(--s-2);
-  display: flex; flex-direction: column; gap: 2px;
-  z-index: 60;
+  position: absolute; inset-inline-end: 0; top: calc(100% + 8px); min-width: 220px;
+  background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-bd); border-radius: var(--r-lg); box-shadow: var(--shadow-2);
+  padding: var(--s-2); display: flex; flex-direction: column; gap: 2px; z-index: 60;
 }
 .muser { padding: var(--s-2) var(--s-3) var(--s-3); display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: var(--s-1); }
-.mitem {
-  display: flex; align-items: center; gap: var(--s-2);
-  text-align: start; border: none; background: transparent;
-  padding: var(--s-2) var(--s-3); border-radius: var(--r-sm);
-  font-size: 13.5px; cursor: pointer; color: var(--ink); text-decoration: none;
-}
-.mitem:hover { background: rgba(20, 32, 56, 0.06); }
+.mitem { display: flex; align-items: center; gap: var(--s-2); text-align: start; border: none; background: transparent; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); font-size: 13.5px; cursor: pointer; color: var(--ink); text-decoration: none; }
+.mitem:hover { background: var(--accent-soft); color: var(--accent-ink); }
 .mitem.danger { color: var(--neg); }
+.mitem.danger:hover { background: rgba(210, 63, 63, 0.1); color: var(--neg); }
 .scrim { position: fixed; inset: 0; z-index: 40; }
 
-.main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+/* ---- section nav ---- */
+.tabs { flex: 0 0 auto; display: flex; gap: var(--s-1); padding: 0 var(--s-4) var(--s-2); }
+.tab {
+  display: flex; align-items: center; gap: var(--s-2);
+  height: 40px; padding: 0 var(--s-4);
+  border: none; background: transparent; border-radius: var(--r-md);
+  cursor: pointer; color: var(--ink-2); font-size: 14px; font-weight: 600;
+}
+.tab:hover { background: rgba(255, 255, 255, 0.6); color: var(--ink); }
+.tab.active { background: rgba(255, 255, 255, 0.85); color: var(--accent-ink); box-shadow: var(--shadow-1); }
+
+/* ---- body ---- */
+.body { flex: 1; min-height: 0; display: flex; gap: var(--s-3); padding: 0 var(--s-4) var(--s-4); }
+.sidebar {
+  flex: 0 0 var(--sidebar-w); min-width: 0;
+  background: rgba(255, 255, 255, 0.66); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-bd); border-radius: var(--r-xl);
+  padding: var(--s-3); overflow: auto;
+  transition: flex-basis 0.18s ease, opacity 0.14s ease;
+}
+.docshell.collapsed .sidebar { flex-basis: 0; padding: 0; border-width: 0; opacity: 0; overflow: hidden; }
+.main {
+  flex: 1; min-width: 0; min-height: 0;
+  background: rgba(255, 255, 255, 0.72); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-bd); border-radius: var(--r-xl);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  .search { flex-basis: 200px; }
+  .bname { display: none; }
+  .body { flex-direction: column; }
+  .sidebar { flex: 0 0 auto; }
+  .docshell.collapsed .sidebar { display: none; }
+}
 
 .pop-enter-active, .pop-leave-active { transition: all 0.12s ease; }
-.pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(6px); }
-
-/* mobile: rail becomes a bottom bar */
-@media (max-width: 720px) {
-  .shell { flex-direction: column-reverse; padding: 4px; gap: 4px; }
-  .rail {
-    flex: 0 0 auto; min-height: 56px; flex-direction: row; width: 100%; padding: 4px 8px;
-    justify-content: space-around; align-items: center;
-  }
-  .logo { display: none; }
-  /* bottom bar: items share the (ample) phone width so labels fit on 1–2 lines;
-     min-height lets the bar grow a touch rather than clip the 2nd line */
-  .railbtn { flex: 1 1 0; max-width: 120px; min-height: 46px; }
-  .grow { display: none; }
-  .menu { inset-inline-start: auto; inset-inline-end: 0; bottom: calc(100% + 8px); }
-}
+.pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(-6px); }
 </style>

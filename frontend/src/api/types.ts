@@ -1,4 +1,4 @@
-export type Design = "glass" | "classic";
+export type Design = "glass" | "glass2" | "classic";
 
 export interface User {
   id: string;

@@ -36,7 +36,7 @@ async function changeLang(code: string) {
   }
 }
 async function changeDesign(code: string) {
-  design.value = code;
+  design.value = code as import("@/api/types").Design;
   try {
     await auth.setDesign(code);
     toast.push(t("profile.saved"));

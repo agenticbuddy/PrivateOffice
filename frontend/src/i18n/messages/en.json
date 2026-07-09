@@ -9,7 +9,10 @@
     "sharedWithMe": "Shared with me",
     "profile": "Profile",
     "admin": "Admin",
-    "logout": "Log out"
+    "logout": "Log out",
+    "toggleSidebar": "Toggle sidebar",
+    "searchPlaceholder": "Search documents, people, folders…",
+    "allSynced": "All synced"
   },
   "start": {
     "greeting": "Welcome back, {name}",
@@ -73,7 +76,18 @@
     "colShared": "Sharing",
     "sharedCount": "Shared with {count}",
     "notShared": "Private",
-    "dropHere": "Drop files to upload"
+    "dropHere": "Drop files to upload",
+    "createNew": "Create New",
+    "library": "Library",
+    "allDocuments": "All documents",
+    "recent": "Recent",
+    "noRecent": "No recent files",
+    "colType": "Type",
+    "typeFolder": "Folder",
+    "typeFile": "File",
+    "viewList": "List view",
+    "viewGrid": "Grid view",
+    "azAll": "All"
   },
   "create": {
     "folderTitle": "New folder",

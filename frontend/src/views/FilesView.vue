@@ -41,6 +41,10 @@ const deleteNode = ref<NodeItem | null>(null);
 const dragOver = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 
+const view = ref<"list" | "grid">((localStorage.getItem("po.files.view") as any) || "list");
+watch(view, (v) => localStorage.setItem("po.files.view", v));
+const azLetter = ref("");
+
 const mode = computed(() => (props.shared ? "shared" : props.id ? "folder" : "root"));
 const parentId = computed(() => props.id ?? null);
 const title = computed(() => {
@@ -54,9 +58,21 @@ const canCreate = computed(() => {
   return current.value?.my_role === "owner" || current.value?.my_role === "editor";
 });
 
+// RECENT: the most-recently-updated files (not folders), for the sidebar list.
+const recent = computed(() =>
+  [...items.value].filter((n) => n.type === "file").sort((a, b) => b.updated_at.localeCompare(a.updated_at)).slice(0, 6),
+);
+// A-Z quick filter (client-side, by first letter of the name).
+const filtered = computed(() =>
+  azLetter.value ? items.value.filter((n) => (n.name[0] || "").toUpperCase() === azLetter.value) : items.value,
+);
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
 const fmt = new Intl.DateTimeFormat(locale.value as string, { dateStyle: "medium" });
-function fdate(s: string) {
-  try { return fmt.format(new Date(s)); } catch { return s; }
+function fdate(s: string) { try { return fmt.format(new Date(s)); } catch { return s; } }
+function ftype(n: NodeItem) {
+  if (n.type === "folder") return t("files.typeFolder");
+  return (n.co_format || "").toUpperCase() || t("files.typeFile");
 }
 
 async function load() {
@@ -83,60 +99,65 @@ function openNode(n: NodeItem) {
 }
 async function createFolder() {
   await nodesApi.createFolder(folderName.value, parentId.value);
-  showFolder.value = false;
-  folderName.value = "";
-  toast.push(t("toast.created"));
-  load();
+  showFolder.value = false; folderName.value = "";
+  toast.push(t("toast.created")); load();
 }
 async function createDoc() {
   await nodesApi.createFile(docName.value || "Untitled", docFormat.value, parentId.value);
-  showDoc.value = false;
-  docName.value = "";
-  toast.push(t("toast.created"));
-  load();
+  showDoc.value = false; docName.value = "";
+  toast.push(t("toast.created")); load();
 }
 async function onFiles(files: FileList | null) {
   if (!files?.length) return;
   for (const f of Array.from(files)) {
-    try {
-      await nodesApi.upload(f, parentId.value);
-      toast.push(t("toast.uploaded"));
-    } catch {
-      toast.push(t("toast.unsupported"), "danger");
-    }
+    try { await nodesApi.upload(f, parentId.value); toast.push(t("toast.uploaded")); }
+    catch { toast.push(t("toast.unsupported"), "danger"); }
   }
   load();
 }
-function onDrop(e: DragEvent) {
-  dragOver.value = false;
-  if (canCreate.value) onFiles(e.dataTransfer?.files ?? null);
-}
+function onDrop(e: DragEvent) { dragOver.value = false; if (canCreate.value) onFiles(e.dataTransfer?.files ?? null); }
 function download(n: NodeItem) {
   const a = document.createElement("a");
-  a.href = nodesApi.downloadUrl(n.id);
-  a.download = n.name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.href = nodesApi.downloadUrl(n.id); a.download = n.name;
+  document.body.appendChild(a); a.click(); a.remove();
 }
 async function doDelete() {
   if (!deleteNode.value) return;
   await nodesApi.remove(deleteNode.value.id);
-  deleteNode.value = null;
-  toast.push(t("toast.deleted"));
-  load();
+  deleteNode.value = null; toast.push(t("toast.deleted")); load();
 }
 
 const formatOptions = computed(() =>
-  formats.value.map((f) => ({
-    value: f.format,
-    label: t(`create.format${f.format[0].toUpperCase()}${f.format.slice(1)}`),
-  })),
+  formats.value.map((f) => ({ value: f.format, label: t(`create.format${f.format[0].toUpperCase()}${f.format.slice(1)}`) })),
 );
 </script>
 
 <template>
   <AppShell>
+    <!-- SIDEBAR: create + library + recent -->
+    <template #sidebar>
+      <BaseButton class="createbtn" variant="primary" block :disabled="!canCreate" @click="showDoc = true">
+        <Icon name="add" :size="18" />{{ t("files.createNew") }}
+      </BaseButton>
+
+      <div class="sec-label">{{ t("files.library") }}</div>
+      <button class="navrow" :class="{ active: mode !== 'shared' }" @click="router.push({ name: 'files' })">
+        <Icon name="folder" :size="18" /><span>{{ t("files.allDocuments") }}</span>
+        <em v-if="mode !== 'shared'">{{ items.length }}</em>
+      </button>
+      <button class="navrow" :class="{ active: mode === 'shared' }" @click="router.push({ name: 'shared' })">
+        <Icon name="group" :size="18" /><span>{{ t("nav.sharedWithMe") }}</span>
+        <em v-if="mode === 'shared'">{{ items.length }}</em>
+      </button>
+
+      <div class="sec-label">{{ t("files.recent") }}</div>
+      <button v-for="n in recent" :key="n.id" class="navrow recent" @click="openNode(n)" :title="n.name">
+        <FileIcon :type="n.type" :format="n.co_format" :size="16" /><span class="rname">{{ n.name }}</span>
+      </button>
+      <div v-if="!recent.length" class="norecent t-faint t-small">{{ t("files.noRecent") }}</div>
+    </template>
+
+    <!-- MAIN -->
     <div
       class="page"
       :class="{ drag: dragOver }"
@@ -144,51 +165,59 @@ const formatOptions = computed(() =>
       @dragleave="dragOver = false"
       @drop.prevent="onDrop"
     >
-      <header class="head glass">
-        <div class="title">
-          <button v-if="mode === 'folder'" class="back" @click="router.back()" aria-label="Back">
-            <Icon name="arrow_back" :size="20" />
-          </button>
-          <h1 class="t-display">{{ title }}</h1>
+      <div class="toolbar">
+        <div class="crumbs">
+          <button v-if="mode === 'folder'" class="iconbtn" @click="router.back()" :aria-label="t('editor.back')"><Icon name="arrow_back" :size="18" /></button>
+          <h1 class="ttl">{{ title }}</h1>
         </div>
-        <div v-if="canCreate" class="actions">
-          <BaseButton size="sm" @click="showFolder = true"><Icon name="create_new_folder" :size="18" />{{ t("files.newFolder") }}</BaseButton>
-          <BaseButton size="sm" @click="fileInput?.click()"><Icon name="upload" :size="18" />{{ t("files.uploadFile") }}</BaseButton>
+        <div class="tspacer" />
+        <div v-if="canCreate" class="tactions">
+          <BaseButton size="sm" variant="ghost" @click="showFolder = true"><Icon name="create_new_folder" :size="18" />{{ t("files.newFolder") }}</BaseButton>
+          <BaseButton size="sm" variant="ghost" @click="fileInput?.click()"><Icon name="upload" :size="18" />{{ t("files.uploadFile") }}</BaseButton>
           <BaseButton size="sm" variant="primary" @click="showDoc = true"><Icon name="add" :size="18" />{{ t("files.newDocument") }}</BaseButton>
           <input ref="fileInput" type="file" hidden multiple @change="onFiles(($event.target as HTMLInputElement).files)" />
         </div>
-      </header>
+        <div class="viewtoggle">
+          <button :class="{ on: view === 'list' }" :title="t('files.viewList')" @click="view = 'list'"><Icon name="list" :size="18" /></button>
+          <button :class="{ on: view === 'grid' }" :title="t('files.viewGrid')" @click="view = 'grid'"><Icon name="grid_view" :size="18" /></button>
+        </div>
+      </div>
 
-      <div class="body glass">
+      <!-- A-Z filter -->
+      <div class="azbar">
+        <button class="az" :class="{ on: azLetter === '' }" @click="azLetter = ''">{{ t("files.azAll") }}</button>
+        <button v-for="l in alphabet" :key="l" class="az" :class="{ on: azLetter === l }" @click="azLetter = azLetter === l ? '' : l">{{ l }}</button>
+      </div>
+
+      <div class="body">
         <div v-if="loading" class="center"><Spinner :size="26" /></div>
 
         <EmptyState
-          v-else-if="!items.length"
+          v-else-if="!filtered.length"
           :title="mode === 'shared' ? t('files.emptyShared') : t('files.empty')"
           :hint="mode === 'shared' ? undefined : t('files.emptyHint')"
           :icon="mode === 'shared' ? 'group' : 'folder_open'"
         >
-          <BaseButton v-if="canCreate" variant="primary" @click="showDoc = true">
-            <Icon name="add" :size="18" />{{ t("files.newDocument") }}
-          </BaseButton>
+          <BaseButton v-if="canCreate" variant="primary" @click="showDoc = true"><Icon name="add" :size="18" />{{ t("files.newDocument") }}</BaseButton>
         </EmptyState>
 
-        <div v-else class="list">
+        <!-- LIST -->
+        <div v-else-if="view === 'list'" class="list">
           <div class="lhead">
             <span>{{ t("files.colName") }}</span>
+            <span class="col-type">{{ t("files.colType") }}</span>
             <span class="col-owner">{{ t("files.colOwner") }}</span>
             <span class="col-mod">{{ t("files.colModified") }}</span>
             <span class="col-act" />
           </div>
-          <div v-for="n in items" :key="n.id" class="rowitem" @click="openNode(n)">
+          <div v-for="n in filtered" :key="n.id" class="rowitem" @click="openNode(n)">
             <div class="cell-name">
               <FileIcon :type="n.type" :format="n.co_format" :size="22" />
               <span class="nm">{{ n.name }}</span>
               <Badge v-if="n.my_role && n.my_role !== 'owner'" :tone="n.my_role">{{ t(`roles.${n.my_role}`) }}</Badge>
             </div>
-            <div class="col-owner cell-owner">
-              <Avatar :name="n.created_by === auth.user?.id ? (auth.user?.full_name || '') : '•'" :id="n.created_by" :size="24" />
-            </div>
+            <div class="col-type t-muted t-small">{{ ftype(n) }}</div>
+            <div class="col-owner cell-owner"><Avatar :name="n.created_by === auth.user?.id ? (auth.user?.full_name || '') : '•'" :id="n.created_by" :size="24" /></div>
             <div class="col-mod t-muted t-small">{{ fdate(n.updated_at) }}</div>
             <div class="col-act acts" @click.stop>
               <button v-if="n.type === 'file'" :title="t('common.download')" @click="download(n)"><Icon name="download" :size="18" /></button>
@@ -197,11 +226,22 @@ const formatOptions = computed(() =>
             </div>
           </div>
         </div>
+
+        <!-- GRID -->
+        <div v-else class="grid">
+          <div v-for="n in filtered" :key="n.id" class="card" @click="openNode(n)">
+            <div class="cicon"><FileIcon :type="n.type" :format="n.co_format" :size="34" /></div>
+            <div class="cname">{{ n.name }}</div>
+            <div class="cmeta t-faint t-small">{{ ftype(n) }} · {{ fdate(n.updated_at) }}</div>
+            <div class="cacts" @click.stop>
+              <button :title="t('common.share')" @click="shareNode = n"><Icon name="group_add" :size="16" /></button>
+              <button v-if="n.my_role === 'owner'" class="del" :title="t('common.delete')" @click="deleteNode = n"><Icon name="delete" :size="16" /></button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div v-if="dragOver" class="dropmask">
-        <Icon name="cloud_upload" :size="36" /><span>{{ t("files.dropHere") }}</span>
-      </div>
+      <div v-if="dragOver" class="dropmask"><Icon name="cloud_upload" :size="36" /><span>{{ t("files.dropHere") }}</span></div>
     </div>
 
     <BaseModal :open="showFolder" :title="t('create.folderTitle')" @close="showFolder = false">
@@ -236,59 +276,79 @@ const formatOptions = computed(() =>
 </template>
 
 <style scoped>
-.page { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; position: relative; }
-.head {
-  flex: 0 0 auto;
-  border-radius: var(--r-lg);
-  padding: var(--s-4) var(--s-5);
-  display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap;
+/* ---- sidebar content ---- */
+.createbtn { margin-bottom: var(--s-3); }
+.sec-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); padding: var(--s-3) var(--s-2) var(--s-1); }
+.navrow {
+  width: 100%; display: flex; align-items: center; gap: var(--s-2);
+  padding: var(--s-2) var(--s-2); border: none; background: transparent; border-radius: var(--r-md);
+  cursor: pointer; color: var(--ink); font-size: 14px; font-weight: 500; text-align: start;
 }
-.title { display: flex; align-items: center; gap: var(--s-2); }
-.back {
-  border: none; background: transparent; cursor: pointer; color: var(--ink-2);
-  width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-sm);
-}
-.back:hover { background: rgba(20, 32, 56, 0.06); }
-.actions { display: flex; gap: var(--s-2); flex-wrap: wrap; }
+.navrow span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navrow em { font-style: normal; color: var(--ink-3); font-size: 12.5px; font-weight: 600; }
+.navrow:hover { background: rgba(37, 99, 217, 0.08); }
+.navrow.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.navrow.recent { font-weight: 500; color: var(--accent-ink); }
+.navrow.recent .rname { font-weight: 500; }
+.norecent { padding: var(--s-2); }
 
-.body { flex: 1; min-height: 0; border-radius: var(--r-lg); overflow: auto; }
+/* ---- main ---- */
+.page { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+.toolbar { flex: 0 0 auto; display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--line); }
+.crumbs { display: flex; align-items: center; gap: var(--s-2); }
+.ttl { font-size: 20px; font-weight: 700; color: var(--ink); }
+.iconbtn { border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-sm); }
+.iconbtn:hover { background: rgba(20, 32, 56, 0.06); }
+.tspacer { flex: 1; }
+.tactions { display: flex; gap: var(--s-1); }
+.viewtoggle { display: flex; gap: 2px; margin-inline-start: var(--s-2); background: rgba(20, 32, 56, 0.05); border-radius: var(--r-md); padding: 2px; }
+.viewtoggle button { border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-sm); }
+.viewtoggle button.on { background: #fff; color: var(--accent-ink); box-shadow: var(--shadow-1); }
+
+.azbar { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 2px; padding: var(--s-2) var(--s-4); border-bottom: 1px solid var(--line); }
+.az { border: none; background: transparent; cursor: pointer; color: var(--ink-3); min-width: 22px; height: 24px; border-radius: var(--r-sm); font-size: 12px; font-weight: 600; }
+.az:hover { background: rgba(37, 99, 217, 0.08); color: var(--accent-ink); }
+.az.on { background: var(--accent); color: #fff; }
+
+.body { flex: 1; min-height: 0; overflow: auto; }
 .center { display: flex; justify-content: center; padding: var(--s-8); }
 
+/* list */
 .list { display: flex; flex-direction: column; }
-.lhead, .rowitem {
-  display: grid;
-  grid-template-columns: 1fr 120px 140px 116px;
-  align-items: center;
-  gap: var(--s-3);
-  padding: var(--s-3) var(--s-5);
-}
-.lhead { color: var(--ink-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(255,255,255,0.5); backdrop-filter: blur(8px); z-index: 1; }
-[data-design="classic"] .lhead { background: #fff; }
+.lhead, .rowitem { display: grid; grid-template-columns: 1fr 120px 120px 140px 116px; align-items: center; gap: var(--s-3); padding: var(--s-3) var(--s-4); }
+.lhead { color: var(--ink-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px); z-index: 1; }
 .rowitem { border-bottom: 1px solid var(--line); cursor: pointer; }
 .rowitem:last-child { border-bottom: none; }
-.rowitem:hover { background: rgba(20, 32, 56, 0.04); }
+.rowitem:hover { background: rgba(37, 99, 217, 0.05); }
 .cell-name { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
 .nm { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .acts { display: flex; gap: 2px; justify-content: flex-end; }
 .acts button { border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-sm); }
-.acts button:hover { background: rgba(20, 32, 56, 0.08); color: var(--ink); }
+.acts button:hover { background: rgba(37, 99, 217, 0.1); color: var(--accent-ink); }
 .acts .del:hover { background: rgba(210, 63, 63, 0.1); color: var(--neg); }
+
+/* grid */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: var(--s-3); padding: var(--s-4); }
+.card { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-4) var(--s-3); border: 1px solid var(--line); border-radius: var(--r-lg); background: rgba(255, 255, 255, 0.5); cursor: pointer; text-align: center; }
+.card:hover { border-color: var(--accent); box-shadow: var(--shadow-1); }
+.cicon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; }
+.cname { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.cmeta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.cacts { position: absolute; top: 6px; inset-inline-end: 6px; display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; }
+.card:hover .cacts { opacity: 1; }
+.cacts button { border: none; background: rgba(255, 255, 255, 0.85); cursor: pointer; color: var(--ink-2); width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-sm); }
+.cacts .del:hover { color: var(--neg); }
+
 .dform { display: flex; flex-direction: column; gap: var(--s-4); }
-.dropmask {
-  position: absolute; inset: 0;
-  border: 2px dashed var(--accent);
-  border-radius: var(--r-lg);
-  background: var(--accent-soft);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-2);
-  font-weight: 700; color: var(--accent-ink); pointer-events: none;
-}
+.dropmask { position: absolute; inset: 0; border: 2px dashed var(--accent); border-radius: var(--r-xl); background: var(--accent-soft); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-2); font-weight: 700; color: var(--accent-ink); pointer-events: none; }
 
 @media (max-width: 720px) {
   .lhead { display: none; }
   .rowitem { grid-template-columns: 1fr auto; grid-template-areas: "name acts" "meta acts"; row-gap: 2px; }
   .cell-name { grid-area: name; }
-  .col-owner { display: none; }
+  .col-type, .col-owner { display: none; }
   .col-mod { grid-area: meta; }
   .acts { grid-area: acts; }
+  .azbar { display: none; }
 }
 </style>
