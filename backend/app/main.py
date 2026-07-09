@@ -16,6 +16,7 @@ from app.routers import admin as admin_router
 from app.routers import auth as auth_router
 from app.routers import editor as editor_router
 from app.routers import nodes as nodes_router
+from app.routers import notifications as notifications_router
 from app.routers import wopi as wopi_router
 from app.services import auth as auth_service
 
@@ -67,6 +68,7 @@ app.include_router(auth_router.router)
 app.include_router(admin_router.router)
 app.include_router(nodes_router.router)
 app.include_router(editor_router.router)
+app.include_router(notifications_router.router)
 app.include_router(wopi_router.router)
 
 

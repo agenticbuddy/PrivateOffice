@@ -137,3 +137,32 @@ class AuditLog(Base):
     action: Mapped[str] = mapped_column(String(40))
     meta: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class Notification(Base):
+    """A per-user inbox entry raised when someone acts on that user's document.
+
+    Recipient (``user_id``) is the person notified: the document OWNER for view/edit
+    events, or the SHARE TARGET for share/unshare. ``meta`` snapshots the node name and
+    actor name at event time so the notification stays readable even after the node is
+    deleted (``node_id`` becomes NULL) or the user loses access. High-frequency view/edit
+    events from the same actor on the same node are collapsed into one unread row with a
+    ``meta.count`` — see ``services/notifications.py``.
+    """
+
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    node_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("nodes.id", ondelete="SET NULL"), nullable=True
+    )
+    type: Mapped[str] = mapped_column(String(16))  # 'view' | 'edit' | 'share' | 'unshare'
+    meta: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, index=True)

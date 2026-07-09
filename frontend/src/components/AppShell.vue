@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch, onBeforeUnmount } from "vue";
+import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useAuth } from "@/stores/auth";
 import { useToast } from "@/stores/toast";
+import { useNotifications } from "@/stores/notifications";
+import type { NotificationItem } from "@/api/types";
 import Avatar from "./ui/Avatar.vue";
 import Icon from "./ui/Icon.vue";
 
@@ -11,12 +13,48 @@ import Icon from "./ui/Icon.vue";
 // PrivateOffice): a top bar (brand + search + user), a horizontal section nav, and a collapsible left
 // sidebar filled by the page via the #sidebar slot. Blue accent is scoped to this shell only, so the
 // document centre reads as the blue "Enterprise" surface while the editor keeps its green Liquid Glass.
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const auth = useAuth();
 const toast = useToast();
+const notif = useNotifications();
 const router = useRouter();
 const route = useRoute();
 const menu = ref(false);
+const bell = ref(false); // notification panel open state
+
+// ---- notifications: poll while the doc-centre header is mounted ----
+onMounted(() => notif.startPolling());
+onBeforeUnmount(() => notif.stopPolling());
+
+// icon per notification type
+const NOTIF_ICON: Record<string, string> = {
+  view: "visibility", edit: "edit", share: "group_add", unshare: "person_remove",
+};
+// localized one-line message; "…viewed «doc» (3×)" when a view/edit was collapsed
+function notifText(n: NotificationItem): string {
+  const base = t(`notif.msg.${n.type}`, { actor: n.actor_name || "—", node: n.node_name || "—" });
+  return n.count > 1 ? `${base} (${n.count}×)` : base;
+}
+// coarse relative time (just now / 5 min / 3 h / 2 d), localized
+const rtf = new Intl.RelativeTimeFormat(locale.value as string, { numeric: "auto" });
+function relTime(iso: string): string {
+  const diff = (new Date(iso).getTime() - Date.now()) / 1000;
+  const a = Math.abs(diff);
+  if (a < 60) return t("notif.justNow");
+  if (a < 3600) return rtf.format(Math.round(diff / 60), "minute");
+  if (a < 86400) return rtf.format(Math.round(diff / 3600), "hour");
+  return rtf.format(Math.round(diff / 86400), "day");
+}
+function openNotif(n: NotificationItem) {
+  notif.markRead(n.id);
+  bell.value = false;
+  if (n.node_id) router.push({ name: "editor", params: { id: n.node_id } });
+}
+function toggleBell() {
+  menu.value = false;
+  bell.value = !bell.value;
+  if (bell.value) notif.fetch(); // refresh on open
+}
 // top-bar search: on Enter, go to the file list filtered by the query (FilesView reads route.query.q).
 const q = ref((route.query.q as string) || "");
 function runSearch() { router.push({ name: "files", query: q.value ? { q: q.value } : {} }); }
@@ -93,11 +131,39 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 
       <div class="synced"><Icon name="cloud_done" :size="18" /><span>{{ t("nav.allSynced") }}</span></div>
       <span class="tbsep" />
-      <button class="tbicon" :title="t('nav.notifications')"><Icon name="notifications" :size="20" /><span class="dot" /></button>
+
+      <div class="bellwrap">
+        <button class="tbicon" :class="{ active: bell }" :title="t('nav.notifications')" @click.stop="toggleBell">
+          <Icon name="notifications" :size="20" />
+          <span v-if="notif.unread" class="badge">{{ notif.unread > 9 ? "9+" : notif.unread }}</span>
+        </button>
+        <Transition name="pop">
+          <div v-if="bell" class="notifpanel" @click.stop>
+            <div class="notifhead">
+              <strong>{{ t("notif.title") }}</strong>
+              <button v-if="notif.unread" class="markall" @click="notif.markAllRead()">{{ t("notif.markAllRead") }}</button>
+            </div>
+            <div class="notiflist">
+              <button v-for="n in notif.items" :key="n.id" class="notifitem" :class="{ unread: !n.read }" @click="openNotif(n)">
+                <span class="ni-ic" :class="'ni-' + n.type"><Icon :name="NOTIF_ICON[n.type] || 'notifications'" :size="18" /></span>
+                <span class="ni-body">
+                  <span class="ni-text">{{ notifText(n) }}</span>
+                  <span class="ni-time">{{ relTime(n.created_at) }}</span>
+                </span>
+                <span v-if="!n.read" class="ni-dot" />
+              </button>
+              <div v-if="!notif.items.length" class="notifempty">
+                <Icon name="notifications_off" :size="28" /><span>{{ t("notif.empty") }}</span>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+
       <button class="tbicon" :title="t('nav.profile')" @click="go({ name: 'profile' })"><Icon name="settings" :size="20" /></button>
 
       <div class="userwrap">
-        <button class="userbtn" @click="menu = !menu" :title="auth.user?.full_name">
+        <button class="userbtn" @click.stop="bell = false; menu = !menu" :title="auth.user?.full_name">
           <Avatar v-if="auth.user" :name="auth.user.full_name" :id="auth.user.id" :size="34" />
           <span class="uinfo">
             <strong>{{ auth.user?.full_name }}</strong>
@@ -141,7 +207,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       <main class="main"><slot /></main>
     </div>
 
-    <div v-if="menu" class="scrim" @click="menu = false" />
+    <div v-if="menu || bell" class="scrim" @click="menu = false; bell = false" />
   </div>
 </template>
 
@@ -201,6 +267,40 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 .tbicon { position: relative; border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 38px; height: 38px; border-radius: var(--r-full); display: flex; align-items: center; justify-content: center; }
 .tbicon:hover { background: rgba(20, 32, 56, 0.06); color: var(--ink); }
 .tbicon .dot { position: absolute; top: 8px; inset-inline-end: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--neg); border: 1.5px solid #fff; }
+.tbicon.active { background: var(--accent-soft); color: var(--accent-ink); }
+
+/* ---- notifications ---- */
+.bellwrap { position: relative; display: flex; }
+.badge {
+  position: absolute; top: 3px; inset-inline-end: 3px; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 8px; background: var(--neg); border: 1.5px solid #fff; color: #fff;
+  font-size: 10px; font-weight: 800; line-height: 13px; display: flex; align-items: center; justify-content: center;
+}
+.notifpanel {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 8px); width: 360px; max-width: 92vw; z-index: 60;
+  background: rgba(255, 255, 255, 0.95); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-bd); border-radius: var(--r-lg); box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+.notifhead { display: flex; align-items: center; justify-content: space-between; padding: var(--s-3) var(--s-3) var(--s-2); border-bottom: 1px solid var(--line); }
+.notifhead strong { font-size: 14px; color: var(--ink); }
+.markall { border: none; background: transparent; cursor: pointer; color: var(--accent-ink); font: inherit; font-size: 12.5px; font-weight: 600; padding: 2px 4px; border-radius: var(--r-sm); }
+.markall:hover { background: var(--accent-soft); }
+.notiflist { max-height: 60vh; overflow: auto; padding: var(--s-1); }
+.notifitem { width: 100%; display: flex; align-items: flex-start; gap: var(--s-2); text-align: start; border: none; background: transparent; padding: var(--s-2); border-radius: var(--r-md); cursor: pointer; position: relative; }
+.notifitem:hover { background: rgba(20, 32, 56, 0.05); }
+.notifitem.unread { background: var(--accent-soft); }
+.notifitem.unread:hover { background: rgba(37, 99, 217, 0.16); }
+.ni-ic { flex: none; width: 32px; height: 32px; border-radius: var(--r-full); display: flex; align-items: center; justify-content: center; background: rgba(20, 32, 56, 0.06); color: var(--ink-2); }
+.ni-view { background: rgba(37, 99, 217, 0.12); color: var(--accent-ink); }
+.ni-edit { background: rgba(217, 154, 10, 0.14); color: #a9760a; }
+.ni-share { background: rgba(35, 150, 90, 0.14); color: #1e8a52; }
+.ni-unshare { background: rgba(210, 63, 63, 0.12); color: var(--neg); }
+.ni-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ni-text { font-size: 13px; color: var(--ink); line-height: 1.3; }
+.ni-time { font-size: 11.5px; color: var(--ink-3); }
+.ni-dot { flex: none; align-self: center; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.notifempty { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-6) var(--s-4); color: var(--ink-3); font-size: 13px; }
 
 .userwrap { position: relative; margin-inline-start: var(--s-1); }
 .userbtn { border: none; background: transparent; padding: 3px 6px 3px 3px; cursor: pointer; border-radius: var(--r-full); display: flex; align-items: center; gap: var(--s-2); }

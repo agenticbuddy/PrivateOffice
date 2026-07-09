@@ -11,6 +11,7 @@ import type {
   DirectoryUser,
   EditorSession,
   NodeItem,
+  NotificationList,
   Role,
   ShareItem,
   User,
@@ -106,6 +107,19 @@ export const shares = {
 export const directory = {
   async users(): Promise<DirectoryUser[]> {
     return (await http.get("/api/users")).data;
+  },
+};
+
+// ---- notifications ----
+export const notifications = {
+  async list(): Promise<NotificationList> {
+    return (await http.get("/api/notifications")).data;
+  },
+  async markAllRead(): Promise<void> {
+    await http.post("/api/notifications/read");
+  },
+  async markRead(id: number): Promise<void> {
+    await http.post(`/api/notifications/${id}/read`);
   },
 };
 

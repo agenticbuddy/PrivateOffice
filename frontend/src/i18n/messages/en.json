@@ -244,5 +244,17 @@
     "error": "Something went wrong",
     "unsupported": "This file format is not supported",
     "renamed": "Renamed"
+  },
+  "notif": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications yet",
+    "justNow": "just now",
+    "msg": {
+      "view": "{actor} viewed «{node}»",
+      "edit": "{actor} edited «{node}»",
+      "share": "{actor} shared «{node}» with you",
+      "unshare": "{actor} revoked your access to «{node}»"
+    }
   }
 }

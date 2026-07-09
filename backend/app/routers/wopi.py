@@ -15,6 +15,7 @@ from app.models import Node, User
 from app.security import verify_wopi_token
 from app.services import audit as audit_service
 from app.services import files as files_svc
+from app.services import notifications as notify_service
 from app.storage import get_storage
 from app.util import as_aware
 
@@ -98,6 +99,12 @@ async def put_file(
     await audit_service.record(
         db, actor_id=user.id, action="edit_save", node_id=node.id,
         meta={"size": len(data), "version": str(version.id)},
+    )
+    # notify the owner that a collaborator saved changes (collapsed while unread —
+    # Collabora autosaves often, so one unread "edited" entry per actor with a count)
+    await notify_service.notify(
+        db, recipient_id=node.created_by, actor_id=user.id, node_id=node.id,
+        type="edit", node_name=node.name, actor_name=user.full_name,
     )
     await db.commit()
     return JSONResponse({"LastModifiedTime": as_aware(node.updated_at).isoformat()})

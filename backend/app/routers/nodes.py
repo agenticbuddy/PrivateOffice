@@ -36,6 +36,7 @@ from app.schemas import (
 from app.services import audit as audit_service
 from app.services import files as files_svc
 from app.services import nodes as svc
+from app.services import notifications as notify_service
 from app.storage import get_storage
 from app.util import content_disposition
 
@@ -277,13 +278,18 @@ async def upsert_share(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ShareOut:
-    await _require(db, user, node_id, "owner")
+    node, _ = await _require(db, user, node_id, "owner")
     target = await db.get(User, body.user_id)
     if target is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
     await svc.set_share(db, node_id, body.user_id, body.role)
     await audit_service.record(db, actor_id=user.id, action="share", node_id=node_id,
                                meta={"user_id": str(body.user_id), "role": body.role})
+    # notify the target that they were granted access
+    await notify_service.notify(
+        db, recipient_id=body.user_id, actor_id=user.id, node_id=node_id,
+        type="share", node_name=node.name, actor_name=user.full_name, role=body.role,
+    )
     await db.commit()
     return ShareOut(user_id=target.id, role=body.role, full_name=target.full_name,
                     email=target.email)
@@ -296,8 +302,13 @@ async def delete_share(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await _require(db, user, node_id, "owner")
+    node, _ = await _require(db, user, node_id, "owner")
     await svc.remove_share(db, node_id, target_id)
     await audit_service.record(db, actor_id=user.id, action="unshare", node_id=node_id,
                                meta={"user_id": str(target_id)})
+    # notify the target that their access was revoked
+    await notify_service.notify(
+        db, recipient_id=target_id, actor_id=user.id, node_id=node_id,
+        type="unshare", node_name=node.name, actor_name=user.full_name,
+    )
     await db.commit()

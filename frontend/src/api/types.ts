@@ -56,6 +56,26 @@ export interface CreatableFormat {
   category: string;
 }
 
+export type NotificationType = "view" | "edit" | "share" | "unshare";
+
+export interface NotificationItem {
+  id: number;
+  type: NotificationType;
+  actor_id: string | null;
+  actor_name: string | null;
+  node_id: string | null;
+  node_name: string | null;
+  role: Role | null;
+  count: number;
+  read: boolean;
+  created_at: string;
+}
+
+export interface NotificationList {
+  items: NotificationItem[];
+  unread: number;
+}
+
 export interface VersionItem {
   id: string;
   size: number;

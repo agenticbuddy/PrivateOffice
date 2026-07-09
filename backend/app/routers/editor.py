@@ -14,6 +14,7 @@ from app.security import sign_wopi_token
 from app.services import audit as audit_service
 from app.services import discovery, locales
 from app.services import nodes as svc
+from app.services import notifications as notify_service
 from app.util import now
 
 settings = get_settings()
@@ -47,6 +48,11 @@ async def editor_session(
     ttl_ms = int((now().timestamp() + settings.wopi_token_ttl) * 1000)
 
     await audit_service.record(db, actor_id=user.id, action="open", node_id=node_id)
+    # notify the owner that someone else viewed their document (collapsed while unread)
+    await notify_service.notify(
+        db, recipient_id=node.created_by, actor_id=user.id, node_id=node.id,
+        type="view", node_name=node.name, actor_name=user.full_name,
+    )
     await db.commit()
 
     return EditorSessionOut(

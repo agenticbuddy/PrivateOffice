@@ -143,3 +143,22 @@ class EditorSessionOut(BaseModel):
     access_token_ttl: int
     lang: str
     can_write: bool
+
+
+# ---- Notifications ----
+class NotificationOut(BaseModel):
+    id: int
+    type: str  # 'view' | 'edit' | 'share' | 'unshare'
+    actor_id: uuid.UUID | None = None
+    actor_name: str | None = None
+    node_id: uuid.UUID | None = None
+    node_name: str | None = None
+    role: str | None = None
+    count: int = 1
+    read: bool = False
+    created_at: datetime
+
+
+class NotificationListOut(BaseModel):
+    items: list[NotificationOut]
+    unread: int
