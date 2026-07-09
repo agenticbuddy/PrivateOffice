@@ -22,8 +22,8 @@ function runSearch() { router.push({ name: "files", query: q.value ? { q: q.valu
 const collapsed = ref(localStorage.getItem("po.sidebar.collapsed") === "1");
 watch(collapsed, (v) => localStorage.setItem("po.sidebar.collapsed", v ? "1" : "0"));
 
+// No "Home" — the file list IS the home page (per the design).
 const nav = computed(() => [
-  { name: "start", to: { name: "start" }, icon: "home", label: t("nav.home") },
   { name: "files", to: { name: "files" }, icon: "folder", label: t("nav.myFiles") },
   { name: "shared", to: { name: "shared" }, icon: "group", label: t("nav.sharedWithMe") },
 ]);
@@ -56,7 +56,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       <button class="collapse" :title="t('nav.toggleSidebar')" @click="collapsed = !collapsed">
         <Icon name="menu" :size="20" />
       </button>
-      <div class="brand" @click="go({ name: 'start' })">
+      <div class="brand" @click="go({ name: 'files' })">
         <div class="mark">P</div>
         <span class="bname"><strong>Private</strong>Office</span>
       </div>
@@ -78,7 +78,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
           <Avatar v-if="auth.user" :name="auth.user.full_name" :id="auth.user.id" :size="34" />
           <span class="uinfo">
             <strong>{{ auth.user?.full_name }}</strong>
-            <span class="urole">{{ auth.user?.is_admin ? t("nav.admin") : t("nav.home") }}</span>
+            <span class="urole">{{ auth.user?.is_admin ? t("nav.admin") : auth.user?.email }}</span>
           </span>
           <Icon name="expand_more" :size="16" class="uchev" />
         </button>
@@ -131,9 +131,9 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
   flex-direction: column;
   min-height: 0;
   background:
-    radial-gradient(50vw 50vw at 100% -10%, rgba(185, 210, 255, 0.42), transparent 66%),
-    radial-gradient(40vw 40vw at -6% 8%, rgba(216, 226, 255, 0.40), transparent 70%),
-    linear-gradient(160deg, #eef2fb 0%, #f4f6fc 55%, #eef4fb 100%);
+    radial-gradient(50vw 50vw at 100% -10%, rgba(185, 210, 255, 0.22), transparent 66%),
+    radial-gradient(40vw 40vw at -6% 8%, rgba(216, 226, 255, 0.18), transparent 70%),
+    linear-gradient(160deg, #f5f8fd 0%, #fafbfe 55%, #f5f8fd 100%);
 }
 
 /* ---- top bar ---- */
@@ -180,7 +180,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 .userbtn:hover { background: rgba(20, 32, 56, 0.06); }
 .uinfo { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
 .uinfo strong { font-size: 13.5px; color: var(--ink); font-weight: 700; }
-.urole { font-size: 11.5px; color: var(--ink-3); }
+.urole { font-size: 11.5px; color: var(--ink-3); max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .uchev { color: var(--ink-3); }
 @media (max-width: 980px) { .uinfo, .uchev { display: none; } }
 .menu {

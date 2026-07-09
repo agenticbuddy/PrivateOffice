@@ -81,12 +81,9 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
   <div class="edshell" :class="{ collapsed }">
     <!-- LEFT RAIL -->
     <nav class="edrail">
-      <div class="logo" @click="go({ name: 'start' })">P</div>
+      <div class="logo" @click="go({ name: 'files' })">P</div>
       <button class="railbtn" :title="t('editor.back')" @click="go({ name: 'files' })">
         <Icon name="folder" :size="22" /><span class="rlabel">{{ t("nav.myFiles") }}</span>
-      </button>
-      <button class="railbtn" :title="t('nav.home')" @click="go({ name: 'start' })">
-        <Icon name="home" :size="22" /><span class="rlabel">{{ t("nav.home") }}</span>
       </button>
       <div class="grow" />
       <button class="railbtn" :title="t('nav.profile')" @click="go({ name: 'profile' })">

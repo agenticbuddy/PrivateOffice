@@ -3,8 +3,8 @@ import { useAuth } from "@/stores/auth";
 
 const routes = [
   { path: "/login", name: "login", component: () => import("@/views/LoginView.vue"), meta: { public: true } },
-  { path: "/", name: "start", component: () => import("@/views/StartView.vue") },
-  { path: "/files", name: "files", component: () => import("@/views/FilesView.vue") },
+  // The file list IS the home page (no separate dashboard). "/" renders FilesView.
+  { path: "/", name: "files", component: () => import("@/views/FilesView.vue") },
   { path: "/folder/:id", name: "folder", component: () => import("@/views/FilesView.vue"), props: true },
   { path: "/shared", name: "shared", component: () => import("@/views/FilesView.vue"), props: { shared: true } },
   { path: "/file/:id", name: "editor", component: () => import("@/views/EditorView.vue"), props: true },
