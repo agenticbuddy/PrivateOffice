@@ -901,6 +901,20 @@ html[data-po="glass2"] .ui-combobox-entry.selected:not(.checked):not(.notchecked
   border-color: var(--po-accent) !important;
 }
 html[data-po="glass2"] .ui-combobox-entry span { color: var(--po-ink) !important; }
+/* notebookbar split-button / value dropdown popups (AutoSum ▾, number-format ▾, …): the combobox
+   rows rendered as square full-width bands; make them rounded, inset accent pills like the wizard's
+   dropdowns. The highlight lives on the entry's inner <span>; the engine only sets its colour (via
+   --co-primary-element), never the shape, so radius/margin/padding here always win. */
+html[data-po="glass2"] .modalpopup .ui-combobox-entry > span,
+html[data-po="glass2"] .modalpopup .ui-listbox-entry > span {
+  display: block !important; margin: 1px 6px !important; padding: 5px 10px !important; border-radius: 8px !important;
+}
+html[data-po="glass2"] .modalpopup .ui-combobox-entry:hover > span,
+html[data-po="glass2"] .modalpopup .ui-combobox-entry.selected > span,
+html[data-po="glass2"] .modalpopup .ui-combobox-entry[aria-selected="true"] > span {
+  background: var(--po-accent-soft) !important; color: var(--po-accent-ink) !important;
+}
+html[data-po="glass2"] .modalpopup .jsdialog.lokdialog.ui-dialog-content { padding: 4px !important; }
 /* snackbar toast — keep dark, round the corners + on-accent action link */
 html[data-po="glass2"] .snackbar.jsdialog-container .ui-dialog-content {
   border-radius: 12px !important;
@@ -1296,6 +1310,18 @@ html[data-po="glass"] .ui-combobox-entry.selected:not(.checked):not(.notchecked)
   border-color: var(--po-accent) !important;
 }
 html[data-po="glass"] .ui-combobox-entry span { color: var(--po-ink) !important; }
+/* notebookbar split-button / value dropdown popups (AutoSum ▾, number-format ▾, …): rounded, inset
+   accent pills instead of square full-width bands (highlight lives on the entry's inner <span>). */
+html[data-po="glass"] .modalpopup .ui-combobox-entry > span,
+html[data-po="glass"] .modalpopup .ui-listbox-entry > span {
+  display: block !important; margin: 1px 6px !important; padding: 5px 10px !important; border-radius: 8px !important;
+}
+html[data-po="glass"] .modalpopup .ui-combobox-entry:hover > span,
+html[data-po="glass"] .modalpopup .ui-combobox-entry.selected > span,
+html[data-po="glass"] .modalpopup .ui-combobox-entry[aria-selected="true"] > span {
+  background: var(--po-accent-soft) !important; color: var(--po-accent-ink) !important;
+}
+html[data-po="glass"] .modalpopup .jsdialog.lokdialog.ui-dialog-content { padding: 4px !important; }
 /* snackbar toast — keep dark, round the corners + on-accent action link */
 html[data-po="glass"] .snackbar.jsdialog-container .ui-dialog-content {
   border-radius: 12px !important;
