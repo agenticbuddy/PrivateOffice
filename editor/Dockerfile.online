@@ -95,6 +95,18 @@ RUN set -e; for f in /tmp/po-overrides/*.json; do \
       else echo "WARN: no catalog for ${lang} ($cat)"; fi; \
     done; rm -rf /tmp/po-overrides
 
+# Same override merge for the UNO-command label catalog (uno/<lang>.json) — notebookbar buttons that
+# take their label from the UNO command (e.g. the Insert→Table button "Table") read this catalog, NOT
+# ui-<lang>.json, so ui overrides can't reach them. editor/l10n/overrides/uno/<lang>.json fills them.
+COPY l10n/overrides/uno /tmp/uno-overrides
+RUN if ls /tmp/uno-overrides/*.json >/dev/null 2>&1; then set -e; for f in /tmp/uno-overrides/*.json; do \
+      lang="$(basename "$f" .json)"; cat="/build/instdir/usr/share/coolwsd/browser/dist/l10n/uno/${lang}.json"; \
+      if [ -f "$cat" ]; then \
+        python3 -c "import json,sys; b=json.load(open('$cat')); o=json.load(open('$f')); b.update(o); json.dump(b, open('$cat','w'), ensure_ascii=False)"; \
+        echo "merged $(python3 -c "import json;print(len(json.load(open('$f'))))") keys into uno/${lang}.json"; \
+      else echo "WARN: no uno catalog for ${lang} ($cat)"; fi; \
+    done; fi; rm -rf /tmp/uno-overrides
+
 # ---------- Stage 2: runtime = pinned base, with the customized from-source Online swapped in ----------
 # The base already provides the matching engine (/opt/collaboraoffice), the cool user, the jail
 # systemplate and capabilities; we overlay our freshly-built + customized Online artifacts on top.
