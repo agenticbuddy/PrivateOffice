@@ -820,6 +820,14 @@ html[data-po="glass2"] .ui-combobox-content input:focus { outline: none !importa
 html[data-po="glass2"] .ui-combobox:focus-within {
   border-color: var(--po-accent) !important; box-shadow: 0 0 0 2px var(--po-accent-soft) !important;
 }
+/* view-mode switcher button ("Редактирование ▾") — the engine gives it a solid white 1px border that
+   reads as a grey raised button, unlike the borderless notebookbar controls. Match the notebookbar. */
+html[data-po="glass2"] .viewModeDropdownButton {
+  background: transparent !important; border: 1px solid transparent !important;
+}
+html[data-po="glass2"] .viewModeDropdownButton:hover {
+  background: rgba(255, 255, 255, 0.6) !important; border-color: var(--po-accent) !important;
+}
 /* group separators */
 html[data-po="glass2"] .notebookbar.ui-separator.vertical {
   background-color: var(--po-line) !important;
@@ -1247,6 +1255,13 @@ html[data-po="glass"] .ui-combobox-content:focus-visible,
 html[data-po="glass"] .ui-combobox-content input:focus { outline: none !important; box-shadow: none !important; }
 html[data-po="glass"] .ui-combobox:focus-within {
   border-color: var(--po-accent) !important; box-shadow: 0 0 0 2px var(--po-accent-soft) !important;
+}
+/* view-mode switcher button — drop the engine's white border (reads as grey raised) → notebookbar look. */
+html[data-po="glass"] .viewModeDropdownButton {
+  background: transparent !important; border: 1px solid transparent !important;
+}
+html[data-po="glass"] .viewModeDropdownButton:hover {
+  background: rgba(255, 255, 255, 0.6) !important; border-color: var(--po-accent) !important;
 }
 /* group separators */
 html[data-po="glass"] .notebookbar.ui-separator.vertical {
