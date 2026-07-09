@@ -53,6 +53,18 @@ html[data-po="glass2"] #toolbar-up, html[data-po="glass2"] .ui-overflow-group-po
   backdrop-filter: none !important;
 }
 
+/* HIT-TEST FIX (both themes) — a non-modal jsdialog (e.g. Page Style / "Стиль страницы") opens WITHOUT a
+   backdrop, and the spreadsheet's full-area cursor overlay `.spreadsheet-cursor` (an empty transparent
+   1299×656 layer) stacks ABOVE the dialog's controls in the overlap region. So a real click on a dialog
+   checkbox/input at that spot lands on the overlay and falls through to the sheet — the "Убрать
+   обрамление" checkbox (and others) would not toggle (verified: elementFromPoint over the checkbox
+   returned `.spreadsheet-cursor`, not the input). The overlay carries no interaction of its own: cell
+   clicks/drag go to `.leaflet-canvas-container` beneath it and the fill handle is a separate element, so
+   dropping its pointer-events is safe and lets clicks reach the dialog (and the canvas for cells).
+   NB: this must be a BAKED rule — an injected <style> is sanitized away inside the CO iframe. */
+html[data-po="glass"] .spreadsheet-cursor,
+html[data-po="glass2"] .spreadsheet-cursor { pointer-events: none !important; }
+
 html[data-po="glass"] {
   --po-accent: #0a7f5e;
   --po-accent-ink: #07614a;
