@@ -28,6 +28,38 @@
 @font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-display: swap;
   src: url(./fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2"); }
 
+/* ============================================================================
+   POPUP OVERLAY FIX — applies to BOTH glass themes.
+   The notebookbar glass rules set `backdrop-filter` via the bare `.notebookbar`
+   class, which ALSO matches the deeply-nested ribbon CONTENT wrappers
+   (.ui-tabs-root / .ui-tabs-content / .ui-tabpage / .ui-content.level-0 /
+   .ui-overflow-manager). A backdrop-filter turns each into a CONTAINING BLOCK for
+   its position:fixed descendants, so ribbon dropdown / overflow / group popups that
+   render inside the notebookbar are positioned relative to that wrapper instead of
+   the viewport → they render clipped / on top of their own button (seen on Insert →
+   «Иллюстрации» and many other ribbon dropdowns, in BOTH glass and glass2).
+   Neutralise backdrop-filter on those inner wrappers (and the popups themselves):
+   the visible glass stays on the top bar + tabs strip, and popups keep their glass
+   look via their opaque-ish background + border + shadow.
+   ============================================================================ */
+html[data-po="glass"] .ui-tabs-root.notebookbar,
+html[data-po="glass"] .ui-tabs-content.notebookbar,
+html[data-po="glass"] .ui-tabpage.notebookbar,
+html[data-po="glass"] .ui-content.level-0.notebookbar,
+html[data-po="glass"] .notebookbar.ui-overflow-manager,
+html[data-po="glass"] .ui-overflow-group.notebookbar,
+html[data-po="glass"] .ui-overflow-group-popup,
+html[data-po="glass2"] .ui-tabs-root.notebookbar,
+html[data-po="glass2"] .ui-tabs-content.notebookbar,
+html[data-po="glass2"] .ui-tabpage.notebookbar,
+html[data-po="glass2"] .ui-content.level-0.notebookbar,
+html[data-po="glass2"] .notebookbar.ui-overflow-manager,
+html[data-po="glass2"] .ui-overflow-group.notebookbar,
+html[data-po="glass2"] .ui-overflow-group-popup {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 html[data-po="glass"] {
   --po-accent: #0a7f5e;
   --po-accent-ink: #07614a;
@@ -298,9 +330,9 @@ html[data-po="glass"] .notebookbar-tabs-container, html[data-po="glass"] .notebo
    --po-glass-blur / --po-glass-sat so this block's surfaces pick up the deeper glass.
    ============================================================================ */
 html[data-po="glass2"] {
-  --po-accent: #2563d9;
-  --po-accent-ink: #1d4fb8;
-  --po-accent-soft: rgba(37, 99, 217, 0.12);
+  --po-accent: #0a7f5e;
+  --po-accent-ink: #07614a;
+  --po-accent-soft: rgba(10, 127, 94, 0.12);
   --po-glass: rgba(255, 255, 255, 0.60);
   --po-glass-strong: rgba(255, 255, 255, 0.90);
   --po-glass-bd: rgba(255, 255, 255, 0.72);
@@ -309,18 +341,18 @@ html[data-po="glass2"] {
   --po-line: rgba(20, 32, 56, 0.10);
   --po-glass-blur: 22px;
   --po-glass-sat: 1.6;
-  --po-accent-grad: linear-gradient(140deg, #2563d9, #1d4fb8);
-  --po-accent-glow: 0 4px 12px rgba(37, 99, 217, 0.34);
-  /* hover/active fills across every editor menu, list and dropdown (blue palette) */
-  --color-background-darker: rgba(37, 99, 217, 0.12);
-  --color-background-hover: rgba(37, 99, 217, 0.12);
+  --po-accent-grad: linear-gradient(140deg, #0a7f5e, #07614a);
+  --po-accent-glow: 0 4px 12px rgba(10, 127, 94, 0.34);
+  /* hover/active fills across every editor menu, list and dropdown (green palette, matches the mockup) */
+  --color-background-darker: rgba(10, 127, 94, 0.12);
+  --color-background-hover: rgba(10, 127, 94, 0.12);
   --color-background-dark: rgba(20, 32, 56, 0.06);
   --color-background-lighter: #ffffff;
   --color-main-background: #ffffff;
   --color-text-darker: #1b2433;
   --color-main-text: #1b2433;
   --color-border-darker: rgba(20, 32, 56, 0.14);
-  --co-primary-element: #2563d9;
+  --co-primary-element: #0a7f5e;
 }
 
 /* typography */
@@ -339,10 +371,10 @@ html[data-po="glass2"] .formulabar input, html[data-po="glass2"] #formulabar, ht
 html[data-po="glass2"], html[data-po="glass2"] body, html[data-po="glass2"] #main-document-content,
 html[data-po="glass2"] #document-container {
   background:
-    radial-gradient(46vw 46vw at 12% -10%, rgba(185, 210, 255, 0.55), transparent 68%),
-    radial-gradient(42vw 42vw at 98% 114%, rgba(216, 202, 255, 0.50), transparent 70%),
-    radial-gradient(34vw 34vw at 90% -8%, rgba(191, 240, 223, 0.45), transparent 72%),
-    linear-gradient(158deg, #e9f0fb 0%, #f1eefb 46%, #eaf6f1 100%) !important;
+    radial-gradient(46vw 46vw at 12% -10%, rgba(160, 226, 197, 0.52), transparent 68%),
+    radial-gradient(42vw 42vw at 98% 114%, rgba(191, 240, 223, 0.48), transparent 70%),
+    radial-gradient(34vw 34vw at 90% -8%, rgba(185, 210, 255, 0.30), transparent 72%),
+    linear-gradient(158deg, #e8f4ee 0%, #eef3f0 46%, #eaf6f1 100%) !important;
   background-attachment: fixed !important;
 }
 
@@ -374,7 +406,6 @@ html[data-po="glass2"] #formulabar-row, html[data-po="glass2"] #topToolbar, html
   backdrop-filter: blur(var(--po-glass-blur)) saturate(var(--po-glass-sat));
   border-color: var(--po-line) !important;
 }
-
 /* nav text / menubar / doc title → dark ink */
 html[data-po="glass2"] .main-nav a, html[data-po="glass2"] .main-nav button, html[data-po="glass2"] .main-nav .ui-tab,
 html[data-po="glass2"] .main-nav span, html[data-po="glass2"] .document-title input, html[data-po="glass2"] #document-name-input,
@@ -864,7 +895,7 @@ html[data-po="glass2"] .snackbar.jsdialog-container .ui-dialog-content {
   overflow: hidden;
 }
 html[data-po="glass2"] .snackbar.jsdialog-container [id$='button'].ui-pushbutton.jsdialog {
-  color: #7ea9ff !important;
+  color: #6fd0a8 !important;
 }
 
 /* ---- Property sidebar / deck ---- */
@@ -920,10 +951,10 @@ html[data-po="glass2"] .sidebar-panel::-webkit-scrollbar-thumb {
   border-radius: 8px;
 }
 html[data-po="glass2"] .sidebar-panel::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(37, 99, 217, 0.28) !important;
+  background-color: rgba(10, 127, 94, 0.28) !important;
 }
 html[data-po="glass2"] #sidebar-dock-wrapper {
-  scrollbar-color: rgba(37, 99, 217, 0.30) transparent !important;
+  scrollbar-color: rgba(10, 127, 94, 0.30) transparent !important;
 }
 
 /* ---- Layout fixes for upstream dialog controls that render too narrow (theme-independent) ---- */
