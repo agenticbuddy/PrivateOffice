@@ -135,7 +135,8 @@
     "readonly": "Read only",
     "back": "Back to files",
     "loading": "Opening document…",
-    "failed": "Couldn't open this document"
+    "failed": "Couldn't open this document",
+    "synced": "Saved · All changes synced"
   },
   "admin": {
     "title": "Administration",
