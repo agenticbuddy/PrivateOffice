@@ -1282,5 +1282,8 @@
   "Your tones": "Ваши тоны",
   "e.g. Quick reply": "напр., Быстрый ответ",
   "tone": "тон",
-  "with emoji": "с эмодзи"
+  "with emoji": "с эмодзи",
+  "CSV import preview": "Предпросмотр импорта CSV",
+  "CSV column ruler: click to toggle a column split": "Линейка столбцов CSV: щёлкните, чтобы переключить разделение столбца",
+  "Served by: ": "Обслуживается: "
 }
