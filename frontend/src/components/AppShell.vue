@@ -3,6 +3,7 @@ import { computed, ref, watch, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useAuth } from "@/stores/auth";
+import { useToast } from "@/stores/toast";
 import Avatar from "./ui/Avatar.vue";
 import Icon from "./ui/Icon.vue";
 
@@ -12,6 +13,7 @@ import Icon from "./ui/Icon.vue";
 // document centre reads as the blue "Enterprise" surface while the editor keeps its green Liquid Glass.
 const { t } = useI18n();
 const auth = useAuth();
+const toast = useToast();
 const router = useRouter();
 const route = useRoute();
 const menu = ref(false);
@@ -22,15 +24,29 @@ function runSearch() { router.push({ name: "files", query: q.value ? { q: q.valu
 const collapsed = ref(localStorage.getItem("po.sidebar.collapsed") === "1");
 watch(collapsed, (v) => localStorage.setItem("po.sidebar.collapsed", v ? "1" : "0"));
 
-// No "Home" — the file list IS the home page (per the design).
+// Section nav — matches the Enterprise Style mockup's rows (Home / Documents / Spreadsheets /
+// Presentations / Shared with me / Templates / Trash / +), adapted to PrivateOffice: Home = all files,
+// Documents/Spreadsheets/Presentations = files filtered by type (?type=doc|sheet|slide), Shared = /shared.
+// Templates & Trash aren't features yet → a "coming soon" toast (kept for parity with the design).
 const nav = computed(() => [
-  { name: "files", to: { name: "files" }, icon: "folder", label: t("nav.myFiles") },
-  { name: "shared", to: { name: "shared" }, icon: "group", label: t("nav.sharedWithMe") },
+  { key: "home", icon: "home", label: t("nav.home"), to: { name: "files" } },
+  { key: "documents", icon: "folder", label: t("nav.documents"), to: { name: "files", query: { type: "doc" } } },
+  { key: "sheets", icon: "table_chart", label: t("nav.spreadsheets"), to: { name: "files", query: { type: "sheet" } } },
+  { key: "slides", icon: "slideshow", label: t("nav.presentations"), to: { name: "files", query: { type: "slide" } } },
+  { key: "shared", icon: "group", label: t("nav.sharedWithMe"), to: { name: "shared" } },
+  { key: "templates", icon: "dashboard", label: t("nav.templates"), soon: true },
+  { key: "trash", icon: "delete", label: t("nav.trash"), soon: true },
 ]);
-function isActive(name: string) {
-  if (name === "files") return route.name === "files" || route.name === "folder";
-  return route.name === name;
+function isActive(key: string) {
+  const type = route.query.type as string | undefined;
+  if (key === "home") return (route.name === "files" || route.name === "folder") && !type;
+  if (key === "documents") return route.name === "files" && type === "doc";
+  if (key === "sheets") return route.name === "files" && type === "sheet";
+  if (key === "slides") return route.name === "files" && type === "slide";
+  if (key === "shared") return route.name === "shared";
+  return false;
 }
+function clickNav(n: any) { if (n.soon) { toast.push(t("common.comingSoon")); return; } go(n.to); }
 async function logout() {
   menu.value = false;
   await auth.logout();
@@ -70,6 +86,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       <div class="spacer" />
 
       <div class="synced"><Icon name="cloud_done" :size="18" /><span>{{ t("nav.allSynced") }}</span></div>
+      <span class="tbsep" />
       <button class="tbicon" :title="t('nav.notifications')"><Icon name="notifications" :size="20" /><span class="dot" /></button>
       <button class="tbicon" :title="t('nav.profile')" @click="go({ name: 'profile' })"><Icon name="settings" :size="20" /></button>
 
@@ -96,16 +113,19 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       </div>
     </header>
 
-    <!-- SECTION NAV -->
+    <!-- SECTION NAV (Home / Documents / Spreadsheets / Presentations / Shared / Templates / Trash / +) -->
     <nav class="tabs">
       <button
         v-for="n in nav"
-        :key="n.name"
+        :key="n.key"
         class="tab"
-        :class="{ active: isActive(n.name) }"
-        @click="go(n.to)"
+        :class="{ active: isActive(n.key) }"
+        @click="clickNav(n)"
       >
-        <Icon :name="n.icon" :size="18" :fill="isActive(n.name)" /><span>{{ n.label }}</span>
+        <Icon :name="n.icon" :size="18" :fill="isActive(n.key)" /><span>{{ n.label }}</span>
+      </button>
+      <button class="tabadd" :title="t('files.newDocument')" @click="go({ name: 'files', query: { new: '1' } })">
+        <Icon name="add" :size="20" />
       </button>
     </nav>
 
@@ -171,6 +191,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 .clearq:hover { background: rgba(20, 32, 56, 0.08); color: var(--ink); }
 .spacer { flex: 1; }
 .synced { display: flex; align-items: center; gap: var(--s-1); color: var(--accent); font-size: 13px; font-weight: 600; margin-inline-end: var(--s-2); }
+.tbsep { width: 1px; height: 24px; background: var(--line); margin-inline: var(--s-1); flex: none; }
 .tbicon { position: relative; border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 38px; height: 38px; border-radius: var(--r-full); display: flex; align-items: center; justify-content: center; }
 .tbicon:hover { background: rgba(20, 32, 56, 0.06); color: var(--ink); }
 .tbicon .dot { position: absolute; top: 8px; inset-inline-end: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--neg); border: 1.5px solid #fff; }
@@ -206,6 +227,12 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 }
 .tab:hover { background: rgba(255, 255, 255, 0.6); color: var(--ink); }
 .tab.active { background: rgba(255, 255, 255, 0.85); color: var(--accent-ink); box-shadow: var(--shadow-1); }
+.tabadd {
+  width: 40px; height: 40px; flex: none;
+  border: none; background: transparent; border-radius: var(--r-md);
+  cursor: pointer; color: var(--ink-3); display: flex; align-items: center; justify-content: center;
+}
+.tabadd:hover { background: rgba(255, 255, 255, 0.6); color: var(--accent-ink); }
 
 /* ---- body ---- */
 .body { flex: 1; min-height: 0; display: flex; gap: var(--s-3); padding: 0 var(--s-4) var(--s-4); }

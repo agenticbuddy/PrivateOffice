@@ -13,7 +13,12 @@
     "toggleSidebar": "Свернуть панель",
     "searchPlaceholder": "Поиск документов, людей, папок…",
     "allSynced": "Всё синхронизировано",
-    "notifications": "Уведомления"
+    "notifications": "Уведомления",
+    "documents": "Документы",
+    "spreadsheets": "Таблицы",
+    "presentations": "Презентации",
+    "templates": "Шаблоны",
+    "trash": "Корзина"
   },
   "start": {
     "greeting": "С возвращением, {name}",
@@ -50,7 +55,8 @@
     "modified": "Изменён",
     "empty": "Здесь пока ничего нет",
     "showPassword": "Показать пароль",
-    "hidePassword": "Скрыть пароль"
+    "hidePassword": "Скрыть пароль",
+    "comingSoon": "Скоро будет"
   },
   "login": {
     "title": "Вход",
@@ -100,7 +106,12 @@
     "private": "Личный",
     "noTrash": "Корзина пуста",
     "sortName": "Название",
-    "searchResults": "Поиск: {q}"
+    "searchResults": "Поиск: {q}",
+    "renameTitle": "Переименовать",
+    "renameLabel": "Новое имя",
+    "print": "Печать",
+    "bulkDeleteTitle": "Удалить объектов: {n}?",
+    "bulkDeleteBody": "Выбранные объекты будут удалены безвозвратно."
   },
   "create": {
     "folderTitle": "Новая папка",
@@ -231,6 +242,7 @@
     "saved": "Сохранено",
     "uploaded": "Загружено",
     "error": "Что-то пошло не так",
-    "unsupported": "Этот формат файла не поддерживается"
+    "unsupported": "Этот формат файла не поддерживается",
+    "renamed": "Переименовано"
   }
 }

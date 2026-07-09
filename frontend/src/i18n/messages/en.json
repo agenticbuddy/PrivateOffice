@@ -13,7 +13,12 @@
     "toggleSidebar": "Toggle sidebar",
     "searchPlaceholder": "Search documents, people, folders…",
     "allSynced": "All synced",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "documents": "Documents",
+    "spreadsheets": "Spreadsheets",
+    "presentations": "Presentations",
+    "templates": "Templates",
+    "trash": "Trash"
   },
   "start": {
     "greeting": "Welcome back, {name}",
@@ -50,7 +55,8 @@
     "modified": "Modified",
     "empty": "Nothing here yet",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "comingSoon": "Coming soon"
   },
   "login": {
     "title": "Sign in",
@@ -100,7 +106,12 @@
     "private": "Private",
     "noTrash": "Recycle Bin is empty",
     "sortName": "Name",
-    "searchResults": "Search: {q}"
+    "searchResults": "Search: {q}",
+    "renameTitle": "Rename",
+    "renameLabel": "New name",
+    "print": "Print",
+    "bulkDeleteTitle": "Delete {n} item(s)?",
+    "bulkDeleteBody": "The selected items will be permanently removed."
   },
   "create": {
     "folderTitle": "New folder",
@@ -231,6 +242,7 @@
     "saved": "Saved",
     "uploaded": "Uploaded",
     "error": "Something went wrong",
-    "unsupported": "This file format is not supported"
+    "unsupported": "This file format is not supported",
+    "renamed": "Renamed"
   }
 }

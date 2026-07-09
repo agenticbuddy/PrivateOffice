@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from "vue";
+import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { nodes as nodesApi } from "@/api/client";
@@ -48,6 +48,17 @@ const azLetter = ref("");
 const sortDir = ref<"asc" | "desc">("asc");
 const lib = ref<"all" | "mine" | "starred">("all"); // library filter within the root list
 const selected = ref<Set<string>>(new Set());
+const secMenu = ref(false);   // "All Documents ▾" section dropdown (sub-toolbar)
+const createMenu = ref(false); // sidebar "Create New ▾" dropdown
+
+// The nav tabs Documents / Spreadsheets / Presentations filter the list by document family via ?type=.
+// Maps a type key to the co_format extensions that belong to it (folders are hidden in a type view).
+const TYPE_CATS: Record<string, string[]> = {
+  doc: ["docx", "odt", "doc", "rtf", "txt", "md"],
+  sheet: ["xlsx", "ods", "xls", "csv", "tsv"],
+  slide: ["pptx", "odp", "ppt"],
+};
+const typeFilter = computed(() => (route.query.type as string) || "");
 const starred = ref<Set<string>>(new Set(JSON.parse(localStorage.getItem("po.starred") || "[]")));
 function toggleStar(id: string) {
   starred.value.has(id) ? starred.value.delete(id) : starred.value.add(id);
@@ -61,9 +72,12 @@ const title = computed(() => {
   if ((route.query.q as string || "").trim()) return t("files.searchResults", { q: (route.query.q as string).trim() });
   if (mode.value === "shared") return t("files.sharedTitle");
   if (mode.value === "folder") return current.value?.name ?? "…";
+  if (typeFilter.value === "doc") return t("nav.documents");
+  if (typeFilter.value === "sheet") return t("nav.spreadsheets");
+  if (typeFilter.value === "slide") return t("nav.presentations");
   if (lib.value === "mine") return t("files.myFilesLib");
   if (lib.value === "starred") return t("files.starred");
-  return t("files.title");
+  return t("files.allDocuments");
 });
 const canCreate = computed(() => {
   if (mode.value === "shared") return false;
@@ -90,6 +104,11 @@ const displayed = computed(() => {
   if (mode.value === "root") {
     if (lib.value === "mine") out = out.filter(isMine);
     else if (lib.value === "starred") out = out.filter((n) => starred.value.has(n.id));
+  }
+  // type view (Documents / Spreadsheets / Presentations): only files of the family, no folders
+  if (typeFilter.value && TYPE_CATS[typeFilter.value]) {
+    const cats = TYPE_CATS[typeFilter.value];
+    out = out.filter((n) => n.type === "file" && cats.includes((n.co_format || "").toLowerCase()));
   }
   if (query.value) out = out.filter((n) => n.name.toLowerCase().includes(query.value));
   if (azLetter.value) out = out.filter((n) => (n.name[0] || "").toUpperCase() === azLetter.value);
@@ -140,11 +159,52 @@ async function load() {
 }
 watch(() => [props.id, props.shared, route.fullPath], load, { immediate: true });
 onMounted(async () => { try { sharedCount.value = (await nodesApi.sharedWithMe()).length; } catch { /* ignore */ } });
+// AppShell's nav "+" routes here with ?new=1 — open the New Document modal, then strip the flag.
+watch(() => route.query.new, (v) => { if (v) { showDoc.value = true; router.replace({ query: { ...route.query, new: undefined } }); } }, { immediate: true });
 
 function goLib(l: "all" | "mine" | "starred") {
   lib.value = l; azLetter.value = "";
-  if (mode.value !== "root") router.push({ name: "files" });
+  if (mode.value !== "root" || typeFilter.value) router.push({ name: "files" });
 }
+// "All Documents ▾" section dropdown — switches the library/section (mirrors the sidebar LIBRARY).
+const sections = computed(() => [
+  { key: "all", icon: "folder", label: t("files.allDocuments"), count: allCount.value },
+  { key: "mine", icon: "person", label: t("files.myFilesLib"), count: myCount.value },
+  { key: "starred", icon: "star", label: t("files.starred"), count: starCount.value },
+  { key: "shared", icon: "group", label: t("nav.sharedWithMe"), count: sharedCount.value },
+]);
+function pickSection(key: string) {
+  secMenu.value = false;
+  if (key === "shared") { router.push({ name: "shared" }); return; }
+  goLib(key as "all" | "mine" | "starred");
+}
+
+// sub-toolbar "Edit" (rename the single selected item) + "Delete" (bulk-delete the selection)
+const showRename = ref(false);
+const renameName = ref("");
+const renameTarget = ref<NodeItem | null>(null);
+const showBulkDelete = ref(false);
+function startRename() {
+  const sel = displayed.value.find((n) => selected.value.has(n.id));
+  if (!sel) return;
+  renameTarget.value = sel; renameName.value = sel.name; showRename.value = true;
+}
+async function doRename() {
+  if (!renameTarget.value || !renameName.value.trim()) return;
+  await nodesApi.rename(renameTarget.value.id, renameName.value.trim());
+  showRename.value = false; selected.value = new Set(); toast.push(t("toast.renamed")); load();
+}
+async function doBulkDelete() {
+  for (const id of [...selected.value]) { try { await nodesApi.remove(id); } catch { /* not owner / gone */ } }
+  showBulkDelete.value = false; selected.value = new Set(); toast.push(t("toast.deleted")); load();
+}
+function printList() { window.print(); }
+// close the section / create dropdowns on any outside click (toggles use @click.stop)
+function closeMenus() { secMenu.value = false; createMenu.value = false; }
+watch([secMenu, createMenu], ([a, b]) => {
+  a || b ? document.addEventListener("click", closeMenus) : document.removeEventListener("click", closeMenus);
+});
+onBeforeUnmount(() => document.removeEventListener("click", closeMenus));
 function openNode(n: NodeItem) {
   if (n.type === "folder") router.push({ name: "folder", params: { id: n.id } });
   else router.push({ name: "editor", params: { id: n.id } });
@@ -171,9 +231,18 @@ const formatOptions = computed(() => formats.value.map((f) => ({ value: f.format
     <!-- SIDEBAR -->
     <template #sidebar>
       <div class="sbcol">
-        <BaseButton class="createbtn" variant="primary" block :disabled="!canCreate" @click="showDoc = true">
-          <Icon name="add" :size="18" />{{ t("files.createNew") }}<Icon name="expand_more" :size="16" class="cchev" />
-        </BaseButton>
+        <div class="createwrap">
+          <BaseButton class="createbtn" variant="primary" block :disabled="!canCreate" @click.stop="createMenu = !createMenu">
+            <Icon name="add" :size="18" />{{ t("files.createNew") }}<Icon name="expand_more" :size="16" class="cchev" />
+          </BaseButton>
+          <Transition name="pop">
+            <div v-if="createMenu" class="createmenu" @click.stop>
+              <button class="cmitem" @click="createMenu = false; showDoc = true"><Icon name="add" :size="18" />{{ t("files.newDocument") }}</button>
+              <button class="cmitem" @click="createMenu = false; showFolder = true"><Icon name="create_new_folder" :size="18" />{{ t("files.newFolder") }}</button>
+              <button class="cmitem" @click="createMenu = false; fileInput?.click()"><Icon name="upload" :size="18" />{{ t("files.uploadFile") }}</button>
+            </div>
+          </Transition>
+        </div>
 
         <div class="sec-label">{{ t("files.library") }}</div>
         <button class="navrow" :class="{ active: mode !== 'shared' && lib === 'all' }" @click="goLib('all')">
@@ -202,26 +271,37 @@ const formatOptions = computed(() => formats.value.map((f) => ({ value: f.format
 
     <!-- MAIN -->
     <div class="page" :class="{ drag: dragOver }" @dragover.prevent="dragOver = canCreate" @dragleave="dragOver = false" @drop.prevent="onDrop">
+      <!-- SUB-TOOLBAR (mockup row 3): [folder] section ▾ · Edit · Delete · New Folder … List/Grid · print -->
       <div class="toolbar">
-        <div class="crumbs">
-          <button v-if="mode === 'folder'" class="iconbtn" @click="router.back()" :aria-label="t('editor.back')"><Icon name="arrow_back" :size="18" /></button>
-          <h1 class="ttl">{{ title }}</h1>
+        <button v-if="mode === 'folder'" class="iconbtn" @click="router.back()" :aria-label="t('editor.back')"><Icon name="arrow_back" :size="18" /></button>
+        <div class="secwrap">
+          <button class="secbtn" @click.stop="secMenu = !secMenu">
+            <Icon name="folder" :size="18" />
+            <span class="secname">{{ title }}</span>
+            <Icon name="expand_more" :size="16" class="secchev" />
+          </button>
+          <Transition name="pop">
+            <div v-if="secMenu" class="secmenu" @click.stop>
+              <button v-for="s in sections" :key="s.key" class="secitem" @click="pickSection(s.key)">
+                <Icon :name="s.icon" :size="18" /><span>{{ s.label }}</span><em>{{ s.count }}</em>
+              </button>
+            </div>
+          </Transition>
         </div>
+
+        <span class="tsep" />
+        <button class="tlink" :disabled="selected.size !== 1" @click="startRename"><Icon name="edit" :size="17" />{{ t("common.rename") }}</button>
+        <button class="tlink" :disabled="!selected.size" @click="showBulkDelete = true"><Icon name="delete" :size="17" />{{ t("common.delete") }}</button>
+        <button class="tlink" :disabled="!canCreate" @click="showFolder = true"><Icon name="create_new_folder" :size="17" />{{ t("files.newFolder") }}</button>
+        <input ref="fileInput" type="file" hidden multiple @change="onFiles(($event.target as HTMLInputElement).files)" />
+
         <div class="tspacer" />
-        <template v-if="selected.size">
-          <span class="selinfo">{{ t("files.selectedOf", { n: selected.size, m: displayed.length }) }}</span>
-          <BaseButton size="sm" variant="ghost" @click="selected = new Set()"><Icon name="close" :size="18" />{{ t("common.cancel") }}</BaseButton>
-        </template>
-        <template v-else-if="canCreate">
-          <BaseButton size="sm" variant="ghost" @click="showFolder = true"><Icon name="create_new_folder" :size="18" />{{ t("files.newFolder") }}</BaseButton>
-          <BaseButton size="sm" variant="ghost" @click="fileInput?.click()"><Icon name="upload" :size="18" />{{ t("files.uploadFile") }}</BaseButton>
-          <BaseButton size="sm" variant="primary" @click="showDoc = true"><Icon name="add" :size="18" />{{ t("files.newDocument") }}</BaseButton>
-          <input ref="fileInput" type="file" hidden multiple @change="onFiles(($event.target as HTMLInputElement).files)" />
-        </template>
+        <span v-if="selected.size" class="selinfo">{{ t("files.selectedOf", { n: selected.size, m: displayed.length }) }}</span>
         <div class="viewtoggle">
           <button :class="{ on: view === 'list' }" :title="t('files.viewList')" @click="view = 'list'"><Icon name="list" :size="18" /></button>
           <button :class="{ on: view === 'grid' }" :title="t('files.viewGrid')" @click="view = 'grid'"><Icon name="grid_view" :size="18" /></button>
         </div>
+        <button class="tbprint" :title="t('files.print')" @click="printList"><Icon name="print" :size="18" /></button>
       </div>
 
       <div class="azbar">
@@ -308,6 +388,14 @@ const formatOptions = computed(() => formats.value.map((f) => ({ value: f.format
       <p class="t-muted">{{ t(deleteNode?.type === "folder" ? "confirm.deleteBodyFolder" : "confirm.deleteBodyFile") }}</p>
       <template #footer><BaseButton variant="ghost" @click="deleteNode = null">{{ t("common.cancel") }}</BaseButton><BaseButton variant="danger" @click="doDelete">{{ t("confirm.deleteConfirm") }}</BaseButton></template>
     </BaseModal>
+    <BaseModal :open="showRename" :title="t('files.renameTitle')" @close="showRename = false">
+      <BaseInput v-model="renameName" :label="t('files.renameLabel')" icon="edit" @keyup.enter="doRename" />
+      <template #footer><BaseButton variant="ghost" @click="showRename = false">{{ t("common.cancel") }}</BaseButton><BaseButton variant="primary" :disabled="!renameName.trim()" @click="doRename">{{ t("common.save") }}</BaseButton></template>
+    </BaseModal>
+    <BaseModal :open="showBulkDelete" :title="t('files.bulkDeleteTitle', { n: selected.size })" @close="showBulkDelete = false">
+      <p class="t-muted">{{ t("files.bulkDeleteBody") }}</p>
+      <template #footer><BaseButton variant="ghost" @click="showBulkDelete = false">{{ t("common.cancel") }}</BaseButton><BaseButton variant="danger" @click="doBulkDelete">{{ t("confirm.deleteConfirm") }}</BaseButton></template>
+    </BaseModal>
     <ShareDrawer :open="!!shareNode" :node="shareNode" @close="shareNode = null" />
   </AppShell>
 </template>
@@ -315,8 +403,17 @@ const formatOptions = computed(() => formats.value.map((f) => ({ value: f.format
 <style scoped>
 /* ---- sidebar ---- */
 .sbcol { display: flex; flex-direction: column; min-height: 100%; }
-.createbtn { margin-bottom: var(--s-3); }
+.createwrap { position: relative; margin-bottom: var(--s-3); }
+.createbtn { margin-bottom: 0; }
 .cchev { margin-inline-start: auto; }
+.createmenu {
+  position: absolute; top: calc(100% + 6px); inset-inline: 0; z-index: 60;
+  background: rgba(255, 255, 255, 0.96); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-bd); border-radius: var(--r-lg); box-shadow: var(--shadow-2);
+  padding: var(--s-1); display: flex; flex-direction: column; gap: 2px;
+}
+.cmitem { display: flex; align-items: center; gap: var(--s-2); text-align: start; border: none; background: transparent; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); font-size: 13.5px; cursor: pointer; color: var(--ink); }
+.cmitem:hover { background: var(--accent-soft); color: var(--accent-ink); }
 .sec-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); padding: var(--s-3) var(--s-2) var(--s-1); }
 .navrow { width: 100%; display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2); border: none; background: transparent; border-radius: var(--r-md); cursor: pointer; color: var(--ink); font-size: 14px; font-weight: 500; text-align: start; }
 /* only the TEXT span grows — NOT the Icon (which also renders as <span class="ms">), else the icon
@@ -341,10 +438,37 @@ const formatOptions = computed(() => formats.value.map((f) => ({ value: f.format
 .iconbtn { border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-sm); }
 .iconbtn:hover { background: rgba(20, 32, 56, 0.06); }
 .tspacer { flex: 1; }
-.selinfo { font-size: 13px; font-weight: 600; color: var(--accent-ink); }
+.selinfo { font-size: 13px; font-weight: 600; color: var(--accent-ink); margin-inline-end: var(--s-1); }
+
+/* section dropdown ([folder] All Documents ▾) */
+.secwrap { position: relative; }
+.secbtn { display: flex; align-items: center; gap: var(--s-2); border: none; background: transparent; cursor: pointer; color: var(--ink); padding: var(--s-2) var(--s-2); border-radius: var(--r-md); font: inherit; }
+.secbtn:hover { background: rgba(20, 32, 56, 0.06); }
+.secname { font-size: 17px; font-weight: 700; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.secchev { color: var(--ink-3); }
+.secmenu {
+  position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 220px; z-index: 60;
+  background: rgba(255, 255, 255, 0.96); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-bd); border-radius: var(--r-lg); box-shadow: var(--shadow-2);
+  padding: var(--s-1); display: flex; flex-direction: column; gap: 2px;
+}
+.secitem { display: flex; align-items: center; gap: var(--s-2); text-align: start; border: none; background: transparent; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); font-size: 13.5px; cursor: pointer; color: var(--ink); }
+.secitem span:not(.ms) { flex: 1; }
+.secitem .ms { flex: 0 0 auto; }
+.secitem em { font-style: normal; color: var(--ink-3); font-size: 12.5px; font-weight: 600; }
+.secitem:hover { background: var(--accent-soft); color: var(--accent-ink); }
+
+/* separator + action links (Edit | Delete | New Folder) */
+.tsep { width: 1px; height: 22px; background: var(--line); margin-inline: var(--s-1); flex: none; }
+.tlink { display: flex; align-items: center; gap: 5px; border: none; background: transparent; cursor: pointer; color: var(--accent-ink); font: inherit; font-size: 13.5px; font-weight: 600; padding: var(--s-2) var(--s-2); border-radius: var(--r-sm); }
+.tlink:hover:not(:disabled) { background: var(--accent-soft); }
+.tlink:disabled { color: var(--ink-3); opacity: 0.55; cursor: default; }
+
 .viewtoggle { display: flex; gap: 2px; margin-inline-start: var(--s-2); background: rgba(20, 32, 56, 0.05); border-radius: var(--r-md); padding: 2px; }
 .viewtoggle button { border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-sm); }
 .viewtoggle button.on { background: #fff; color: var(--accent-ink); box-shadow: var(--shadow-1); }
+.tbprint { border: 1px solid var(--line); background: rgba(255,255,255,0.5); cursor: pointer; color: var(--ink-2); width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-md); margin-inline-start: var(--s-2); }
+.tbprint:hover { border-color: var(--accent); color: var(--accent-ink); }
 
 .azbar { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 2px; padding: var(--s-2) var(--s-4); border-bottom: 1px solid var(--line); }
 .az { border: none; background: transparent; cursor: pointer; color: var(--ink-3); min-width: 22px; height: 24px; border-radius: var(--r-sm); font-size: 12px; font-weight: 600; }
