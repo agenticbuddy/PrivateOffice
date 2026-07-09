@@ -53,24 +53,6 @@ html[data-po="glass2"] #toolbar-up, html[data-po="glass2"] .ui-overflow-group-po
   backdrop-filter: none !important;
 }
 
-/* HIT-TEST FIX (all designs, #66) — a NON-MODAL jsdialog (e.g. Page Style / "Стиль страницы") floats over
-   the document WITHOUT an overlay (by CO design, so you can still see the sheet). But the whole Leaflet map
-   (cursor <canvas> → .leaflet-* panes → .leaflet-container → #document-container, each pe:auto) hit-tests
-   ABOVE the dialog, so a real click on the dialog's own checkboxes/inputs falls through to the sheet — e.g.
-   the "Убрать обрамление" checkbox would not toggle (verified: elementFromPoint over it returned the map,
-   not the input; a raised dialog z-index does NOT beat it). Neither a modal backdrop nor z-index fixes it.
-   Fix: while a TITLED dialog that is NOT a range-picker is open, drop pointer-events on the whole document/
-   map area — the dialog itself is a <body> child OUTSIDE #document-container, so it stays clickable, and the
-   notebookbar is outside #document-container too, so the ribbon still works. EXCLUSIONS: range-picker
-   dialogs (Define Range / Create Table — they carry a `assignrb` shrink button and DO need sheet clicks)
-   via :not(:has([id*=assignrb])); transient snackbars/dropdowns have no titlebar so they don't match.
-   Needs :has() (Chrome 105+, which CO runs in). Must be BAKED — an injected <style> is sanitized in the
-   CO iframe; both inline and baked rules apply. Unscoped by design: this is a functional fix for all users. */
-body:has(.jsdialog-container.ui-dialog .ui-dialog-titlebar):not(:has([id*="assignrb"])) #document-container,
-body:has(.jsdialog-container.ui-dialog .ui-dialog-titlebar):not(:has([id*="assignrb"])) #document-container * {
-  pointer-events: none !important;
-}
-
 html[data-po="glass"] {
   --po-accent: #0a7f5e;
   --po-accent-ink: #07614a;

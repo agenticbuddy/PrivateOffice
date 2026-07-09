@@ -196,11 +196,16 @@ RUN sed -i 's#getImageURL=function(imgName){var _a;#getImageURL=function(imgName
 
 # Privacy + rebrand of coolwsd's SERVE-TIME placeholders. Name -> PrivateOffice, product URL ->
 # about:blank; empty feedback/welcome/buyproduct; disable auto-welcome. Also REPLACE the %BRANDING_JS%
-# placeholder with our OWN <script .../branding.js> tag: this stops coolwsd injecting its own
-# un-cache-busted tag at serve time, and routes branding.js through the ?b= step below so even an
-# already-cached browser refetches it. The from-source build ships no welcome/ dir → that rm is a no-op.
+# AND %BRANDING_CSS% placeholders with our OWN <script>/<link> tags: coolwsd otherwise expands these at
+# serve time into UN-cache-busted references (no ?b=), so an old cached branding.css/js sticks forever.
+# This bit us: an earlier build shipped the theme AS branding.css; browsers cached it (no token), and its
+# stale UNSCOPED `.jsdialog-window{overflow:hidden}` rule clipped the 2×2 dialog wrapper → dialog controls
+# (e.g. the Page-Style "Убрать обрамление" checkbox) became un-hit-testable. Emitting our own tags routes
+# BOTH through the ?b= step below, so even an already-cached browser refetches the fresh (inert stock)
+# files. The from-source build ships no welcome/ dir → that rm is a no-op.
 RUN sed -i 's/%FEEDBACK_URL%//g; s/%WELCOME_URL%//g; s/%BUYPRODUCT_URL%//g; s/%AUTO_SHOW_WELCOME%/false/g; s/%PRODUCT_BRANDING_NAME%/PrivateOffice/g; s|%PRODUCT_BRANDING_URL%|about:blank|g' ${DIST}/cool.html \
  && sed -i 's#<!--%BRANDING_JS%-->#<script src="%SERVICE_ROOT%/browser/%VERSION%/branding.js"></script>#' ${DIST}/cool.html \
+ && sed -i 's#<!--%BRANDING_CSS%-->#<link rel="stylesheet" href="%SERVICE_ROOT%/browser/%VERSION%/branding.css" />#' ${DIST}/cool.html \
  && rm -rf ${DIST}/welcome ${DIST}/welcome.html ${DIST}/welcome.js \
  && chmod -R a+r ${DIST}/fonts ${DIST}/images
 
