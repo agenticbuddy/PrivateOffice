@@ -58,6 +58,7 @@ function toggleStar(id: string) {
 const mode = computed(() => (props.shared ? "shared" : props.id ? "folder" : "root"));
 const parentId = computed(() => props.id ?? null);
 const title = computed(() => {
+  if ((route.query.q as string || "").trim()) return t("files.searchResults", { q: (route.query.q as string).trim() });
   if (mode.value === "shared") return t("files.sharedTitle");
   if (mode.value === "folder") return current.value?.name ?? "…";
   if (lib.value === "mine") return t("files.myFilesLib");
@@ -82,13 +83,15 @@ const recent = computed(() =>
 );
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-// displayed = base list → library filter → A-Z → sort
+// displayed = base list → library filter → search query → A-Z → sort
+const query = computed(() => ((route.query.q as string) || "").trim().toLowerCase());
 const displayed = computed(() => {
   let out = items.value;
   if (mode.value === "root") {
     if (lib.value === "mine") out = out.filter(isMine);
     else if (lib.value === "starred") out = out.filter((n) => starred.value.has(n.id));
   }
+  if (query.value) out = out.filter((n) => n.name.toLowerCase().includes(query.value));
   if (azLetter.value) out = out.filter((n) => (n.name[0] || "").toUpperCase() === azLetter.value);
   return [...out].sort((a, b) => {
     // folders first, then by name in the chosen direction

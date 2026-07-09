@@ -99,7 +99,8 @@
     "shared": "Shared",
     "private": "Private",
     "noTrash": "Recycle Bin is empty",
-    "sortName": "Name"
+    "sortName": "Name",
+    "searchResults": "Search: {q}"
   },
   "create": {
     "folderTitle": "New folder",

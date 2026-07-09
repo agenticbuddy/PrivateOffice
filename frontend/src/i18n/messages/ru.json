@@ -99,7 +99,8 @@
     "shared": "Общий",
     "private": "Личный",
     "noTrash": "Корзина пуста",
-    "sortName": "Название"
+    "sortName": "Название",
+    "searchResults": "Поиск: {q}"
   },
   "create": {
     "folderTitle": "Новая папка",

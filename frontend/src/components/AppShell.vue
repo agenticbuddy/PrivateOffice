@@ -15,6 +15,9 @@ const auth = useAuth();
 const router = useRouter();
 const route = useRoute();
 const menu = ref(false);
+// top-bar search: on Enter, go to the file list filtered by the query (FilesView reads route.query.q).
+const q = ref((route.query.q as string) || "");
+function runSearch() { router.push({ name: "files", query: q.value ? { q: q.value } : {} }); }
 // sidebar collapse persists across navigations (localStorage), per the user's "сворачиваемый/разворачиваемый"
 const collapsed = ref(localStorage.getItem("po.sidebar.collapsed") === "1");
 watch(collapsed, (v) => localStorage.setItem("po.sidebar.collapsed", v ? "1" : "0"));
@@ -60,7 +63,8 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 
       <div class="search">
         <Icon name="search" :size="18" class="sicon" />
-        <input type="text" :placeholder="t('nav.searchPlaceholder')" />
+        <input v-model="q" type="text" :placeholder="t('nav.searchPlaceholder')" @keyup.enter="runSearch" />
+        <button v-if="q" class="clearq" :title="t('common.cancel')" @click="q=''; runSearch()"><Icon name="close" :size="16" /></button>
       </div>
 
       <div class="spacer" />
@@ -163,6 +167,8 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 .search:focus-within { border-color: var(--accent); background: #fff; }
 .search .sicon { color: var(--ink-3); flex: none; }
 .search input { border: none; background: transparent; outline: none; width: 100%; font: inherit; font-size: 14px; color: var(--ink); }
+.clearq { border: none; background: transparent; cursor: pointer; color: var(--ink-3); display: flex; padding: 2px; border-radius: var(--r-full); flex: none; }
+.clearq:hover { background: rgba(20, 32, 56, 0.08); color: var(--ink); }
 .spacer { flex: 1; }
 .synced { display: flex; align-items: center; gap: var(--s-1); color: var(--accent); font-size: 13px; font-weight: 600; margin-inline-end: var(--s-2); }
 .tbicon { position: relative; border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 38px; height: 38px; border-radius: var(--r-full); display: flex; align-items: center; justify-content: center; }
