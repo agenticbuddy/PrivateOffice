@@ -12,7 +12,8 @@
     "home": "Главная",
     "toggleSidebar": "Свернуть панель",
     "searchPlaceholder": "Поиск документов, людей, папок…",
-    "allSynced": "Всё синхронизировано"
+    "allSynced": "Всё синхронизировано",
+    "notifications": "Уведомления"
   },
   "start": {
     "greeting": "С возвращением, {name}",
@@ -87,7 +88,18 @@
     "typeFile": "Файл",
     "viewList": "Список",
     "viewGrid": "Плитка",
-    "azAll": "Все"
+    "azAll": "Все",
+    "myFilesLib": "Мои файлы",
+    "starred": "Избранное",
+    "recycleBin": "Корзина",
+    "colSize": "Размер",
+    "colSharing": "Доступ",
+    "selectedOf": "Выбрано {n} из {m}",
+    "itemsCount": "{m} элементов",
+    "shared": "Общий",
+    "private": "Личный",
+    "noTrash": "Корзина пуста",
+    "sortName": "Название"
   },
   "create": {
     "folderTitle": "Новая папка",

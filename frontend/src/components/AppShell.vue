@@ -66,10 +66,17 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       <div class="spacer" />
 
       <div class="synced"><Icon name="cloud_done" :size="18" /><span>{{ t("nav.allSynced") }}</span></div>
+      <button class="tbicon" :title="t('nav.notifications')"><Icon name="notifications" :size="20" /><span class="dot" /></button>
+      <button class="tbicon" :title="t('nav.profile')" @click="go({ name: 'profile' })"><Icon name="settings" :size="20" /></button>
 
       <div class="userwrap">
         <button class="userbtn" @click="menu = !menu" :title="auth.user?.full_name">
           <Avatar v-if="auth.user" :name="auth.user.full_name" :id="auth.user.id" :size="34" />
+          <span class="uinfo">
+            <strong>{{ auth.user?.full_name }}</strong>
+            <span class="urole">{{ auth.user?.is_admin ? t("nav.admin") : t("nav.home") }}</span>
+          </span>
+          <Icon name="expand_more" :size="16" class="uchev" />
         </button>
         <Transition name="pop">
           <div v-if="menu" class="menu" @click.stop>
@@ -157,10 +164,19 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
 .search .sicon { color: var(--ink-3); flex: none; }
 .search input { border: none; background: transparent; outline: none; width: 100%; font: inherit; font-size: 14px; color: var(--ink); }
 .spacer { flex: 1; }
-.synced { display: flex; align-items: center; gap: var(--s-1); color: var(--accent); font-size: 13px; font-weight: 600; }
+.synced { display: flex; align-items: center; gap: var(--s-1); color: var(--accent); font-size: 13px; font-weight: 600; margin-inline-end: var(--s-2); }
+.tbicon { position: relative; border: none; background: transparent; cursor: pointer; color: var(--ink-2); width: 38px; height: 38px; border-radius: var(--r-full); display: flex; align-items: center; justify-content: center; }
+.tbicon:hover { background: rgba(20, 32, 56, 0.06); color: var(--ink); }
+.tbicon .dot { position: absolute; top: 8px; inset-inline-end: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--neg); border: 1.5px solid #fff; }
 
-.userwrap { position: relative; }
-.userbtn { border: none; background: transparent; padding: 2px; cursor: pointer; border-radius: var(--r-full); display: flex; }
+.userwrap { position: relative; margin-inline-start: var(--s-1); }
+.userbtn { border: none; background: transparent; padding: 3px 6px 3px 3px; cursor: pointer; border-radius: var(--r-full); display: flex; align-items: center; gap: var(--s-2); }
+.userbtn:hover { background: rgba(20, 32, 56, 0.06); }
+.uinfo { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.uinfo strong { font-size: 13.5px; color: var(--ink); font-weight: 700; }
+.urole { font-size: 11.5px; color: var(--ink-3); }
+.uchev { color: var(--ink-3); }
+@media (max-width: 980px) { .uinfo, .uchev { display: none; } }
 .menu {
   position: absolute; inset-inline-end: 0; top: calc(100% + 8px); min-width: 220px;
   background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);

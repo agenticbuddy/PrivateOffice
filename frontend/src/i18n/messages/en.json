@@ -12,7 +12,8 @@
     "logout": "Log out",
     "toggleSidebar": "Toggle sidebar",
     "searchPlaceholder": "Search documents, people, folders…",
-    "allSynced": "All synced"
+    "allSynced": "All synced",
+    "notifications": "Notifications"
   },
   "start": {
     "greeting": "Welcome back, {name}",
@@ -87,7 +88,18 @@
     "typeFile": "File",
     "viewList": "List view",
     "viewGrid": "Grid view",
-    "azAll": "All"
+    "azAll": "All",
+    "myFilesLib": "My files",
+    "starred": "Starred",
+    "recycleBin": "Recycle Bin",
+    "colSize": "Size",
+    "colSharing": "Sharing",
+    "selectedOf": "{n} of {m} selected",
+    "itemsCount": "{m} items",
+    "shared": "Shared",
+    "private": "Private",
+    "noTrash": "Recycle Bin is empty",
+    "sortName": "Name"
   },
   "create": {
     "folderTitle": "New folder",
