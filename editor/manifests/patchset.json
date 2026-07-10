@@ -184,13 +184,13 @@
     },
     {
       "id": "PO-SRC-018",
-      "title": "Notebookbar: keep the Formulas tab active after inserting a function (fix name typo)",
+      "title": "Notebookbar: keep the user's current Calc tab instead of jumping to Home on context change",
       "type": "code-fix",
-      "files": ["editor/patches/0003-notebookbar-keep-formulas-tab.patch", "browser/src/control/Control.Notebookbar.js"],
+      "files": ["editor/patches/0003-notebookbar-keep-current-tab.patch", "browser/src/control/Control.Notebookbar.js"],
       "source_class": "browser-source",
       "render_path": "n/a (build-time source patch)",
-      "rationale": "updateTabsVisibilityForContext has a guard meant to keep the Formulas tab selected on a Calc context change (so inserting a function from the Formulas tab doesn't jump the ribbon to Home). But it checks isTabSelected('Formulas') while the Calc tab's name is 'Formula' (Control.NotebookbarCalc.js) — so the guard never fires and the ribbon switches to Home on every function insert. Fix the name to 'Formula'. Upstream typo; became visible once RU function insertion worked.",
-      "rollback": "Remove editor/patches/0003-*.patch.",
+      "rationale": "updateTabsVisibilityForContext switches the Calc ribbon to the tab that owns the incoming context. When the context reverts to Cell/default (after inserting a table/chart/function, or just re-selecting a cell) the Home tab owns that context, so contextTab/defaultTab.click() yanks the ribbon to Home. Upstream guarded only the Formulas tab, and via a 'Formulas' vs 'Formula' name typo (the Calc tab's name is 'Formula' per Control.NotebookbarCalc.js) that guard never even fired. Generalised the guard: in spreadsheets, if the tab we would switch to is Home and the currently-selected tab is still visible, stay put — so Insert/Data/Layout/Formulas etc. survive an insert instead of snapping to Home. Genuine object-context tabs (Chart/Picture/Shape/Table) still take over, and a hidden current tab still falls through to Home. Supersedes the earlier name-typo-only fix.",
+      "rollback": "Remove editor/patches/0003-*.patch (restores upstream auto-switch-to-Home behaviour).",
       "status": "active"
     },
     {

@@ -1,0 +1,32 @@
+diff --git a/browser/src/control/Control.Notebookbar.js b/browser/src/control/Control.Notebookbar.js
+index 1abe340..287c26b 100644
+--- a/browser/src/control/Control.Notebookbar.js
++++ b/browser/src/control/Control.Notebookbar.js
+@@ -593,9 +593,24 @@ window.L.Control.Notebookbar = window.L.Control.extend({
+ 
+ 		const docType = this._map.getDocType();
+ 
+-		if (docType === 'spreadsheet' && this.isTabSelected('Formulas')) {
+-			this.updateButtonVisibilityForContext(requestedContext, this.FORMULAS_TAB_ID);
+-			return;
++		// PrivateOffice: keep the user on their current Calc ribbon tab instead of yanking it to Home when
++		// the context reverts to a cell/default state — e.g. after inserting a table, chart or function
++		// from the Insert/Formulas/Data tab. Upstream only guarded the Formulas tab, and a 'Formulas' vs
++		// 'Formula' name typo meant even that never fired. Generalised: if the tab we would switch to is
++		// Home (the tab that owns the default/Cell context) and the currently-selected tab is still
++		// visible, stay put. Genuine object-context tabs (Chart/Picture/Shape/Table) still take over, and
++		// if the current tab gets hidden we still fall through to Home below.
++		if (docType === 'spreadsheet' && currentlySelectedTabName) {
++			var targetTab = contextTab || defaultTab;
++			var currentTabElement = $('#' + currentlySelectedTabName + '-tab-label');
++			var targetIsHome = targetTab && targetTab.attr('id') === this.HOME_TAB_ID;
++			var currentStillVisible = currentTabElement.length
++				&& !currentTabElement.hasClass('hidden')
++				&& currentTabElement.css('display') !== 'none';
++			if (targetIsHome && currentStillVisible) {
++				this.updateButtonVisibilityForContext(requestedContext, currentTabElement.attr('id'));
++				return;
++			}
+ 		}
+ 
+ 		if (contextTab) {
