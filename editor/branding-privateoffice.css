@@ -269,13 +269,15 @@ html[data-po="glass"] #jsd-context-menu-entries .ui-combobox-entry:hover {
   color: var(--po-ink) !important;
   border-radius: 8px;
 }
-/* Dropdown menus, list popups & treeviews: only the row under the cursor highlights (#63/#64). Container-
-   agnostic — `*:has(> ENTRY:hover)` matches whatever element directly holds the hovered row, so the tint
-   on that list's OTHER `.selected:not(:hover)` rows is dropped whatever the popup's class. Keyboard nav
-   keeps its highlight; the direct-child `>` keeps `*` scoped to the real list (no over-match to <body>). */
-html[data-po="glass"] *:has(> .ui-treeview-entry:hover) > .ui-treeview-entry.selected:not(:hover),
+/* Dropdown menus, list popups, treeviews & icon-view pickers: only the row under the cursor highlights
+   (#63/#64/#67). Container- AND entry-class-agnostic — match any jsdialog list entry via the shared
+   `-entry` fragment (`.ui-treeview-entry`, `.ui-iconview-entry` image-effect pickers, `.ui-combobox-entry`,
+   `.dropdown-entry-*`, …) plus menu / context-menu items. `*:has(> ENTRY:hover)` matches whatever directly
+   holds the hovered row; `> ENTRY.selected:not(:hover)` drops the tint on the list's other selected rows.
+   Keyboard nav keeps its highlight; `>` scopes to the real list (tabs/buttons have no `-entry` class). */
+html[data-po="glass"] *:has(> [class*="-entry"]:hover) > [class*="-entry"].selected:not(:hover),
 html[data-po="glass"] *:has(> .ui-menu-item:hover) > .ui-menu-item.selected:not(:hover),
-html[data-po="glass"] *:has(> .ui-combobox-entry:hover) > .ui-combobox-entry.selected:not(:hover) {
+html[data-po="glass"] *:has(> .context-menu-item:hover) > .context-menu-item.selected:not(:hover) {
   background: transparent !important;
   box-shadow: none !important;
   color: var(--po-ink) !important;
@@ -550,17 +552,20 @@ html[data-po="glass2"] #jsd-context-menu-entries .ui-combobox-entry:hover {
   color: var(--po-ink) !important;
   border-radius: 8px;
 }
-/* Dropdown menus, list popups & treeviews: show only the row under the cursor. The engine keeps a
-   persistent `.selected` "current" row (keyboard/default); tinting it lit up TWO rows when the mouse
-   hovered a DIFFERENT one (#63/#64 — the first item stayed highlighted; same class as autofilter #57).
-   CONTAINER-AGNOSTIC: `*:has(> ENTRY:hover)` matches whatever element directly holds the hovered row (a
-   `.ui-treeview`, `.mobile-wizard`, `.ui-listbox-container`, a combobox popup, …) — so `> ENTRY.selected
-   :not(:hover)` drops the tint on that list's OTHER selected rows, whatever the popup's class. Keyboard
-   navigation (nothing hovered) keeps its highlight. The direct-child `>` keeps `*` scoped to the real list
-   (only lists have these entries as direct children), so it can't over-match up to <body>. */
-html[data-po="glass2"] *:has(> .ui-treeview-entry:hover) > .ui-treeview-entry.selected:not(:hover),
+/* Dropdown menus, list popups, treeviews & icon-view pickers: show only the row under the cursor. The
+   engine keeps a persistent `.selected` "current" row (keyboard/default); tinting it lit up TWO rows when
+   the mouse hovered a DIFFERENT one (#63/#64 — the first item stayed highlighted; same class as autofilter
+   #57). CONTAINER-AGNOSTIC + ENTRY-CLASS-AGNOSTIC: match ANY jsdialog list entry by the shared `-entry`
+   class fragment — `.ui-treeview-entry`, `.ui-iconview-entry` (image-effect pickers: Brightness/Contrast/
+   ColorMode/Transparency), `.ui-combobox-entry`, `.dropdown-entry-*`, … — plus menu / context-menu items.
+   `*:has(> ENTRY:hover)` matches whatever element directly holds the hovered row (`.ui-treeview`,
+   `.ui-iconview`, `.mobile-wizard`, a menu, …); `> ENTRY.selected:not(:hover)` drops the tint on that
+   list's OTHER selected rows. Keyboard nav (nothing hovered) keeps its highlight. The direct-child `>`
+   keeps `*` scoped to the real list (ribbon tabs `.ui-tab` / toolbar `.unobutton` have no `-entry` class,
+   so they're never touched). #67: image-effect iconview dropdowns were the uncovered case. */
+html[data-po="glass2"] *:has(> [class*="-entry"]:hover) > [class*="-entry"].selected:not(:hover),
 html[data-po="glass2"] *:has(> .ui-menu-item:hover) > .ui-menu-item.selected:not(:hover),
-html[data-po="glass2"] *:has(> .ui-combobox-entry:hover) > .ui-combobox-entry.selected:not(:hover) {
+html[data-po="glass2"] *:has(> .context-menu-item:hover) > .context-menu-item.selected:not(:hover) {
   background: transparent !important;
   box-shadow: none !important;
   color: var(--po-ink) !important;
