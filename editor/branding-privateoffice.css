@@ -853,6 +853,14 @@ html[data-po="glass2"] .notebookbar.unotoolbutton.selected:hover {
   border-radius: 8px;
 }
 
+/* ---- Ribbon big-button labels ---- */
+/* The engine paints notebookbar big-button labels at 16px, so the longest RU labels ("Комбинации клавиш" =
+   Keyboard shortcuts on the Help tab) sit right at the button edge and clip / wrap-and-clip on narrower
+   windows or higher zoom. Nudge to 14px — still clearly readable, with comfortable room for the longest
+   labels. Ungated so it applies to classic/glass/glass2 alike. Scoped to .notebookbar so the sidebar and
+   dialog labels are untouched. */
+.notebookbar .ui-content.unolabel { font-size: 14px; }
+
 /* ---- Floating popups & pickers ---- */
 /* Calc auto-filter dropdown container (was flat white) */
 html[data-po="glass2"] .autofilter-container {
@@ -869,11 +877,23 @@ html[data-po="glass2"] .autofilter-container {
 html[data-po="glass2"] .autofilter-container-submenu > .autofilter-container {
   border-radius: 12px !important;
 }
-/* auto-filter inner list: HOVER ONLY. The dropdown holds TWO independent sub-treeviews (the sort/filter
-   ACTION list and the value list); the engine keeps a persistent `.selected` "current row" in EACH, so
-   tinting `.selected` lit up two rows at once — and a stale one lingered after a click, so the next hover
-   showed two highlights. Highlight only the row under the cursor: one at a time, standard menu behaviour.
-   Clean soft-accent tint + accent-ink text, no ring, no bold. (`.selected` is left untinted — harmless.) */
+/* auto-filter inner list: HOVER ONLY. The dropdown holds several independent sub-treeviews (the sort/filter
+   ACTION list and the value list), and the engine keeps a persistent `.selected` "current row" in EACH.
+   The GENERIC treeview rule (html[data-po] .ui-treeview-entry.selected) tints EVERY .selected row, so two
+   rows lit up at once (one per sub-list) and a stale one lingered after a click — hence the "two rows
+   highlighted" report. Neutralise `.selected` inside the autofilter so only the row under the cursor
+   (:hover) highlights — one at a time, standard menu behaviour. The :hover rules come AFTER the neutraliser
+   (equal specificity) so a selected+hovered row still highlights. */
+html[data-po="glass2"] .autofilter .ui-treeview-entry.selected,
+html[data-po="glass2"] .autofilter-container .ui-treeview-entry.selected {
+  background-color: transparent !important;
+  color: var(--po-ink) !important;
+  border-color: transparent !important;
+}
+html[data-po="glass2"] .autofilter .ui-treeview-entry.selected *,
+html[data-po="glass2"] .autofilter-container .ui-treeview-entry.selected * {
+  color: var(--po-ink) !important;
+}
 html[data-po="glass2"] .autofilter .ui-treeview-entry:hover,
 html[data-po="glass2"] .autofilter-container .ui-treeview-entry:hover {
   background-color: var(--po-accent-soft) !important;
@@ -1316,9 +1336,20 @@ html[data-po="glass"] .autofilter-container {
 html[data-po="glass"] .autofilter-container-submenu > .autofilter-container {
   border-radius: 12px !important;
 }
-/* auto-filter inner list: HOVER ONLY — the dropdown's two sub-treeviews each keep a persistent `.selected`
-   row, so tinting `.selected` lit up multiple rows at once (and a stale one lingered after a click).
-   Highlight only the row under the cursor: clean soft-accent tint + accent-ink text, no ring, no bold. */
+/* auto-filter inner list: HOVER ONLY. The generic treeview rule tints every `.selected` row, and the
+   dropdown's sub-treeviews each keep a persistent `.selected`, so multiple rows lit up at once (and a stale
+   one lingered after a click). Neutralise `.selected` inside the autofilter; highlight only the row under
+   the cursor. :hover rules come AFTER the neutraliser so a selected+hovered row still highlights. */
+html[data-po="glass"] .autofilter .ui-treeview-entry.selected,
+html[data-po="glass"] .autofilter-container .ui-treeview-entry.selected {
+  background-color: transparent !important;
+  color: var(--po-ink) !important;
+  border-color: transparent !important;
+}
+html[data-po="glass"] .autofilter .ui-treeview-entry.selected *,
+html[data-po="glass"] .autofilter-container .ui-treeview-entry.selected * {
+  color: var(--po-ink) !important;
+}
 html[data-po="glass"] .autofilter .ui-treeview-entry:hover,
 html[data-po="glass"] .autofilter-container .ui-treeview-entry:hover {
   background-color: var(--po-accent-soft) !important;
