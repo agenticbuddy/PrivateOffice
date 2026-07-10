@@ -269,14 +269,13 @@ html[data-po="glass"] #jsd-context-menu-entries .ui-combobox-entry:hover {
   color: var(--po-ink) !important;
   border-radius: 8px;
 }
-/* Dropdown menus, list popups & treeviews: only the row under the cursor highlights. When any sibling
-   entry in the same list is hovered (:has), drop the persistent `.selected` tint on the others so a
-   stale/first "current" row doesn't light up alongside the hovered one (#63, same class as autofilter
-   #57). Keyboard nav keeps its highlight. Container-agnostic via :has() on the list parent. */
-html[data-po="glass"] .ui-treeview:has(.ui-treeview-entry:hover) .ui-treeview-entry.selected:not(:hover),
-html[data-po="glass"] .mobile-wizard:has(.ui-menu-item:hover) .ui-menu-item.selected:not(:hover),
-html[data-po="glass"] .ui-menu:has(.ui-menu-item:hover) .ui-menu-item.selected:not(:hover),
-html[data-po="glass"] .ui-listbox-container:has(.ui-combobox-entry:hover) .ui-combobox-entry.selected:not(:hover) {
+/* Dropdown menus, list popups & treeviews: only the row under the cursor highlights (#63/#64). Container-
+   agnostic — `*:has(> ENTRY:hover)` matches whatever element directly holds the hovered row, so the tint
+   on that list's OTHER `.selected:not(:hover)` rows is dropped whatever the popup's class. Keyboard nav
+   keeps its highlight; the direct-child `>` keeps `*` scoped to the real list (no over-match to <body>). */
+html[data-po="glass"] *:has(> .ui-treeview-entry:hover) > .ui-treeview-entry.selected:not(:hover),
+html[data-po="glass"] *:has(> .ui-menu-item:hover) > .ui-menu-item.selected:not(:hover),
+html[data-po="glass"] *:has(> .ui-combobox-entry:hover) > .ui-combobox-entry.selected:not(:hover) {
   background: transparent !important;
   box-shadow: none !important;
   color: var(--po-ink) !important;
@@ -553,14 +552,15 @@ html[data-po="glass2"] #jsd-context-menu-entries .ui-combobox-entry:hover {
 }
 /* Dropdown menus, list popups & treeviews: show only the row under the cursor. The engine keeps a
    persistent `.selected` "current" row (keyboard/default); tinting it lit up TWO rows when the mouse
-   hovered a DIFFERENT one (#63 — the first item stayed highlighted; same class as autofilter #57). When
-   ANY sibling entry in the same list is hovered (:has), drop the tint on the other selected rows. Keyboard
-   navigation (nothing hovered in the list) keeps its highlight. Container-agnostic via :has() on the list
-   parent — covers notebookbar dropdowns, the autofilter, comboboxes and font/style lists alike. */
-html[data-po="glass2"] .ui-treeview:has(.ui-treeview-entry:hover) .ui-treeview-entry.selected:not(:hover),
-html[data-po="glass2"] .mobile-wizard:has(.ui-menu-item:hover) .ui-menu-item.selected:not(:hover),
-html[data-po="glass2"] .ui-menu:has(.ui-menu-item:hover) .ui-menu-item.selected:not(:hover),
-html[data-po="glass2"] .ui-listbox-container:has(.ui-combobox-entry:hover) .ui-combobox-entry.selected:not(:hover) {
+   hovered a DIFFERENT one (#63/#64 — the first item stayed highlighted; same class as autofilter #57).
+   CONTAINER-AGNOSTIC: `*:has(> ENTRY:hover)` matches whatever element directly holds the hovered row (a
+   `.ui-treeview`, `.mobile-wizard`, `.ui-listbox-container`, a combobox popup, …) — so `> ENTRY.selected
+   :not(:hover)` drops the tint on that list's OTHER selected rows, whatever the popup's class. Keyboard
+   navigation (nothing hovered) keeps its highlight. The direct-child `>` keeps `*` scoped to the real list
+   (only lists have these entries as direct children), so it can't over-match up to <body>. */
+html[data-po="glass2"] *:has(> .ui-treeview-entry:hover) > .ui-treeview-entry.selected:not(:hover),
+html[data-po="glass2"] *:has(> .ui-menu-item:hover) > .ui-menu-item.selected:not(:hover),
+html[data-po="glass2"] *:has(> .ui-combobox-entry:hover) > .ui-combobox-entry.selected:not(:hover) {
   background: transparent !important;
   box-shadow: none !important;
   color: var(--po-ink) !important;
