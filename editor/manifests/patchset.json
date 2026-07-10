@@ -1,5 +1,5 @@
 {
-  "note": "Every modification the editor image makes to the upstream build, as typed units. The DEPLOYED build is editor/Dockerfile.online (Collabora Online from source, wired in docker-compose.yml): it merges the translation data from editor/l10n/overrides/client/*.json into the built catalogs and applies the code/asset/theme patches below to the from-source output. editor/Dockerfile (prebuilt-base patching) is the stopgap/fallback and still uses inline sed for PO-L10N-006. dockerfile_lines below refer to the stopgap editor/Dockerfile and are approximate; the same patches live in editor/Dockerfile.online.",
+  "note": "Every modification the editor image makes to the upstream build, as typed units. The DEPLOYED build is editor/Dockerfile.online (Collabora Online from source, wired in docker-compose.yml): it merges the translation data from editor/l10n/overrides/client/*.json into the built catalogs and applies the code/asset/theme patches below to the from-source output. editor/Dockerfile (prebuilt-base patching) is the fallback and injects PO-L10N-006 via inline sed. dockerfile_lines below refer to the fallback editor/Dockerfile and are approximate; the same patches live in editor/Dockerfile.online.",
   "base": "see editor/manifests/upstream.json",
   "patches": [
     {
@@ -13,7 +13,7 @@
         "dist/cool.html"
       ],
       "dockerfile_lines": "21-24",
-      "rationale": "Theme is part of the editor's own stylesheet (correct on first paint), gated by a same-origin external script (CSP-safe), not an override sheet. The one stylesheet holds 3 designs, scoped by the data-po attribute po-toggle.js sets from ?po_design: classic (stock, no rules), glass (green accent), glass2 (blue #2563d9). It covers every UI surface - ribbon, menus, popups, dialogs, sidebar, pickers, tooltips - and all accumulated per-surface fixes live in this same file: combobox = one field, rounded accent pills for ribbon dropdowns, outlined selected-state for sidebar toggles, de-greyed accent view-mode switcher, popup-overlay fix (drop backdrop-filter on the notebookbar), and the dropdown/menu selection styling: the Calc AutoFilter dropdown reads as a clean soft-accent hover with colour-submenu lists sized to content (#54); a single highlighted row at a time in the AutoFilter (generic .selected tint neutralised, #57) and in notebookbar dropdown menus / lists (:has()-scoped suppression of the persistent .selected when a sibling is hovered, #63); and a 14px notebookbar big-button label so long labels like 'Комбинации клавиш' fit (#58).",
+      "rationale": "Theme is part of the editor's own stylesheet (correct on first paint), gated by a same-origin external script (CSP-safe), not an override sheet. The one stylesheet holds 3 designs, scoped by the data-po attribute po-toggle.js sets from ?po_design: classic (stock, no rules), glass (green accent), glass2 (blue #2563d9). It covers every UI surface - ribbon, menus, popups, dialogs, sidebar, pickers, tooltips - and all per-surface fixes live in this same file: combobox = one field, rounded accent pills for ribbon dropdowns, outlined selected-state for sidebar toggles, accent-coloured view-mode switcher, popup-overlay handling (no backdrop-filter on the notebookbar), and the dropdown/menu selection styling: the Calc AutoFilter dropdown reads as a clean soft-accent hover with colour-submenu lists sized to content; a single highlighted row at a time in the AutoFilter (generic .selected tint neutralised) and in EVERY jsdialog dropdown / menu / list / icon-view picker (container- AND entry-class-agnostic `*:has(> [class*=\"-entry\"]:hover) > [class*=\"-entry\"].selected:not(:hover)` — covers .ui-treeview-entry, .ui-iconview-entry (image-effect pickers Brightness/Contrast/…), .ui-combobox-entry, .dropdown-entry-* plus .ui-menu-item / .context-menu-item — clearing the .selected row's fill, border AND inner-<span> fill when a sibling is hovered; ribbon tabs .ui-tab / toolbar .unobutton have no -entry class so they are untouched); a 14px notebookbar big-button label so long labels like 'Комбинации клавиш' fit; and a localised colour-palette selector (Стандартная/Цвета темы/Цвета документа) via PO-SRC-026.",
       "rollback": "Drop the cat>>bundle.css and the two cool.html sed lines; remove the po-toggle.js COPY.",
       "status": "active"
     },
@@ -82,9 +82,9 @@
       "source_class": "client-ui",
       "render_path": "client (UNVERIFIED per string: catalog presence does not prove the string renders from the client catalog - some render from core. Verify each, see the Clipboard caveat in assisted_translate.md).",
       "migrate_to": "editor/l10n/overrides/client/",
-      "rationale": "Fills missing client _() keys the merged catalog omits. The values are now extracted to editor/l10n/overrides/client/<lang>.json as canonical data.",
-      "rollback": "Remove the overrides merge step in editor/Dockerfile.online (and the 12 sed lines in the stopgap editor/Dockerfile).",
-      "status": "consumed: editor/Dockerfile.online merges editor/l10n/overrides/client/*.json into the built ui-<lang>.json (migration done, build-verified). The stopgap editor/Dockerfile still injects via inline sed."
+      "rationale": "Fills missing client _() keys the merged catalog omits. The canonical data lives in editor/l10n/overrides/client/<lang>.json; editor/Dockerfile.online merges it into the built ui-<lang>.json.",
+      "rollback": "Remove the overrides merge step in editor/Dockerfile.online (and the 12 sed lines in the fallback editor/Dockerfile).",
+      "status": "active: editor/Dockerfile.online merges editor/l10n/overrides/client/*.json into the built ui-<lang>.json; the fallback editor/Dockerfile injects the same data via inline sed."
     },
     {
       "id": "PO-URL-007",
@@ -147,7 +147,7 @@
         "dist/welcome*"
       ],
       "dockerfile_lines": "138-141",
-      "rationale": "coolwsd substitutes %PRODUCT_BRANDING_NAME/URL% at serve time (the bare-word sed never sees them); set them to PrivateOffice / about:blank, empty feedback/welcome/buyproduct, drop welcome assets. branding.js: if left alone, coolwsd substitutes the %BRANDING_JS% placeholder at serve time with an UN-cache-busted <script .../branding.js>. Instead editor/Dockerfile.online itself REPLACES <!--%BRANDING_JS%--> with our own <script %SERVICE_ROOT%/browser/%VERSION%/branding.js> tag pointing at an empty inert branding.js we write, so PO-CACHE-013 appends ?b=BUILD_ID and an already-cached browser refetches it (no stale brand script). The stopgap editor/Dockerfile injects a rebranded branding.js the same way. Do NOT revert to letting coolwsd inject the tag (it would be un-cache-busted).",
+      "rationale": "coolwsd substitutes %PRODUCT_BRANDING_NAME/URL% at serve time (the bare-word sed never sees them); set them to PrivateOffice / about:blank, empty feedback/welcome/buyproduct, drop welcome assets. branding.js: if left alone, coolwsd substitutes the %BRANDING_JS% placeholder at serve time with an UN-cache-busted <script .../branding.js>. Instead editor/Dockerfile.online itself REPLACES <!--%BRANDING_JS%--> with our own <script %SERVICE_ROOT%/browser/%VERSION%/branding.js> tag pointing at an empty inert branding.js we write, so PO-CACHE-013 appends ?b=BUILD_ID and an already-cached browser refetches it (no stale brand script). The fallback editor/Dockerfile injects a rebranded branding.js the same way. Do NOT let coolwsd inject the tag itself (it would be un-cache-busted).",
       "rollback": "Remove the placeholder seds (incl. the %BRANDING_JS% -> <script> replace) + the empty branding.js; keep welcome.",
       "status": "active"
     },
@@ -171,7 +171,7 @@
         "dist/cool.html"
       ],
       "dockerfile_lines": "166",
-      "rationale": "Browsers holding a 128-day max-age copy won't revalidate; ?b= forces a refetch of the patched bundle.css/js + l10n catalogs + the branding.js tag (injected by PO-BRAND-011) on next open.",
+      "rationale": "coolwsd serves the assets with a long Cache-Control max-age (128 days), so a browser holding a copy won't revalidate; ?b= changes the URL and forces a refetch of the patched bundle.css/js + l10n catalogs + the branding.js tag (injected by PO-BRAND-011) on next open.",
       "rollback": "Remove the sed.",
       "status": "active"
     },
@@ -186,7 +186,7 @@
       "render_path": "n/a (build-time source modification, before configure)",
       "rationale": "Channel real source-level changes to coolwsd / the browser bundle through reviewable unified diffs applied with `git apply` right after `git clone` and before `configure` - not post-build sed on built artifacts, not runtime overrides. No-op when no .patch is present; a failed apply breaks the build on purpose. Pinned to online_from_source.ref; rebase on re-pin. See editor/patches/README.md.",
       "rollback": "Remove the `COPY patches` + `git apply` step from editor/Dockerfile.online and the editor/patches/ dir.",
-      "status": "scaffold: mechanism wired + self-tested at build; no production source patches yet (README only)."
+      "status": "active: editor/Dockerfile.online applies editor/patches/*.patch (0001-0008) to the cloned Online tree before configure."
     },
     {
       "id": "PO-QA-015",
@@ -214,7 +214,7 @@
       ],
       "source_class": "browser-source",
       "render_path": "n/a (build-time source patch + parse-blocking head script po-funcnames.js)",
-      "rationale": "Upstream getLocalizedFuncName localizes only de/fr/es, so the Formulas-tab function dropdowns (Date & Time, Financial, Logical, Math & Trig, …) emit the ENGLISH function name both as the visible label and inside .uno:InsertFunction?FunctionName=. A localized LO core only accepts the LOCALIZED name (RU needs СЕГОДНЯ, not TODAY), so in RU and every non-en/de/fr/es locale the dropdown shows English AND fails to insert. Fix: patch getLocalizedFuncName to consult window.PO_FN_NAMES - a per-locale {english:localized} map extracted from the core for.mo (RID_STRLIST_FUNCTION_NAMES) + sca.mo (*_FUNCNAME_*) by scripts/build-l10n-funcnames.py into editor/po-funcnames.js, delivered as a parse-blocking <head> script (like po-toggle.js) that runs before the deferred bundle.js. Covers all localizable functions across 12 locales. The same patch also removes the 9 dead Excel-import compatibility aliases (…_ADD / …_EXCEL2003, e.g. CUMIPMT_ADD, WEEKNUM_EXCEL2003) from the dropdowns: they are not real insertable functions (absent from the core name table) and did nothing on click; their real equivalents (CUMIPMT, WEEKNUM, …) remain. Confirmed an upstream defect on the clean base image.",
+      "rationale": "Upstream getLocalizedFuncName localizes only de/fr/es, so the Formulas-tab function dropdowns (Date & Time, Financial, Logical, Math & Trig, …) emit the ENGLISH function name both as the visible label and inside .uno:InsertFunction?FunctionName=. A localized LO core only accepts the LOCALIZED name (RU needs СЕГОДНЯ, not TODAY), so in RU and every non-en/de/fr/es locale the dropdown shows English AND fails to insert. Fix: patch getLocalizedFuncName to consult window.PO_FN_NAMES - a per-locale {english:localized} map extracted from the core for.mo (RID_STRLIST_FUNCTION_NAMES) + sca.mo (*_FUNCNAME_*) by scripts/build-l10n-funcnames.py into editor/po-funcnames.js, delivered as a parse-blocking <head> script (like po-toggle.js) that runs before the deferred bundle.js. Covers all localizable functions across 12 locales. The same patch also removes the 9 dead Excel-import compatibility aliases (…_ADD / …_EXCEL2003, e.g. CUMIPMT_ADD, WEEKNUM_EXCEL2003) from the dropdowns: they are not real insertable functions (absent from the core name table) and did nothing on click; their real equivalents (CUMIPMT, WEEKNUM, …) remain.",
       "rollback": "Remove editor/patches/0001-*.patch, the po-funcnames.js COPY + cool.html inject in editor/Dockerfile.online, and editor/po-funcnames.js. Regenerate the map (scripts/build-l10n-funcnames.py) on every engine re-pin.",
       "status": "active"
     },
@@ -228,13 +228,13 @@
       ],
       "source_class": "browser-source",
       "render_path": "n/a (build-time source patch)",
-      "rationale": "The core sends jsdialogaction select position=-1 (clear selection) as the user clicks around the Calc Function Wizard tree; selectEntryByRow(-1) misses the row map and logs console.warn('TreeView onSelect: row -1 not found') on every click. Treat row<0 as a normal deselect (unselect all, return) without warning. Confirmed upstream on the clean base image; benign but noisy.",
+      "rationale": "The core sends jsdialogaction select position=-1 (clear selection) as the user clicks around the Calc Function Wizard tree; selectEntryByRow(-1) misses the row map and logs console.warn('TreeView onSelect: row -1 not found') on every click. Treat row<0 as a normal deselect (unselect all, return) without warning.",
       "rollback": "Remove editor/patches/0002-*.patch.",
       "status": "active"
     },
     {
       "id": "PO-SRC-018",
-      "title": "Notebookbar: keep the user's current Calc tab instead of jumping to Home on context change",
+      "title": "Notebookbar: keep the user's current Calc ribbon tab across context changes",
       "type": "code-fix",
       "files": [
         "editor/patches/0003-notebookbar-keep-current-tab.patch",
@@ -242,7 +242,7 @@
       ],
       "source_class": "browser-source",
       "render_path": "n/a (build-time source patch)",
-      "rationale": "updateTabsVisibilityForContext switches the Calc ribbon to the tab that owns the incoming context. When the context reverts to Cell/default (after inserting a table/chart/function, or just re-selecting a cell) the Home tab owns that context, so contextTab/defaultTab.click() yanks the ribbon to Home. Upstream guarded only the Formulas tab, and via a 'Formulas' vs 'Formula' name typo (the Calc tab's name is 'Formula' per Control.NotebookbarCalc.js) that guard never even fired. Generalised the guard: in spreadsheets, if the tab we would switch to is Home and the currently-selected tab is still visible, stay put — so Insert/Data/Layout/Formulas etc. survive an insert instead of snapping to Home. Genuine object-context tabs (Chart/Picture/Shape/Table) still take over, and a hidden current tab still falls through to Home. Supersedes the earlier name-typo-only fix.",
+      "rationale": "updateTabsVisibilityForContext switches the Calc ribbon to the tab that owns the incoming context. When the context reverts to Cell/default (after inserting a table/chart/function, or just re-selecting a cell) the Home tab owns that context, so contextTab/defaultTab.click() would yank the ribbon to Home. The guard: in spreadsheets, if the tab we would switch to is Home and the currently-selected tab is still visible, stay put — so Insert/Data/Layout/Formulas etc. survive an insert instead of snapping to Home. Genuine object-context tabs (Chart/Picture/Shape/Table) still take over, and a hidden current tab still falls through to Home.",
       "rollback": "Remove editor/patches/0003-*.patch (restores upstream auto-switch-to-Home behaviour).",
       "status": "active"
     },
@@ -260,7 +260,7 @@
       ],
       "source_class": "browser-source",
       "render_path": "sidebar StyleListDeck treeview (id 'flatview') + CF Apply-Style listbox (id 'style')",
-      "rationale": "The LO core ships translations for built-in cell-style names (sc.mo, msgctxt STR_STYLENAME_*, e.g. Good→Хорошо, Accent→Акцент) but the style-LIST path sends the internal ENGLISH name to the browser (only 'Default' is core-localized), so the sidebar Styles deck and the Conditional-Formatting Apply-Style dropdown show Accent/Good/Heading/Result/Status/Text… in English in every locale. Confirmed NOT document-data (a native ODS shows English too) and NOT client _() (the deck/dropdown paint core-sent text with no _() call — adding the names to ui-ru.json did nothing there). Fix: display-only localization via window.getPOStyleName — a per-locale {english:localized} map extracted from sc.mo STR_STYLENAME_* by scripts/build-l10n-stylenames.py into editor/po-stylenames.js, delivered as a parse-blocking <head> script like po-funcnames.js — called ONLY inside the two style widgets: treeview id 'flatview' (Widget.TreeView.ts) and listbox id 'style' (Widget.Listbox.ts). Both select by row/index, so the applied style value stays English and round-trips correctly; custom/user styles pass through unchanged (the map holds built-in names only), and scoping by widget id avoids collateral translation of unrelated lists. Covers 18 locales.",
+      "rationale": "The LO core ships translations for built-in cell-style names (sc.mo, msgctxt STR_STYLENAME_*, e.g. Good→Хорошо, Accent→Акцент) but the style-LIST path sends the internal ENGLISH name to the browser (only 'Default' is core-localized), so the sidebar Styles deck and the Conditional-Formatting Apply-Style dropdown show Accent/Good/Heading/Result/Status/Text… in English in every locale. This is not document-data (a native ODS shows English too) and not reachable via client _() (the deck/dropdown paint core-sent text with no _() call, so a ui-ru.json entry does not affect it). Fix: display-only localization via window.getPOStyleName — a per-locale {english:localized} map extracted from sc.mo STR_STYLENAME_* by scripts/build-l10n-stylenames.py into editor/po-stylenames.js, delivered as a parse-blocking <head> script like po-funcnames.js — called ONLY inside the two style widgets: treeview id 'flatview' (Widget.TreeView.ts) and listbox id 'style' (Widget.Listbox.ts). Both select by row/index, so the applied style value stays English and round-trips correctly; custom/user styles pass through unchanged (the map holds built-in names only), and scoping by widget id avoids collateral translation of unrelated lists. Covers 18 locales.",
       "rollback": "Remove editor/patches/0004-*.patch, the po-stylenames.js COPY + cool.html inject in editor/Dockerfile.online, and editor/po-stylenames.js. Regenerate the map (scripts/build-l10n-stylenames.py) on every engine re-pin.",
       "status": "active"
     },
@@ -274,7 +274,7 @@
       ],
       "source_class": "browser-source",
       "render_path": "colour-picker palette <select> (#color-palette-listbox) — Widget.ColorPicker.ts createPaletteSwitch",
-      "rationale": "The colour picker's palette selector <select> painted window.app.colorPalettes[i].name verbatim; those names arrive from the core as English msgids ('Standard', 'Theme colors', 'Document colors'), so the dropdown showed English in every locale even though the client catalog already has the translations (Стандартная / Цвета темы / Цвета документа). Confirmed NOT applied by the core listbox and NOT reached by client _() at the original call site. Fix: wrap the name in _() at the one assignment (Widget.ColorPicker.ts createPaletteSwitch) — _() returns the input unchanged for any name not in the catalog (custom palettes pass through). Display-only; the option value stays the English key.",
+      "rationale": "The colour picker's palette selector <select> painted window.app.colorPalettes[i].name verbatim; those names arrive from the core as English msgids ('Standard', 'Theme colors', 'Document colors'), so the dropdown shows English in every locale even though the client catalog already has the translations (Стандартная / Цвета темы / Цвета документа): the core listbox does not localize these names and the assignment does not run through client _(). Fix: wrap the name in _() at the one assignment (Widget.ColorPicker.ts createPaletteSwitch) — _() returns the input unchanged for any name not in the catalog (custom palettes pass through). Display-only; the option value stays the English key.",
       "rollback": "Remove editor/patches/0007-*.patch (restores the untranslated palette names).",
       "status": "active"
     },
@@ -292,7 +292,7 @@
       ],
       "source_class": "browser-source",
       "render_path": "jsdialog label widgets — FixedTextControl / StaticText (.ui-text) / Checkbox / RadioButton labels",
-      "rationale": "Fixed-text labels were painted from core-sent text verbatim (builder._cleanText(data.text), no client _()). The CODE image does not ship chart2.mo, so the chart2 area/fill sidebar panels (shown when a chart is selected/edited) render their labels in English in every locale — Gradient type:, Gradient angle:, Effect/From:, To:, Transparency type:, Transparency:, Keep ratio, plus 3D Scheme: in the Chart Wizard. Add a client-catalog fallback: _(builder._cleanText(data.text)) on the label-rendering widgets — FixedTextControl, StaticText (Widget.Text, .ui-text), Checkbox and RadioButton labels (so grid-cell 'To:' and checkbox 'Keep ratio' also localize, not only <label> fixedtext). _() returns the input unchanged when there is no catalog entry, so labels the engine already localised server-side (the vast majority) and strings we do not translate are untouched — only true gaps we carry a translation for change. RU translations for the visible chart-area labels added to client/ru.json. NOTE: full chart2-module localization would still need a shipped/merged chart2.mo; this fallback covers the labels surfaced so far.",
+      "rationale": "Upstream paints fixed-text labels from core-sent text verbatim (builder._cleanText(data.text), no client _()). The CODE image does not ship chart2.mo, so the chart2 area/fill sidebar panels (shown when a chart is selected/edited) render their labels in English in every locale — Gradient type:, Gradient angle:, Effect/From:, To:, Transparency type:, Transparency:, Keep ratio, plus 3D Scheme: in the Chart Wizard. The patch adds a client-catalog fallback: _(builder._cleanText(data.text)) on the label-rendering widgets — FixedTextControl, StaticText (Widget.Text, .ui-text), Checkbox and RadioButton labels (so grid-cell 'To:' and checkbox 'Keep ratio' also localize, not only <label> fixedtext). _() returns the input unchanged when there is no catalog entry, so labels the engine already localises server-side (the vast majority) and strings we do not translate stay untouched — only true gaps we carry a translation for change. RU translations for the visible chart-area labels live in client/ru.json. NOTE: full chart2-module localization would need a shipped/merged chart2.mo; this fallback covers the labels these panels surface.",
       "rollback": "Remove editor/patches/0008-*.patch (labels revert to core-sent text) and the corresponding chart-area keys from editor/l10n/overrides/client/ru.json.",
       "status": "active"
     },
@@ -309,7 +309,7 @@
       ],
       "source_class": "browser-source",
       "render_path": "Format-tab Themes gallery iconview (id 'iconview_theme_colors') + 'Add Theme...' _UNO label (ru.json)",
-      "rationale": "The Format-tab Themes gallery shows built-in document colour-theme preset names (Retro/Forest/Sunset/Breeze/Classic/Rainbow/Red/Office/Chalk/Green/Chart Classic/Beach/Ocean/Purple/Orange/Blue/Grey) in English. Unlike cell styles, the LO engine ships NO translations for these preset names (absent from every .mo) — they are proper preset names kept English upstream. Per user decision, localize them: a HAND-MAINTAINED curated {english:localized} map (window.PO_THEME_NAMES + getPOThemeName in editor/po-themenames.js, <head> script) is consulted DISPLAY-ONLY inside _iconViewEntry scoped to the gallery id 'iconview_theme_colors' (Widget.IconView.ts) via a localized copy of the entry — the gallery selects by row index so the applied theme value stays English; unknown/custom theme names pass through, and the id scope leaves every other iconview (e.g. stylesview) untouched. Also fixes the 'Add Theme...' button: it is _UNO('.uno:AddTheme') = client _('Add Theme...'), so the ru.json key is corrected from 'Add Theme' to 'Add Theme...'. RU only for now (other locales fall back to English); add locales by hand in po-themenames.js.",
+      "rationale": "The Format-tab Themes gallery shows built-in document colour-theme preset names (Retro/Forest/Sunset/Breeze/Classic/Rainbow/Red/Office/Chalk/Green/Chart Classic/Beach/Ocean/Purple/Orange/Blue/Grey) in English. Unlike cell styles, the LO engine ships NO translations for these preset names (absent from every .mo) — they are proper preset names kept English upstream. Per user decision, localize them: a HAND-MAINTAINED curated {english:localized} map (window.PO_THEME_NAMES + getPOThemeName in editor/po-themenames.js, <head> script) is consulted DISPLAY-ONLY inside _iconViewEntry scoped to the gallery id 'iconview_theme_colors' (Widget.IconView.ts) via a localized copy of the entry — the gallery selects by row index so the applied theme value stays English; unknown/custom theme names pass through, and the id scope leaves every other iconview (e.g. stylesview) untouched. The 'Add Theme...' button is _UNO('.uno:AddTheme') = client _('Add Theme...'), so the ru.json key is 'Add Theme...'. RU only (other locales fall back to English); add locales by hand in po-themenames.js.",
       "rollback": "Remove editor/patches/0005-*.patch, the po-themenames.js COPY + cool.html inject in editor/Dockerfile.online, and editor/po-themenames.js; revert the ru.json 'Add Theme...' key.",
       "status": "active"
     },
@@ -330,20 +330,20 @@
     },
     {
       "id": "PO-CACHE-022",
-      "title": "Own (cache-busted) branding.css <link> instead of the serve-time %BRANDING_CSS% placeholder (#66)",
+      "title": "Own (cache-busted) branding.css <link> instead of the serve-time %BRANDING_CSS% placeholder",
       "type": "cache",
       "files": [
         "dist/cool.html",
         "dist/branding.css",
         "editor/Dockerfile.online"
       ],
-      "rationale": "coolwsd expands the <!--%BRANDING_CSS%--> placeholder in cool.html at serve time into a branding.css <link> WITHOUT a ?b= token, so its URL never changes and browsers keep an old cached copy forever. An earlier build shipped the PrivateOffice theme AS branding.css; its stale, un-cache-busted, UNSCOPED `.jsdialog-window{overflow:hidden}` rule clipped the 2x2 dialog wrapper, so dialog controls (e.g. the Page-Style 'Убрать обрамление' checkbox) became un-hit-testable (elementFromPoint over them returned the sheet, not the checkbox). Mirroring PO-BRAND-011 (branding.js): editor/Dockerfile.online replaces <!--%BRANDING_CSS%--> with our own <link rel=stylesheet href=%SERVICE_ROOT%/browser/%VERSION%/branding.css> tag so PO-CACHE-013 appends ?b=BUILD_ID and browsers refetch the fresh (inert stock) branding.css, dropping the stale one. The theme itself now lives folded in the cache-busted bundle.css (PO-THEME-001).",
+      "rationale": "coolwsd expands the <!--%BRANDING_CSS%--> placeholder in cool.html at serve time into a branding.css <link> WITHOUT a ?b= token, so its URL never changes and browsers keep a cached copy indefinitely. A cached, un-cache-busted branding.css carrying an UNSCOPED `.jsdialog-window{overflow:hidden}` rule clips the 2x2 dialog wrapper, so dialog controls (e.g. the Page-Style 'Убрать обрамление' checkbox) become un-hit-testable (elementFromPoint over them returns the sheet, not the checkbox). Mirroring PO-BRAND-011 (branding.js): editor/Dockerfile.online replaces <!--%BRANDING_CSS%--> with our own <link rel=stylesheet href=%SERVICE_ROOT%/browser/%VERSION%/branding.css> tag so PO-CACHE-013 appends ?b=BUILD_ID and browsers refetch the served (inert stock) branding.css instead of a cached one. The theme itself lives folded in the cache-busted bundle.css (PO-THEME-001).",
       "rollback": "Remove the <!--%BRANDING_CSS%--> -> <link> sed in editor/Dockerfile.online (coolwsd resumes injecting an un-cache-busted tag).",
       "status": "active"
     },
     {
       "id": "PO-CODE-023",
-      "title": "Save-status tooltip: Intl.RelativeTimeFormat narrow -> short (no signed '-36 мин') (#61)",
+      "title": "Save-status tooltip: Intl.RelativeTimeFormat narrow -> short (no signed '-36 мин')",
       "type": "code-fix",
       "files": [
         "dist/bundle.js",
@@ -357,7 +357,7 @@
     },
     {
       "id": "PO-L10N-024",
-      "title": "Russian keyboard-shortcuts help (cool-help.html) (#48)",
+      "title": "Russian keyboard-shortcuts help (cool-help.html)",
       "type": "translation-data",
       "files": [
         "editor/cool-help.ru.html",
@@ -372,7 +372,7 @@
     },
     {
       "id": "PO-L10N-025",
-      "title": "Core catalog (sc.mo) overrides for server-rendered Calc strings (#46 + sidebar/#validation)",
+      "title": "Core catalog (sc.mo) overrides for server-rendered Calc strings (Create Table + sidebar + validation)",
       "type": "translation-data",
       "files": [
         "editor/l10n/overrides/core/ru/sc.po",
@@ -383,6 +383,19 @@
       "render_path": "server (the engine renders .ui dialogs/panels and pulls their translations from sc.mo)",
       "rationale": "Some newer Calc strings are untranslated in the pinned engine's ru sc.mo and are rendered SERVER-SIDE from .ui files, so a client/browser override cannot reach them (the string is in ui-ru.json yet the screen stays English). editor/Dockerfile.online merges editor/l10n/overrides/core/<lang>/sc.po into the engine's sc.mo via gettext (msgunfmt -> msgcat --use-first, existing catalog first to keep its Plural-Forms header -> msgfmt -> cp) BEFORE systemplate-setup, so the per-document jail template ships the corrected catalog. Covers: the 'Create Table' dialog (definetablerangedialog|*); the Table-Style-Options sidebar toggles + Table Styles/None (sidebardatabase|*) and the number-format 'Category' label (sidebarnumberformat|numberformatcomboboxlabel); and the Data-Validation 'Error Alert' tab labels + Action items (erroralerttabpage|*). msgctxt values come from the engine .ui files (share/config/soffice.cfg/modules/scalc/ui/*.ui). 23 entries; ru only. For Writer/Impress use sw.po / sd.po the same way.",
       "rollback": "Remove the core-l10n merge RUN step in editor/Dockerfile.online (and editor/l10n/overrides/core/); the engine's stock ru sc.mo returns.",
+      "status": "active"
+    },
+    {
+      "id": "PO-CACHE-028",
+      "title": "nginx: make editor cool.html uncacheable so redeploys actually reach the browser",
+      "type": "cache",
+      "files": [
+        "nginx/nginx.conf"
+      ],
+      "source_class": "infra (nginx, not the editor image)",
+      "render_path": "n/a (HTTP delivery)",
+      "rationale": "cool.html (the editor bootstrap HTML that stamps ?b=<BUILD_ID> on every asset ref) is served by coolwsd under the fixed base-version path /browser/<hash>/cool.html with a static ETag (the base commit hash, not the per-build ver_suffix from PO-CACHE-012). Under a blanket no-cache on /browser, a returning browser revalidates cool.html -> ETag matches -> 304 -> keeps its cached cool.html -> loads the old ?b= tokens -> the whole editor stays pinned to a stale bundle. The SPA loads the editor iframe via JS, so even a hard reload does not reach it. A dedicated nginx location `~ ^/browser/[^/]+/cool\\.html` placed BEFORE the (non-^~) `/browser` prefix so it wins makes cool.html uncacheable: it proxy_hide_header ETag/Last-Modified, proxy_set_header If-None-Match/If-Modified-Since \"\" (so coolwsd cannot answer 304), and Cache-Control: no-store. cool.html is then always a fresh 200 -> current ?b= -> current bundle. The per-build ?b= on the (still no-cache) assets busts them by URL. Verify: `curl -I .../cool.html` shows no ETag + Cache-Control: no-store.",
+      "rollback": "Restore the single `location ^~ /browser` block (drop the cool.html regex location). cool.html then reverts to a cacheable 304, so editor updates would only reach the browser if the ver_suffix ETag changed on cool.html — which it does not.",
       "status": "active"
     }
   ]
