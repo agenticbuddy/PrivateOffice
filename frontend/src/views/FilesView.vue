@@ -58,6 +58,9 @@ const TYPE_CATS: Record<string, string[]> = {
   sheet: ["xlsx", "ods", "xls", "csv", "tsv"],
   slide: ["pptx", "odp", "ppt"],
 };
+// Primary creatable format per section, so a "New document" started from a filtered
+// view (Presentations → .pptx, Spreadsheets → .xlsx) defaults to the right type.
+const TYPE_DEFAULT_FORMAT: Record<string, string> = { doc: "docx", sheet: "xlsx", slide: "pptx" };
 const typeFilter = computed(() => (route.query.type as string) || "");
 const starred = ref<Set<string>>(new Set(JSON.parse(localStorage.getItem("po.starred") || "[]")));
 function toggleStar(id: string) {
@@ -159,6 +162,10 @@ async function load() {
 }
 watch(() => [props.id, props.shared, route.fullPath], load, { immediate: true });
 onMounted(async () => { try { sharedCount.value = (await nodesApi.sharedWithMe()).length; } catch { /* ignore */ } });
+// When the New Document modal opens, preselect the current section's primary format
+// (Presentations → .pptx, Spreadsheets → .xlsx, otherwise .docx). Registered BEFORE the ?new
+// watcher so it also catches an open triggered by the "+" nav button (?new=1).
+watch(showDoc, (open) => { if (open) docFormat.value = TYPE_DEFAULT_FORMAT[typeFilter.value] || "docx"; });
 // AppShell's nav "+" routes here with ?new=1 — open the New Document modal, then strip the flag.
 watch(() => route.query.new, (v) => { if (v) { showDoc.value = true; router.replace({ query: { ...route.query, new: undefined } }); } }, { immediate: true });
 
