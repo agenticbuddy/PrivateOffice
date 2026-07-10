@@ -869,17 +869,27 @@ html[data-po="glass2"] .autofilter-container {
 html[data-po="glass2"] .autofilter-container-submenu > .autofilter-container {
   border-radius: 12px !important;
 }
-/* auto-filter inner list: selected row (engine teal → accent) + search input */
+/* auto-filter inner list: SELECTED + HOVER. The engine fills the row with a heavy solid accent + white
+   text (hard on the eyes, and inconsistent — the colour submenu used a lighter fill). Unify to the same
+   soft-accent tint + dark accent-ink text + inset accent ring used by the ribbon/sidebar selected state:
+   lighter, higher-contrast, and consistent across the main menu and the "Filter by colour" submenu. */
 html[data-po="glass2"] .autofilter .ui-treeview-entry.selected,
-html[data-po="glass2"] .autofilter-container .ui-treeview-entry.selected {
-  background-color: var(--po-accent) !important;
-  border-color: var(--po-accent) !important;
-  color: #fff !important;
-  border-radius: 8px !important;
-}
-html[data-po="glass2"] .autofilter .ui-treeview-entry:hover {
+html[data-po="glass2"] .autofilter-container .ui-treeview-entry.selected,
+html[data-po="glass2"] .autofilter .ui-treeview-entry:hover,
+html[data-po="glass2"] .autofilter-container .ui-treeview-entry:hover {
+  background-color: var(--po-accent-soft) !important;
+  box-shadow: inset 0 0 0 1.5px var(--po-accent) !important;
   border-color: transparent !important;
+  color: var(--po-accent-ink) !important;
   border-radius: 8px !important;
+  font-weight: 600;
+}
+/* keep the row text/icons readable on the tint (engine sometimes forces white on the inner cells) */
+html[data-po="glass2"] .autofilter .ui-treeview-entry.selected *,
+html[data-po="glass2"] .autofilter-container .ui-treeview-entry.selected *,
+html[data-po="glass2"] .autofilter .ui-treeview-entry:hover *,
+html[data-po="glass2"] .autofilter-container .ui-treeview-entry:hover * {
+  color: var(--po-accent-ink) !important;
 }
 html[data-po="glass2"] .autofilter .ui-treeview-search-input.jsdialog.ui-edit {
   border-radius: 8px !important;
