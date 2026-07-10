@@ -8,7 +8,7 @@
       "type": "theme",
       "files": ["editor/branding-privateoffice.css", "editor/po-toggle.js", "dist/bundle.css", "dist/cool.html"],
       "dockerfile_lines": "21-24",
-      "rationale": "Theme is part of the editor's own stylesheet (correct on first paint), gated by a same-origin external script (CSP-safe), not an override sheet.",
+      "rationale": "Theme is part of the editor's own stylesheet (correct on first paint), gated by a same-origin external script (CSP-safe), not an override sheet. The one stylesheet holds 3 designs, scoped by the data-po attribute po-toggle.js sets from ?po_design: classic (stock, no rules), glass (green accent), glass2 (blue #2563d9). It covers every UI surface - ribbon, menus, popups, dialogs, sidebar, pickers, tooltips - and all accumulated per-surface fixes live in this same file: combobox = one field, rounded accent pills for ribbon dropdowns, outlined selected-state for sidebar toggles, de-greyed accent view-mode switcher, popup-overlay fix (drop backdrop-filter on the notebookbar), and the Calc AutoFilter dropdown soft-accent selection (#58).",
       "rollback": "Drop the cat>>bundle.css and the two cool.html sed lines; remove the po-toggle.js COPY.",
       "status": "active"
     },
@@ -224,6 +224,47 @@
       "render_path": "Help menu (all app contexts) + formula-error popup",
       "rationale": "A self-hosted, rebranded PrivateOffice should not point users to the Collabora site. Removed the Help-menu items Forum (forum.collaboraonline.com), Report an issue (github.com/CollaboraOnline/online/issues), Latest Updates + Send Feedback (Collabora welcome/feedback), and the 'Help on this error' formula-error item (help.collaboraoffice.com); also neutralized the forum/report-an-issue window.open handler branches so no path navigates to a Collabora domain. KEPT the OFFLINE, self-contained items: Online Help + Keyboard shortcuts (bundled cool-help.html, no external nav), Server audit, About. Per user request ('не переходить на сайт CO'). NOTE: fully localizing the offline cool-help.html content to RU is a separate, larger task.",
       "rollback": "Remove editor/patches/0006-*.patch.",
+      "status": "active"
+    },
+    {
+      "id": "PO-CACHE-022",
+      "title": "Own (cache-busted) branding.css <link> instead of the serve-time %BRANDING_CSS% placeholder (#66)",
+      "type": "cache",
+      "files": ["dist/cool.html", "dist/branding.css", "editor/Dockerfile.online"],
+      "rationale": "coolwsd expands the <!--%BRANDING_CSS%--> placeholder in cool.html at serve time into a branding.css <link> WITHOUT a ?b= token, so its URL never changes and browsers keep an old cached copy forever. An earlier build shipped the PrivateOffice theme AS branding.css; its stale, un-cache-busted, UNSCOPED `.jsdialog-window{overflow:hidden}` rule clipped the 2x2 dialog wrapper, so dialog controls (e.g. the Page-Style 'Убрать обрамление' checkbox) became un-hit-testable (elementFromPoint over them returned the sheet, not the checkbox). Mirroring PO-BRAND-011 (branding.js): editor/Dockerfile.online replaces <!--%BRANDING_CSS%--> with our own <link rel=stylesheet href=%SERVICE_ROOT%/browser/%VERSION%/branding.css> tag so PO-CACHE-013 appends ?b=BUILD_ID and browsers refetch the fresh (inert stock) branding.css, dropping the stale one. The theme itself now lives folded in the cache-busted bundle.css (PO-THEME-001).",
+      "rollback": "Remove the <!--%BRANDING_CSS%--> -> <link> sed in editor/Dockerfile.online (coolwsd resumes injecting an un-cache-busted tag).",
+      "status": "active"
+    },
+    {
+      "id": "PO-CODE-023",
+      "title": "Save-status tooltip: Intl.RelativeTimeFormat narrow -> short (no signed '-36 мин') (#61)",
+      "type": "code-fix",
+      "files": ["dist/bundle.js", "editor/Dockerfile.online"],
+      "source_class": "client-ui",
+      "render_path": "client",
+      "rationale": "The 'Last saved: …' indicator (updateModificationIndicator) formats elapsed time with Intl.RelativeTimeFormat style:'narrow'. For ru (and fr) the CLDR narrow relative form is a terse SIGNED number - format(-36,'minute') yields '-36 мин' / '-36 min', which reads as a broken negative time. This is native ICU behaviour (identical in the top-level window and the editor iframe), not a polyfill, and NOT a backend data problem: our WOPI LastModifiedTime (node.updated_at, UTC-aware) is correct and genuinely in the past. Fix: an anchored bundle.js sed (target string unique) switching that one RelativeTimeFormat to style:'short', which renders '36 мин. назад' / '36 min. ago' / 'vor 36 Min.' across locales and units.",
+      "rollback": "Revert the sed (style:'short' -> style:'narrow').",
+      "status": "active"
+    },
+    {
+      "id": "PO-L10N-024",
+      "title": "Russian keyboard-shortcuts help (cool-help.html) (#48)",
+      "type": "translation-data",
+      "files": ["editor/cool-help.ru.html", "editor/l10n/help/ru.json", "dist/cool-help.html", "editor/Dockerfile.online"],
+      "render_path": "the 'Комбинации клавиш' reference opened via showHelp('keyboard-shortcuts-content')",
+      "rationale": "The built-in offline help opened by the Keyboard-shortcuts button is dist/cool-help.html - a keyboard-shortcuts REFERENCE that shipped English-only (NOT the full LO help corpus, so it IS translatable). editor/cool-help.ru.html is the fully-translated file (527 text nodes -> RU, key-combos preserved, tag structure intact - 3642 tags unchanged), regenerated from the pinned engine's cool-help.html by substituting text nodes via the editor/l10n/help/ru.json data map (translations reconciled to official uno/ru.json wording). editor/Dockerfile.online COPYs it over dist/cool-help.html BEFORE the rebrand/cache-bust steps so it flows through the same pipeline. Regenerate on engine re-pin.",
+      "rollback": "Remove the `COPY cool-help.ru.html -> dist/cool-help.html` step in editor/Dockerfile.online (the English cool-help.html returns).",
+      "status": "active"
+    },
+    {
+      "id": "PO-L10N-025",
+      "title": "Core catalog (sc.mo) overrides for server-rendered Calc strings (#46 + sidebar/#validation)",
+      "type": "translation-data",
+      "files": ["editor/l10n/overrides/core/ru/sc.po", "/opt/collaboraoffice/program/resource/ru/LC_MESSAGES/sc.mo", "editor/Dockerfile.online"],
+      "source_class": "core",
+      "render_path": "server (the engine renders .ui dialogs/panels and pulls their translations from sc.mo)",
+      "rationale": "Some newer Calc strings are untranslated in the pinned engine's ru sc.mo and are rendered SERVER-SIDE from .ui files, so a client/browser override cannot reach them (the string is in ui-ru.json yet the screen stays English). editor/Dockerfile.online merges editor/l10n/overrides/core/<lang>/sc.po into the engine's sc.mo via gettext (msgunfmt -> msgcat --use-first, existing catalog first to keep its Plural-Forms header -> msgfmt -> cp) BEFORE systemplate-setup, so the per-document jail template ships the corrected catalog. Covers: the 'Create Table' dialog (definetablerangedialog|*); the Table-Style-Options sidebar toggles + Table Styles/None (sidebardatabase|*) and the number-format 'Category' label (sidebarnumberformat|numberformatcomboboxlabel); and the Data-Validation 'Error Alert' tab labels + Action items (erroralerttabpage|*). msgctxt values come from the engine .ui files (share/config/soffice.cfg/modules/scalc/ui/*.ui). 23 entries; ru only. For Writer/Impress use sw.po / sd.po the same way.",
+      "rollback": "Remove the core-l10n merge RUN step in editor/Dockerfile.online (and editor/l10n/overrides/core/); the engine's stock ru sc.mo returns.",
       "status": "active"
     }
   ]
