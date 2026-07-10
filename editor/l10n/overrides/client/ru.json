@@ -1285,5 +1285,13 @@
   "with emoji": "с эмодзи",
   "CSV import preview": "Предпросмотр импорта CSV",
   "CSV column ruler: click to toggle a column split": "Линейка столбцов CSV: щёлкните, чтобы переключить разделение столбца",
-  "Served by: ": "Обслуживается: "
+  "Served by: ": "Обслуживается: ",
+  "Gradient type:": "Тип градиента:",
+  "Gradient angle:": "Угол градиента:",
+  "Effect/From:": "Эффект/От:",
+  "To:": "До:",
+  "Transparency type:": "Тип прозрачности:",
+  "Transparency:": "Прозрачность:",
+  "Keep ratio": "Сохранять пропорции",
+  "3D Scheme:": "Схема 3D:"
 }

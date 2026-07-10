@@ -1,0 +1,18 @@
+diff --git a/browser/src/control/jsdialog/Widget.FixedTextControl.ts b/browser/src/control/jsdialog/Widget.FixedTextControl.ts
+index 803c5a4..339c2f0 100644
+--- a/browser/src/control/jsdialog/Widget.FixedTextControl.ts
++++ b/browser/src/control/jsdialog/Widget.FixedTextControl.ts
+@@ -36,7 +36,12 @@ JSDialog.fixedtextControl = function (
+ 	fixedtext.htmlFor = data.labelFor + '-input';
+ 	fixedtext.id = data.id;
+ 
+-	if (data.text) fixedtext.textContent = builder._cleanText(data.text);
++	// PrivateOffice: fixed-text labels are painted from core-sent text with no client translation, so any
++	// label the engine did not localise server-side (e.g. the chart2 area/fill sidebar panels, whose
++	// chart2.mo is not shipped in the CODE image) stays English in every locale. Fall back to the client
++	// catalog: _() returns the input unchanged when there is no entry, so already-localised labels and
++	// strings we do not translate are untouched — only true gaps that we DO carry a translation for change.
++	if (data.text) fixedtext.textContent = _(builder._cleanText(data.text));
+ 	else if (data.html) fixedtext.innerHTML = data.html;
+ 
+ 	if (data.xalign) {
