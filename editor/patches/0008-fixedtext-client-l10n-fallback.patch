@@ -1,3 +1,18 @@
+diff --git a/browser/src/control/jsdialog/Widget.Checkbox.ts b/browser/src/control/jsdialog/Widget.Checkbox.ts
+index 04bb9b3..21b7300 100644
+--- a/browser/src/control/jsdialog/Widget.Checkbox.ts
++++ b/browser/src/control/jsdialog/Widget.Checkbox.ts
+@@ -86,7 +86,9 @@ function _createCheckboxLabel(
+ 		parentContainer,
+ 	);
+ 	label.id = data.id + '-label';
+-	label.textContent = builder._cleanText(data.text);
++	// PrivateOffice: client-catalog fallback (see Widget.FixedTextControl.ts) for checkbox labels the engine
++	// didn't translate server-side (e.g. chart2 "Keep ratio"). _() is a no-op without a catalog entry.
++	label.textContent = _(builder._cleanText(data.text));
+ 	label.htmlFor = data.id + '-input';
+ 	return label;
+ }
 diff --git a/browser/src/control/jsdialog/Widget.FixedTextControl.ts b/browser/src/control/jsdialog/Widget.FixedTextControl.ts
 index 803c5a4..339c2f0 100644
 --- a/browser/src/control/jsdialog/Widget.FixedTextControl.ts
@@ -16,3 +31,34 @@ index 803c5a4..339c2f0 100644
  	else if (data.html) fixedtext.innerHTML = data.html;
  
  	if (data.xalign) {
+diff --git a/browser/src/control/jsdialog/Widget.RadioButton.ts b/browser/src/control/jsdialog/Widget.RadioButton.ts
+index e7f5ea5..474e3c4 100644
+--- a/browser/src/control/jsdialog/Widget.RadioButton.ts
++++ b/browser/src/control/jsdialog/Widget.RadioButton.ts
+@@ -46,7 +46,9 @@ function radiobuttonControl(
+ 		data.id + '-label',
+ 		container,
+ 	);
+-	radiobuttonLabel.textContent = builder._cleanText(data.text);
++	// PrivateOffice: client-catalog fallback (see Widget.FixedTextControl.ts) for radio-button labels the
++	// engine didn't translate server-side. _() is a no-op without a catalog entry.
++	radiobuttonLabel.textContent = _(builder._cleanText(data.text));
+ 	radiobuttonLabel.htmlFor = data.id + '-input';
+ 
+ 	const toggleFunction = () => {
+diff --git a/browser/src/control/jsdialog/Widget.Text.ts b/browser/src/control/jsdialog/Widget.Text.ts
+index bf63ee2..742782b 100644
+--- a/browser/src/control/jsdialog/Widget.Text.ts
++++ b/browser/src/control/jsdialog/Widget.Text.ts
+@@ -26,7 +26,10 @@ function staticTextControl(
+ 		parentContainer,
+ 	);
+ 
+-	if (data.text) statictext.textContent = builder._cleanText(data.text);
++	// PrivateOffice: client-catalog fallback (see Widget.FixedTextControl.ts) — localizes static-text labels
++	// the engine didn't translate server-side (e.g. chart2 area/fill sidebar). _() returns the input
++	// unchanged when there is no catalog entry, so already-localized labels are untouched.
++	if (data.text) statictext.textContent = _(builder._cleanText(data.text));
+ 	else if (data.html) statictext.innerHTML = data.html;
+ 
+ 	statictext.id = data.id;

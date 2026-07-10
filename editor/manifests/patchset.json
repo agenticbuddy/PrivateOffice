@@ -280,16 +280,19 @@
     },
     {
       "id": "PO-SRC-027",
-      "title": "Client-catalog fallback for jsdialog fixed-text labels (localizes chart2 area/fill sidebar labels)",
+      "title": "Client-catalog fallback for jsdialog label widgets (fixedtext/static/checkbox/radio) — localizes chart2 sidebar labels",
       "type": "code-fix",
       "files": [
         "editor/patches/0008-fixedtext-client-l10n-fallback.patch",
         "browser/src/control/jsdialog/Widget.FixedTextControl.ts",
+        "browser/src/control/jsdialog/Widget.Text.ts",
+        "browser/src/control/jsdialog/Widget.Checkbox.ts",
+        "browser/src/control/jsdialog/Widget.RadioButton.ts",
         "editor/l10n/overrides/client/ru.json"
       ],
       "source_class": "browser-source",
-      "render_path": "every jsdialog fixedtext <label> — Widget.FixedTextControl.ts",
-      "rationale": "Fixed-text labels were painted from core-sent text verbatim (builder._cleanText(data.text), no client _()). The CODE image does not ship chart2.mo, so the chart2 area/fill sidebar panels (shown when a chart is selected/edited) render their labels in English in every locale — Gradient type:, Gradient angle:, Effect/From:, To:, Transparency type:, Transparency:, Keep ratio, plus 3D Scheme: in the Chart Wizard. Add a client-catalog fallback: _(builder._cleanText(data.text)). _() returns the input unchanged when there is no catalog entry, so labels the engine already localised server-side (the vast majority) and strings we do not translate are untouched — only true gaps we carry a translation for change. RU translations for the visible chart-area labels added to client/ru.json. NOTE: full chart2-module localization would still need a shipped/merged chart2.mo; this fallback covers the labels surfaced so far.",
+      "render_path": "jsdialog label widgets — FixedTextControl / StaticText (.ui-text) / Checkbox / RadioButton labels",
+      "rationale": "Fixed-text labels were painted from core-sent text verbatim (builder._cleanText(data.text), no client _()). The CODE image does not ship chart2.mo, so the chart2 area/fill sidebar panels (shown when a chart is selected/edited) render their labels in English in every locale — Gradient type:, Gradient angle:, Effect/From:, To:, Transparency type:, Transparency:, Keep ratio, plus 3D Scheme: in the Chart Wizard. Add a client-catalog fallback: _(builder._cleanText(data.text)) on the label-rendering widgets — FixedTextControl, StaticText (Widget.Text, .ui-text), Checkbox and RadioButton labels (so grid-cell 'To:' and checkbox 'Keep ratio' also localize, not only <label> fixedtext). _() returns the input unchanged when there is no catalog entry, so labels the engine already localised server-side (the vast majority) and strings we do not translate are untouched — only true gaps we carry a translation for change. RU translations for the visible chart-area labels added to client/ru.json. NOTE: full chart2-module localization would still need a shipped/merged chart2.mo; this fallback covers the labels surfaced so far.",
       "rollback": "Remove editor/patches/0008-*.patch (labels revert to core-sent text) and the corresponding chart-area keys from editor/l10n/overrides/client/ru.json.",
       "status": "active"
     },
