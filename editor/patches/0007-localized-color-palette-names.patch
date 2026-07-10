@@ -1,0 +1,16 @@
+diff --git a/browser/src/control/jsdialog/Widget.ColorPicker.ts b/browser/src/control/jsdialog/Widget.ColorPicker.ts
+index fca10ec..053cf26 100644
+--- a/browser/src/control/jsdialog/Widget.ColorPicker.ts
++++ b/browser/src/control/jsdialog/Widget.ColorPicker.ts
+@@ -273,7 +273,10 @@ function createPaletteSwitch(
+ 		if (i === getCurrentPaletteName())
+ 			paletteOption.setAttribute('selected', 'selected');
+ 		paletteOption.value = i;
+-		paletteOption.innerText = window.app.colorPalettes[i].name;
++		// PrivateOffice: palette names arrive from the core as English msgids ("Standard", "Theme colors",
++		// "Document colors"); translate them through the client catalog so the picker's palette selector is
++		// localised. _() returns the input unchanged for any name not in the catalog (e.g. custom palettes).
++		paletteOption.innerText = _(window.app.colorPalettes[i].name);
+ 	}
+ 
+ 	window.L.DomUtil.create(

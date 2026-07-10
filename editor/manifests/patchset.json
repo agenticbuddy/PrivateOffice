@@ -205,6 +205,17 @@
       "status": "active"
     },
     {
+      "id": "PO-SRC-026",
+      "title": "Localize colour-palette selector names in the colour picker (Standard / Theme colors / Document colors)",
+      "type": "code-fix",
+      "files": ["editor/patches/0007-localized-color-palette-names.patch", "browser/src/control/jsdialog/Widget.ColorPicker.ts"],
+      "source_class": "browser-source",
+      "render_path": "colour-picker palette <select> (#color-palette-listbox) — Widget.ColorPicker.ts createPaletteSwitch",
+      "rationale": "The colour picker's palette selector <select> painted window.app.colorPalettes[i].name verbatim; those names arrive from the core as English msgids ('Standard', 'Theme colors', 'Document colors'), so the dropdown showed English in every locale even though the client catalog already has the translations (Стандартная / Цвета темы / Цвета документа). Confirmed NOT applied by the core listbox and NOT reached by client _() at the original call site. Fix: wrap the name in _() at the one assignment (Widget.ColorPicker.ts createPaletteSwitch) — _() returns the input unchanged for any name not in the catalog (custom palettes pass through). Display-only; the option value stays the English key.",
+      "rollback": "Remove editor/patches/0007-*.patch (restores the untranslated palette names).",
+      "status": "active"
+    },
+    {
       "id": "PO-SRC-020",
       "title": "Localize document-theme preset names in the Format-tab Themes gallery",
       "type": "code-fix",

@@ -869,13 +869,11 @@ html[data-po="glass2"] .autofilter-container {
 html[data-po="glass2"] .autofilter-container-submenu > .autofilter-container {
   border-radius: 12px !important;
 }
-/* auto-filter inner list: SELECTED + HOVER. The engine fills the row with a heavy solid accent + white
-   text (hard on the eyes). Use a clean, subtle soft-accent tint + dark accent-ink text — the same quiet
-   highlight as the context menu / other menus. NO heavy inset ring and NO bold: an inset ring turned every
-   hovered/selected row (incl. the colour submenu's "No fill") into a jarring boxed outline. Consistent
-   across the main menu and the "Sort/Filter by colour" submenu. */
-html[data-po="glass2"] .autofilter .ui-treeview-entry.selected,
-html[data-po="glass2"] .autofilter-container .ui-treeview-entry.selected,
+/* auto-filter inner list: HOVER ONLY. The dropdown holds TWO independent sub-treeviews (the sort/filter
+   ACTION list and the value list); the engine keeps a persistent `.selected` "current row" in EACH, so
+   tinting `.selected` lit up two rows at once — and a stale one lingered after a click, so the next hover
+   showed two highlights. Highlight only the row under the cursor: one at a time, standard menu behaviour.
+   Clean soft-accent tint + accent-ink text, no ring, no bold. (`.selected` is left untinted — harmless.) */
 html[data-po="glass2"] .autofilter .ui-treeview-entry:hover,
 html[data-po="glass2"] .autofilter-container .ui-treeview-entry:hover {
   background-color: var(--po-accent-soft) !important;
@@ -885,8 +883,6 @@ html[data-po="glass2"] .autofilter-container .ui-treeview-entry:hover {
   border-radius: 8px !important;
 }
 /* keep the row text/icons readable on the tint (engine sometimes forces white on the inner cells) */
-html[data-po="glass2"] .autofilter .ui-treeview-entry.selected *,
-html[data-po="glass2"] .autofilter-container .ui-treeview-entry.selected *,
 html[data-po="glass2"] .autofilter .ui-treeview-entry:hover *,
 html[data-po="glass2"] .autofilter-container .ui-treeview-entry:hover * {
   color: var(--po-accent-ink) !important;
@@ -1320,11 +1316,9 @@ html[data-po="glass"] .autofilter-container {
 html[data-po="glass"] .autofilter-container-submenu > .autofilter-container {
   border-radius: 12px !important;
 }
-/* auto-filter inner list: SELECTED + HOVER — clean subtle soft-accent tint + accent-ink text (was a heavy
-   solid-accent fill + white text, hard to read). No ring, no bold; same quiet highlight as other menus and
-   consistent with glass2. */
-html[data-po="glass"] .autofilter .ui-treeview-entry.selected,
-html[data-po="glass"] .autofilter-container .ui-treeview-entry.selected,
+/* auto-filter inner list: HOVER ONLY — the dropdown's two sub-treeviews each keep a persistent `.selected`
+   row, so tinting `.selected` lit up multiple rows at once (and a stale one lingered after a click).
+   Highlight only the row under the cursor: clean soft-accent tint + accent-ink text, no ring, no bold. */
 html[data-po="glass"] .autofilter .ui-treeview-entry:hover,
 html[data-po="glass"] .autofilter-container .ui-treeview-entry:hover {
   background-color: var(--po-accent-soft) !important;
