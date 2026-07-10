@@ -19,24 +19,44 @@ all in Docker Compose behind a single `http://localhost:8088` origin.
 
 ## Deploy from scratch
 
-**Prerequisites:** Docker + Docker Compose v2, `git`, and a free port **8088**.
+**Prerequisites:** Docker + Docker Compose v2, `git`, `make`, and a free port **8088**.
 The editor's first build compiles Collabora Online from source — **slow (~15–25 min once)**, then fast from cache.
 
 ```bash
 git clone <repo-url> privateoffice && cd privateoffice
-cp deploy/.env.example .env      # compose reads .env from the repo root; edit secrets/passwords
-./scripts/up.sh                  # build + start the whole stack (editor from source, postgres, minio, app, nginx)
-# app:   http://localhost:8088
-# admin: http://localhost:8088/admin   (BasicAuth  admin / 123)
+make deploy          # ONE command: .env + build + start + admin setup + prints access info
 ```
 
-> **Use `./scripts/up.sh`, not a bare `docker compose up -d --build`.** The script stamps
+`make deploy` (alias `make init`) copies `deploy/.env.example` → `.env` (if absent), builds and starts the
+whole stack (editor from source, postgres, minio, app, nginx), waits until it is healthy, gives the SPA
+administrator a password, and prints:
+
+```
+App (SPA):    http://localhost:8088
+Admin panel:  http://localhost:8088/admin   → BasicAuth  admin / 123
+SPA sign-in:  admin@example.com / admin123   (administrator; create end-users from the admin panel)
+```
+
+**`make` targets**
+
+| Command | Does |
+|---|---|
+| `make deploy` / `make init` | Full deploy: config + build + start + admin setup + access info |
+| `make up` | (Re)build + start the stack |
+| `make down` | Stop + remove containers (**data volumes are kept**) |
+| `make restart` | `make down` then `make deploy` |
+| `make logs` / `make ps` | Follow logs / show stack status |
+| `make admin` | Print the admin-panel URL + credentials |
+
+> Override the defaults inline, e.g. `make deploy ADMIN_PASS=secret BOOTSTRAP_ADMIN_PASSWORD=…`.
+> `make up` / `make deploy` run `./scripts/up.sh` (**not** a bare `docker compose up -d --build`): it stamps
 > `BUILD_ID=<git sha>` so the editor's per-build cache-bust works; a bare compose build leaves
 > `BUILD_ID=dev` → stale editor assets can be served after a redeploy.
 
-**First login.** A default admin (`admin@example.com`) is bootstrapped on first boot. Create end-user
-accounts from the admin area, then sign them in by password or by the generated passwordless magic link
-(in dev, the link is in the app logs: `docker compose logs app`).
+**Access the admin panel.** Open `http://localhost:8088/admin` → the nginx BasicAuth prompt → sign in with
+**`admin` / `123`** (from `nginx/htpasswd`). Create end-user accounts there. To sign in to the SPA as the
+administrator, use **`admin@example.com` / `admin123`** (set by `make deploy`); passwordless magic-link
+sign-in also works — in dev the link is in `make logs`.
 
 > Port 8088 is used because 80/8080 were taken on the dev host. To move it, change `PUBLIC_ORIGIN` in
 > `.env` **and** the nginx port mapping in `docker-compose.yml` together (the editor's `server_name`
@@ -45,9 +65,10 @@ accounts from the admin area, then sign them in by password or by the generated 
 ### Rebuild after changes (what you edited → how to rebuild)
 | Edited | Command |
 |---|---|
+| whole stack | `make up` (or `make restart`) |
 | `editor/**` (theme, l10n overrides, Dockerfile, cool-help) | `./scripts/up.sh editor` |
 | `frontend/**` (SPA) | `./scripts/up.sh app` |
-| `nginx/**` | `docker compose up -d nginx` |
+| `nginx/**` (config is bind-mounted) | `docker compose up -d --force-recreate nginx` |
 | `backend/**` | nothing — hot-reload (bind-mount) |
 
 > After an editor change, **commit before verifying**: an uncommitted build gets a `<sha>-dirty`
