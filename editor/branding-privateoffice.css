@@ -283,6 +283,12 @@ html[data-po="glass"] *:has(> .context-menu-item:hover) > .context-menu-item.sel
   border-color: transparent !important; /* iconview .selected also draws a 1px border — clear it too */
   color: var(--po-ink) !important;
 }
+/* …AND clear the inner <span> fill of a selected combobox/menu row (engine tints the child, not the row). */
+html[data-po="glass"] *:has(> [class*="-entry"]:hover) > [class*="-entry"].selected:not(:hover) *,
+html[data-po="glass"] *:has(> .ui-menu-item:hover) > .ui-menu-item.selected:not(:hover) *,
+html[data-po="glass"] *:has(> .context-menu-item:hover) > .context-menu-item.selected:not(:hover) * {
+  background: transparent !important;
+}
 
 /* ----------------------------------------------------------------------------
    Right-click context menus AND their submenus.
@@ -571,6 +577,15 @@ html[data-po="glass2"] *:has(> .context-menu-item:hover) > .context-menu-item.se
   box-shadow: none !important;
   border-color: transparent !important; /* iconview .selected also draws a 1px border — clear it too */
   color: var(--po-ink) !important;
+}
+/* …AND the engine tints the INNER <span> of a selected combobox/menu row
+   (`.ui-combobox-entry.selected:not(:hover) span { background: --color-background-darker }`), not the row
+   itself — so clearing only the row left a visible child fill and the "two rows lit" bug survived. Clear the
+   background on the selected row's descendants too. Background only (leave icon colours alone). */
+html[data-po="glass2"] *:has(> [class*="-entry"]:hover) > [class*="-entry"].selected:not(:hover) *,
+html[data-po="glass2"] *:has(> .ui-menu-item:hover) > .ui-menu-item.selected:not(:hover) *,
+html[data-po="glass2"] *:has(> .context-menu-item:hover) > .context-menu-item.selected:not(:hover) * {
+  background: transparent !important;
 }
 
 /* right-click context menus + submenus */
