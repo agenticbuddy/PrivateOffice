@@ -280,6 +280,7 @@ html[data-po="glass"] *:has(> .ui-menu-item:hover) > .ui-menu-item.selected:not(
 html[data-po="glass"] *:has(> .context-menu-item:hover) > .context-menu-item.selected:not(:hover) {
   background: transparent !important;
   box-shadow: none !important;
+  border-color: transparent !important; /* iconview .selected also draws a 1px border — clear it too */
   color: var(--po-ink) !important;
 }
 
@@ -568,6 +569,7 @@ html[data-po="glass2"] *:has(> .ui-menu-item:hover) > .ui-menu-item.selected:not
 html[data-po="glass2"] *:has(> .context-menu-item:hover) > .context-menu-item.selected:not(:hover) {
   background: transparent !important;
   box-shadow: none !important;
+  border-color: transparent !important; /* iconview .selected also draws a 1px border — clear it too */
   color: var(--po-ink) !important;
 }
 
