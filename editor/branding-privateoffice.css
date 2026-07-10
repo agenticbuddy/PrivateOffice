@@ -870,19 +870,19 @@ html[data-po="glass2"] .autofilter-container-submenu > .autofilter-container {
   border-radius: 12px !important;
 }
 /* auto-filter inner list: SELECTED + HOVER. The engine fills the row with a heavy solid accent + white
-   text (hard on the eyes, and inconsistent — the colour submenu used a lighter fill). Unify to the same
-   soft-accent tint + dark accent-ink text + inset accent ring used by the ribbon/sidebar selected state:
-   lighter, higher-contrast, and consistent across the main menu and the "Filter by colour" submenu. */
+   text (hard on the eyes). Use a clean, subtle soft-accent tint + dark accent-ink text — the same quiet
+   highlight as the context menu / other menus. NO heavy inset ring and NO bold: an inset ring turned every
+   hovered/selected row (incl. the colour submenu's "No fill") into a jarring boxed outline. Consistent
+   across the main menu and the "Sort/Filter by colour" submenu. */
 html[data-po="glass2"] .autofilter .ui-treeview-entry.selected,
 html[data-po="glass2"] .autofilter-container .ui-treeview-entry.selected,
 html[data-po="glass2"] .autofilter .ui-treeview-entry:hover,
 html[data-po="glass2"] .autofilter-container .ui-treeview-entry:hover {
   background-color: var(--po-accent-soft) !important;
-  box-shadow: inset 0 0 0 1.5px var(--po-accent) !important;
+  box-shadow: none !important;
   border-color: transparent !important;
   color: var(--po-accent-ink) !important;
   border-radius: 8px !important;
-  font-weight: 600;
 }
 /* keep the row text/icons readable on the tint (engine sometimes forces white on the inner cells) */
 html[data-po="glass2"] .autofilter .ui-treeview-entry.selected *,
@@ -897,6 +897,12 @@ html[data-po="glass2"] .autofilter .ui-treeview-search-input.jsdialog.ui-edit {
   background: rgba(255, 255, 255, 0.55) !important;
   color: var(--po-ink) !important;
 }
+/* auto-filter tree lists fit their content. The engine hard-codes .ui-treeview{min-height:100px} in
+   bundle.css, so the "Sort/Filter by colour" submenu's two colour lists ("Background"/"Font colour") each
+   reserved ~100px even with a single entry — a tall block with a big empty gap. Drop the floor to 0; the
+   engine's max-height:150px still caps + scrolls long lists (main value list unaffected — it already sizes
+   to content). */
+html[data-po="glass2"] .autofilter .ui-treeview { min-height: 0 !important; }
 /* tooltips (flat white → glass) */
 html[data-po="glass2"] .ui-tooltip,
 html[data-po="glass2"] .ui-tooltip-content,
@@ -1314,16 +1320,17 @@ html[data-po="glass"] .autofilter-container {
 html[data-po="glass"] .autofilter-container-submenu > .autofilter-container {
   border-radius: 12px !important;
 }
-/* auto-filter inner list: selected row (engine teal → accent) + search input */
+/* auto-filter inner list: SELECTED + HOVER — clean subtle soft-accent tint + accent-ink text (was a heavy
+   solid-accent fill + white text, hard to read). No ring, no bold; same quiet highlight as other menus and
+   consistent with glass2. */
 html[data-po="glass"] .autofilter .ui-treeview-entry.selected,
-html[data-po="glass"] .autofilter-container .ui-treeview-entry.selected {
-  background-color: var(--po-accent) !important;
-  border-color: var(--po-accent) !important;
-  color: #fff !important;
-  border-radius: 8px !important;
-}
-html[data-po="glass"] .autofilter .ui-treeview-entry:hover {
+html[data-po="glass"] .autofilter-container .ui-treeview-entry.selected,
+html[data-po="glass"] .autofilter .ui-treeview-entry:hover,
+html[data-po="glass"] .autofilter-container .ui-treeview-entry:hover {
+  background-color: var(--po-accent-soft) !important;
+  box-shadow: none !important;
   border-color: transparent !important;
+  color: var(--po-accent-ink) !important;
   border-radius: 8px !important;
 }
 html[data-po="glass"] .autofilter .ui-treeview-search-input.jsdialog.ui-edit {
@@ -1332,6 +1339,8 @@ html[data-po="glass"] .autofilter .ui-treeview-search-input.jsdialog.ui-edit {
   background: rgba(255, 255, 255, 0.55) !important;
   color: var(--po-ink) !important;
 }
+/* colour submenu lists fit content (drop engine min-height:100px; max-height:150px still scrolls) */
+html[data-po="glass"] .autofilter .ui-treeview { min-height: 0 !important; }
 /* tooltips (flat white → glass) */
 html[data-po="glass"] .ui-tooltip,
 html[data-po="glass"] .ui-tooltip-content,
