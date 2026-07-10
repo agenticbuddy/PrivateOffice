@@ -6,9 +6,14 @@
       "id": "PO-THEME-001",
       "title": "Fold glass theme into bundle.css + external po-toggle.js theme gate",
       "type": "theme",
-      "files": ["editor/branding-privateoffice.css", "editor/po-toggle.js", "dist/bundle.css", "dist/cool.html"],
+      "files": [
+        "editor/branding-privateoffice.css",
+        "editor/po-toggle.js",
+        "dist/bundle.css",
+        "dist/cool.html"
+      ],
       "dockerfile_lines": "21-24",
-      "rationale": "Theme is part of the editor's own stylesheet (correct on first paint), gated by a same-origin external script (CSP-safe), not an override sheet. The one stylesheet holds 3 designs, scoped by the data-po attribute po-toggle.js sets from ?po_design: classic (stock, no rules), glass (green accent), glass2 (blue #2563d9). It covers every UI surface - ribbon, menus, popups, dialogs, sidebar, pickers, tooltips - and all accumulated per-surface fixes live in this same file: combobox = one field, rounded accent pills for ribbon dropdowns, outlined selected-state for sidebar toggles, de-greyed accent view-mode switcher, popup-overlay fix (drop backdrop-filter on the notebookbar), and the Calc AutoFilter dropdown soft-accent selection (#58).",
+      "rationale": "Theme is part of the editor's own stylesheet (correct on first paint), gated by a same-origin external script (CSP-safe), not an override sheet. The one stylesheet holds 3 designs, scoped by the data-po attribute po-toggle.js sets from ?po_design: classic (stock, no rules), glass (green accent), glass2 (blue #2563d9). It covers every UI surface - ribbon, menus, popups, dialogs, sidebar, pickers, tooltips - and all accumulated per-surface fixes live in this same file: combobox = one field, rounded accent pills for ribbon dropdowns, outlined selected-state for sidebar toggles, de-greyed accent view-mode switcher, popup-overlay fix (drop backdrop-filter on the notebookbar), and the dropdown/menu selection styling: the Calc AutoFilter dropdown reads as a clean soft-accent hover with colour-submenu lists sized to content (#54); a single highlighted row at a time in the AutoFilter (generic .selected tint neutralised, #57) and in notebookbar dropdown menus / lists (:has()-scoped suppression of the persistent .selected when a sibling is hovered, #63); and a 14px notebookbar big-button label so long labels like 'Комбинации клавиш' fit (#58).",
       "rollback": "Drop the cat>>bundle.css and the two cool.html sed lines; remove the po-toggle.js COPY.",
       "status": "active"
     },
@@ -16,7 +21,9 @@
       "id": "PO-CSP-002",
       "title": "Delete dead inline dark-theme <script> from cool.html",
       "type": "code-fix",
-      "files": ["dist/cool.html"],
+      "files": [
+        "dist/cool.html"
+      ],
       "dockerfile_lines": "37",
       "rationale": "Inline script violates the binary-baked CSP on every load and never runs (gated on ?darkTheme, which our integration never sets); deletion is behavior-preserving.",
       "rollback": "Remove the sed; the dead block returns on rebuild.",
@@ -26,7 +33,11 @@
       "id": "PO-BRAND-003",
       "title": "Rewrite Collabora product/copyright display strings to PrivateOffice",
       "type": "rebrand",
-      "files": ["dist/**/*.{js,html,json,css}", "dist/admin-bundle.js", "dist/branding.js"],
+      "files": [
+        "dist/**/*.{js,html,json,css}",
+        "dist/admin-bundle.js",
+        "dist/branding.js"
+      ],
       "dockerfile_lines": "43-46",
       "rationale": "MPL-2.0 permits modifying this self-hosted build; phrases first, then the bare word on data/markup files only (not the bundle.js global).",
       "rollback": "Remove the PHRASES sed block.",
@@ -36,7 +47,9 @@
       "id": "PO-CODE-004",
       "title": "De-concatenate ribbon group expander 'More options for {1}'",
       "type": "code-fix",
-      "files": ["dist/bundle.js"],
+      "files": [
+        "dist/bundle.js"
+      ],
       "dockerfile_lines": "56",
       "source_class": "client-ui",
       "render_path": "client",
@@ -48,7 +61,9 @@
       "id": "PO-CODE-005",
       "title": "De-concatenate combobox accessible name 'Open {name}'",
       "type": "code-fix",
-      "files": ["dist/bundle.js"],
+      "files": [
+        "dist/bundle.js"
+      ],
       "dockerfile_lines": "68",
       "source_class": "client-ui",
       "render_path": "client",
@@ -60,7 +75,9 @@
       "id": "PO-L10N-006",
       "title": "Client catalog string injections (12 langs)",
       "type": "translation-data",
-      "files": ["dist/l10n/ui-{ar,cs,fr,he,it,ja,ko,pt_BR,ru,tr,vi,uk}.json"],
+      "files": [
+        "dist/l10n/ui-{ar,cs,fr,he,it,ja,ko,pt_BR,ru,tr,vi,uk}.json"
+      ],
       "dockerfile_lines": "87-98",
       "source_class": "client-ui",
       "render_path": "client (UNVERIFIED per string: catalog presence does not prove the string renders from the client catalog - some render from core. Verify each, see the Clipboard caveat in assisted_translate.md).",
@@ -73,7 +90,9 @@
       "id": "PO-URL-007",
       "title": "Neutralize upstream URLs to about:blank",
       "type": "privacy",
-      "files": ["dist/**/*.{js,html,json,css}"],
+      "files": [
+        "dist/**/*.{js,html,json,css}"
+      ],
       "dockerfile_lines": "102-105",
       "rationale": "No phone-home and no upstream-identity leak via header-logo / release-notes / docs / proxy links.",
       "rollback": "Remove the two grep|sed URL passes.",
@@ -83,7 +102,10 @@
       "id": "PO-ASSET-008",
       "title": "Replace upstream logo images with the PrivateOffice mark",
       "type": "asset",
-      "files": ["dist/images/{collabora*,full-logo*,lc_about*,toolbar-bg-logo*}", "editor/po-logo.svg"],
+      "files": [
+        "dist/images/{collabora*,full-logo*,lc_about*,toolbar-bg-logo*}",
+        "editor/po-logo.svg"
+      ],
       "dockerfile_lines": "108-110",
       "rationale": "About wordmark and header logo show PrivateOffice.",
       "rollback": "Remove the cp loop; the original images return on rebuild.",
@@ -93,7 +115,10 @@
       "id": "PO-ASSET-009",
       "title": "Materialize missing lc_pastespecial.svg icon (light + dark)",
       "type": "asset",
-      "files": ["dist/images/lc_pastespecial.svg", "dist/images/dark/lc_pastespecial.svg"],
+      "files": [
+        "dist/images/lc_pastespecial.svg",
+        "dist/images/dark/lc_pastespecial.svg"
+      ],
       "dockerfile_lines": "118-120",
       "rationale": "Engine deterministically requests an icon upstream omits -> 404 + blank icon; copy it from the shipped paste art.",
       "rollback": "Remove the cp lines.",
@@ -103,7 +128,9 @@
       "id": "PO-CODE-010",
       "title": "getImageURL empty-name guard (no stray images/ request)",
       "type": "code-fix",
-      "files": ["dist/bundle.js"],
+      "files": [
+        "dist/bundle.js"
+      ],
       "dockerfile_lines": "128",
       "render_path": "client",
       "rationale": "Icon-less submenu entries build getURL('images/') -> 404; return '' for an empty imgName, matching the engine's own empty-path guard.",
@@ -114,7 +141,11 @@
       "id": "PO-BRAND-011",
       "title": "Neutralize serve-time %PLACEHOLDER% branding + own (cache-busted) branding.js + remove welcome",
       "type": "privacy",
-      "files": ["dist/cool.html", "dist/branding.js", "dist/welcome*"],
+      "files": [
+        "dist/cool.html",
+        "dist/branding.js",
+        "dist/welcome*"
+      ],
       "dockerfile_lines": "138-141",
       "rationale": "coolwsd substitutes %PRODUCT_BRANDING_NAME/URL% at serve time (the bare-word sed never sees them); set them to PrivateOffice / about:blank, empty feedback/welcome/buyproduct, drop welcome assets. branding.js: if left alone, coolwsd substitutes the %BRANDING_JS% placeholder at serve time with an UN-cache-busted <script .../branding.js>. Instead editor/Dockerfile.online itself REPLACES <!--%BRANDING_JS%--> with our own <script %SERVICE_ROOT%/browser/%VERSION%/branding.js> tag pointing at an empty inert branding.js we write, so PO-CACHE-013 appends ?b=BUILD_ID and an already-cached browser refetches it (no stale brand script). The stopgap editor/Dockerfile injects a rebranded branding.js the same way. Do NOT revert to letting coolwsd inject the tag (it would be un-cache-busted).",
       "rollback": "Remove the placeholder seds (incl. the %BRANDING_JS% -> <script> replace) + the empty branding.js; keep welcome.",
@@ -124,7 +155,9 @@
       "id": "PO-CACHE-012",
       "title": "Per-build ETag via ver_suffix = BUILD_ID (coolwsd.xml)",
       "type": "cache",
-      "files": ["/etc/coolwsd/coolwsd.xml"],
+      "files": [
+        "/etc/coolwsd/coolwsd.xml"
+      ],
       "dockerfile_lines": "159",
       "rationale": "ETag derives from the compile-time hash, which our content patches never change; stamp BUILD_ID into ver_suffix so each patched rebuild yields a fresh ETag.",
       "rollback": "Remove the sed; the ETag reverts to the upstream hash.",
@@ -134,7 +167,9 @@
       "id": "PO-CACHE-013",
       "title": "Cache-bust cool.html-referenced assets with ?b=BUILD_ID",
       "type": "cache",
-      "files": ["dist/cool.html"],
+      "files": [
+        "dist/cool.html"
+      ],
       "dockerfile_lines": "166",
       "rationale": "Browsers holding a 128-day max-age copy won't revalidate; ?b= forces a refetch of the patched bundle.css/js + l10n catalogs + the branding.js tag (injected by PO-BRAND-011) on next open.",
       "rollback": "Remove the sed.",
@@ -144,7 +179,10 @@
       "id": "PO-SRC-014",
       "title": "Source-patch mechanism: apply editor/patches/*.patch to the cloned Online source",
       "type": "code-fix",
-      "files": ["editor/patches/*.patch", "editor/Dockerfile.online"],
+      "files": [
+        "editor/patches/*.patch",
+        "editor/Dockerfile.online"
+      ],
       "render_path": "n/a (build-time source modification, before configure)",
       "rationale": "Channel real source-level changes to coolwsd / the browser bundle through reviewable unified diffs applied with `git apply` right after `git clone` and before `configure` - not post-build sed on built artifacts, not runtime overrides. No-op when no .patch is present; a failed apply breaks the build on purpose. Pinned to online_from_source.ref; rebase on re-pin. See editor/patches/README.md.",
       "rollback": "Remove the `COPY patches` + `git apply` step from editor/Dockerfile.online and the editor/patches/ dir.",
@@ -154,7 +192,10 @@
       "id": "PO-QA-015",
       "title": "Snapshot the unmerged source-built client catalog to /usr/share/coolwsd/upstream-l10n",
       "type": "qa",
-      "files": ["editor/Dockerfile.online", "scripts/check-l10n-overrides.py"],
+      "files": [
+        "editor/Dockerfile.online",
+        "scripts/check-l10n-overrides.py"
+      ],
       "render_path": "n/a (not served; QA baseline only)",
       "rationale": "Before the override merge, copy the freshly-built ui-<lang>.json to a non-served path that ships in the image. This is the TRUE upstream baseline for the override overlap check (scripts/check-l10n-overrides.py --upstream-from-active): the exact catalog the merge writes into, read from the SAME running container as the active catalog - not the base image's prebuilt browser dist (a different build that can drift).",
       "rollback": "Remove the cp-to-upstream-l10n RUN step; the offline base-image approximation (make l10n-overlap-offline) still works.",
@@ -164,7 +205,13 @@
       "id": "PO-SRC-016",
       "title": "Localize notebookbar function-name dropdowns for all locales (fixes insert + display in RU etc.)",
       "type": "code-fix",
-      "files": ["editor/patches/0001-notebookbar-localized-function-names.patch", "browser/src/control/jsdialog/Definitions.Menu.ts", "editor/po-funcnames.js", "scripts/build-l10n-funcnames.py", "editor/Dockerfile.online"],
+      "files": [
+        "editor/patches/0001-notebookbar-localized-function-names.patch",
+        "browser/src/control/jsdialog/Definitions.Menu.ts",
+        "editor/po-funcnames.js",
+        "scripts/build-l10n-funcnames.py",
+        "editor/Dockerfile.online"
+      ],
       "source_class": "browser-source",
       "render_path": "n/a (build-time source patch + parse-blocking head script po-funcnames.js)",
       "rationale": "Upstream getLocalizedFuncName localizes only de/fr/es, so the Formulas-tab function dropdowns (Date & Time, Financial, Logical, Math & Trig, …) emit the ENGLISH function name both as the visible label and inside .uno:InsertFunction?FunctionName=. A localized LO core only accepts the LOCALIZED name (RU needs СЕГОДНЯ, not TODAY), so in RU and every non-en/de/fr/es locale the dropdown shows English AND fails to insert. Fix: patch getLocalizedFuncName to consult window.PO_FN_NAMES - a per-locale {english:localized} map extracted from the core for.mo (RID_STRLIST_FUNCTION_NAMES) + sca.mo (*_FUNCNAME_*) by scripts/build-l10n-funcnames.py into editor/po-funcnames.js, delivered as a parse-blocking <head> script (like po-toggle.js) that runs before the deferred bundle.js. Covers all localizable functions across 12 locales. The same patch also removes the 9 dead Excel-import compatibility aliases (…_ADD / …_EXCEL2003, e.g. CUMIPMT_ADD, WEEKNUM_EXCEL2003) from the dropdowns: they are not real insertable functions (absent from the core name table) and did nothing on click; their real equivalents (CUMIPMT, WEEKNUM, …) remain. Confirmed an upstream defect on the clean base image.",
@@ -175,7 +222,10 @@
       "id": "PO-SRC-017",
       "title": "TreeView: treat row -1 as clear-selection, not an error (no console warn)",
       "type": "code-fix",
-      "files": ["editor/patches/0002-treeview-clear-selection.patch", "browser/src/control/jsdialog/Widget.TreeView.ts"],
+      "files": [
+        "editor/patches/0002-treeview-clear-selection.patch",
+        "browser/src/control/jsdialog/Widget.TreeView.ts"
+      ],
       "source_class": "browser-source",
       "render_path": "n/a (build-time source patch)",
       "rationale": "The core sends jsdialogaction select position=-1 (clear selection) as the user clicks around the Calc Function Wizard tree; selectEntryByRow(-1) misses the row map and logs console.warn('TreeView onSelect: row -1 not found') on every click. Treat row<0 as a normal deselect (unselect all, return) without warning. Confirmed upstream on the clean base image; benign but noisy.",
@@ -186,7 +236,10 @@
       "id": "PO-SRC-018",
       "title": "Notebookbar: keep the user's current Calc tab instead of jumping to Home on context change",
       "type": "code-fix",
-      "files": ["editor/patches/0003-notebookbar-keep-current-tab.patch", "browser/src/control/Control.Notebookbar.js"],
+      "files": [
+        "editor/patches/0003-notebookbar-keep-current-tab.patch",
+        "browser/src/control/Control.Notebookbar.js"
+      ],
       "source_class": "browser-source",
       "render_path": "n/a (build-time source patch)",
       "rationale": "updateTabsVisibilityForContext switches the Calc ribbon to the tab that owns the incoming context. When the context reverts to Cell/default (after inserting a table/chart/function, or just re-selecting a cell) the Home tab owns that context, so contextTab/defaultTab.click() yanks the ribbon to Home. Upstream guarded only the Formulas tab, and via a 'Formulas' vs 'Formula' name typo (the Calc tab's name is 'Formula' per Control.NotebookbarCalc.js) that guard never even fired. Generalised the guard: in spreadsheets, if the tab we would switch to is Home and the currently-selected tab is still visible, stay put — so Insert/Data/Layout/Formulas etc. survive an insert instead of snapping to Home. Genuine object-context tabs (Chart/Picture/Shape/Table) still take over, and a hidden current tab still falls through to Home. Supersedes the earlier name-typo-only fix.",
@@ -197,7 +250,14 @@
       "id": "PO-SRC-019",
       "title": "Localize built-in cell-style names in the sidebar Styles deck + Conditional-Formatting Apply-Style dropdown",
       "type": "code-fix",
-      "files": ["editor/patches/0004-localized-cell-style-names.patch", "browser/src/control/jsdialog/Widget.TreeView.ts", "browser/src/control/jsdialog/Widget.Listbox.ts", "editor/po-stylenames.js", "scripts/build-l10n-stylenames.py", "editor/Dockerfile.online"],
+      "files": [
+        "editor/patches/0004-localized-cell-style-names.patch",
+        "browser/src/control/jsdialog/Widget.TreeView.ts",
+        "browser/src/control/jsdialog/Widget.Listbox.ts",
+        "editor/po-stylenames.js",
+        "scripts/build-l10n-stylenames.py",
+        "editor/Dockerfile.online"
+      ],
       "source_class": "browser-source",
       "render_path": "sidebar StyleListDeck treeview (id 'flatview') + CF Apply-Style listbox (id 'style')",
       "rationale": "The LO core ships translations for built-in cell-style names (sc.mo, msgctxt STR_STYLENAME_*, e.g. Good→Хорошо, Accent→Акцент) but the style-LIST path sends the internal ENGLISH name to the browser (only 'Default' is core-localized), so the sidebar Styles deck and the Conditional-Formatting Apply-Style dropdown show Accent/Good/Heading/Result/Status/Text… in English in every locale. Confirmed NOT document-data (a native ODS shows English too) and NOT client _() (the deck/dropdown paint core-sent text with no _() call — adding the names to ui-ru.json did nothing there). Fix: display-only localization via window.getPOStyleName — a per-locale {english:localized} map extracted from sc.mo STR_STYLENAME_* by scripts/build-l10n-stylenames.py into editor/po-stylenames.js, delivered as a parse-blocking <head> script like po-funcnames.js — called ONLY inside the two style widgets: treeview id 'flatview' (Widget.TreeView.ts) and listbox id 'style' (Widget.Listbox.ts). Both select by row/index, so the applied style value stays English and round-trips correctly; custom/user styles pass through unchanged (the map holds built-in names only), and scoping by widget id avoids collateral translation of unrelated lists. Covers 18 locales.",
@@ -208,7 +268,10 @@
       "id": "PO-SRC-026",
       "title": "Localize colour-palette selector names in the colour picker (Standard / Theme colors / Document colors)",
       "type": "code-fix",
-      "files": ["editor/patches/0007-localized-color-palette-names.patch", "browser/src/control/jsdialog/Widget.ColorPicker.ts"],
+      "files": [
+        "editor/patches/0007-localized-color-palette-names.patch",
+        "browser/src/control/jsdialog/Widget.ColorPicker.ts"
+      ],
       "source_class": "browser-source",
       "render_path": "colour-picker palette <select> (#color-palette-listbox) — Widget.ColorPicker.ts createPaletteSwitch",
       "rationale": "The colour picker's palette selector <select> painted window.app.colorPalettes[i].name verbatim; those names arrive from the core as English msgids ('Standard', 'Theme colors', 'Document colors'), so the dropdown showed English in every locale even though the client catalog already has the translations (Стандартная / Цвета темы / Цвета документа). Confirmed NOT applied by the core listbox and NOT reached by client _() at the original call site. Fix: wrap the name in _() at the one assignment (Widget.ColorPicker.ts createPaletteSwitch) — _() returns the input unchanged for any name not in the catalog (custom palettes pass through). Display-only; the option value stays the English key.",
@@ -219,7 +282,11 @@
       "id": "PO-SRC-027",
       "title": "Client-catalog fallback for jsdialog fixed-text labels (localizes chart2 area/fill sidebar labels)",
       "type": "code-fix",
-      "files": ["editor/patches/0008-fixedtext-client-l10n-fallback.patch", "browser/src/control/jsdialog/Widget.FixedTextControl.ts", "editor/l10n/overrides/client/ru.json"],
+      "files": [
+        "editor/patches/0008-fixedtext-client-l10n-fallback.patch",
+        "browser/src/control/jsdialog/Widget.FixedTextControl.ts",
+        "editor/l10n/overrides/client/ru.json"
+      ],
       "source_class": "browser-source",
       "render_path": "every jsdialog fixedtext <label> — Widget.FixedTextControl.ts",
       "rationale": "Fixed-text labels were painted from core-sent text verbatim (builder._cleanText(data.text), no client _()). The CODE image does not ship chart2.mo, so the chart2 area/fill sidebar panels (shown when a chart is selected/edited) render their labels in English in every locale — Gradient type:, Gradient angle:, Effect/From:, To:, Transparency type:, Transparency:, Keep ratio, plus 3D Scheme: in the Chart Wizard. Add a client-catalog fallback: _(builder._cleanText(data.text)). _() returns the input unchanged when there is no catalog entry, so labels the engine already localised server-side (the vast majority) and strings we do not translate are untouched — only true gaps we carry a translation for change. RU translations for the visible chart-area labels added to client/ru.json. NOTE: full chart2-module localization would still need a shipped/merged chart2.mo; this fallback covers the labels surfaced so far.",
@@ -230,7 +297,13 @@
       "id": "PO-SRC-020",
       "title": "Localize document-theme preset names in the Format-tab Themes gallery",
       "type": "code-fix",
-      "files": ["editor/patches/0005-localized-theme-names.patch", "browser/src/control/jsdialog/Widget.IconView.ts", "editor/po-themenames.js", "editor/Dockerfile.online", "editor/l10n/overrides/client/ru.json"],
+      "files": [
+        "editor/patches/0005-localized-theme-names.patch",
+        "browser/src/control/jsdialog/Widget.IconView.ts",
+        "editor/po-themenames.js",
+        "editor/Dockerfile.online",
+        "editor/l10n/overrides/client/ru.json"
+      ],
       "source_class": "browser-source",
       "render_path": "Format-tab Themes gallery iconview (id 'iconview_theme_colors') + 'Add Theme...' _UNO label (ru.json)",
       "rationale": "The Format-tab Themes gallery shows built-in document colour-theme preset names (Retro/Forest/Sunset/Breeze/Classic/Rainbow/Red/Office/Chalk/Green/Chart Classic/Beach/Ocean/Purple/Orange/Blue/Grey) in English. Unlike cell styles, the LO engine ships NO translations for these preset names (absent from every .mo) — they are proper preset names kept English upstream. Per user decision, localize them: a HAND-MAINTAINED curated {english:localized} map (window.PO_THEME_NAMES + getPOThemeName in editor/po-themenames.js, <head> script) is consulted DISPLAY-ONLY inside _iconViewEntry scoped to the gallery id 'iconview_theme_colors' (Widget.IconView.ts) via a localized copy of the entry — the gallery selects by row index so the applied theme value stays English; unknown/custom theme names pass through, and the id scope leaves every other iconview (e.g. stylesview) untouched. Also fixes the 'Add Theme...' button: it is _UNO('.uno:AddTheme') = client _('Add Theme...'), so the ru.json key is corrected from 'Add Theme' to 'Add Theme...'. RU only for now (other locales fall back to English); add locales by hand in po-themenames.js.",
@@ -241,7 +314,11 @@
       "id": "PO-SRC-021",
       "title": "Remove Help links that navigate to the Collabora site (Forum / Report an issue / Latest Updates / Send Feedback / formula-error help)",
       "type": "code-fix",
-      "files": ["editor/patches/0006-remove-collabora-external-links.patch", "browser/src/control/Control.Menubar.ts", "browser/src/canvas/sections/FormulaErrorHelpSection.ts"],
+      "files": [
+        "editor/patches/0006-remove-collabora-external-links.patch",
+        "browser/src/control/Control.Menubar.ts",
+        "browser/src/canvas/sections/FormulaErrorHelpSection.ts"
+      ],
       "source_class": "browser-source",
       "render_path": "Help menu (all app contexts) + formula-error popup",
       "rationale": "A self-hosted, rebranded PrivateOffice should not point users to the Collabora site. Removed the Help-menu items Forum (forum.collaboraonline.com), Report an issue (github.com/CollaboraOnline/online/issues), Latest Updates + Send Feedback (Collabora welcome/feedback), and the 'Help on this error' formula-error item (help.collaboraoffice.com); also neutralized the forum/report-an-issue window.open handler branches so no path navigates to a Collabora domain. KEPT the OFFLINE, self-contained items: Online Help + Keyboard shortcuts (bundled cool-help.html, no external nav), Server audit, About. Per user request ('не переходить на сайт CO'). NOTE: fully localizing the offline cool-help.html content to RU is a separate, larger task.",
@@ -252,7 +329,11 @@
       "id": "PO-CACHE-022",
       "title": "Own (cache-busted) branding.css <link> instead of the serve-time %BRANDING_CSS% placeholder (#66)",
       "type": "cache",
-      "files": ["dist/cool.html", "dist/branding.css", "editor/Dockerfile.online"],
+      "files": [
+        "dist/cool.html",
+        "dist/branding.css",
+        "editor/Dockerfile.online"
+      ],
       "rationale": "coolwsd expands the <!--%BRANDING_CSS%--> placeholder in cool.html at serve time into a branding.css <link> WITHOUT a ?b= token, so its URL never changes and browsers keep an old cached copy forever. An earlier build shipped the PrivateOffice theme AS branding.css; its stale, un-cache-busted, UNSCOPED `.jsdialog-window{overflow:hidden}` rule clipped the 2x2 dialog wrapper, so dialog controls (e.g. the Page-Style 'Убрать обрамление' checkbox) became un-hit-testable (elementFromPoint over them returned the sheet, not the checkbox). Mirroring PO-BRAND-011 (branding.js): editor/Dockerfile.online replaces <!--%BRANDING_CSS%--> with our own <link rel=stylesheet href=%SERVICE_ROOT%/browser/%VERSION%/branding.css> tag so PO-CACHE-013 appends ?b=BUILD_ID and browsers refetch the fresh (inert stock) branding.css, dropping the stale one. The theme itself now lives folded in the cache-busted bundle.css (PO-THEME-001).",
       "rollback": "Remove the <!--%BRANDING_CSS%--> -> <link> sed in editor/Dockerfile.online (coolwsd resumes injecting an un-cache-busted tag).",
       "status": "active"
@@ -261,7 +342,10 @@
       "id": "PO-CODE-023",
       "title": "Save-status tooltip: Intl.RelativeTimeFormat narrow -> short (no signed '-36 мин') (#61)",
       "type": "code-fix",
-      "files": ["dist/bundle.js", "editor/Dockerfile.online"],
+      "files": [
+        "dist/bundle.js",
+        "editor/Dockerfile.online"
+      ],
       "source_class": "client-ui",
       "render_path": "client",
       "rationale": "The 'Last saved: …' indicator (updateModificationIndicator) formats elapsed time with Intl.RelativeTimeFormat style:'narrow'. For ru (and fr) the CLDR narrow relative form is a terse SIGNED number - format(-36,'minute') yields '-36 мин' / '-36 min', which reads as a broken negative time. This is native ICU behaviour (identical in the top-level window and the editor iframe), not a polyfill, and NOT a backend data problem: our WOPI LastModifiedTime (node.updated_at, UTC-aware) is correct and genuinely in the past. Fix: an anchored bundle.js sed (target string unique) switching that one RelativeTimeFormat to style:'short', which renders '36 мин. назад' / '36 min. ago' / 'vor 36 Min.' across locales and units.",
@@ -272,7 +356,12 @@
       "id": "PO-L10N-024",
       "title": "Russian keyboard-shortcuts help (cool-help.html) (#48)",
       "type": "translation-data",
-      "files": ["editor/cool-help.ru.html", "editor/l10n/help/ru.json", "dist/cool-help.html", "editor/Dockerfile.online"],
+      "files": [
+        "editor/cool-help.ru.html",
+        "editor/l10n/help/ru.json",
+        "dist/cool-help.html",
+        "editor/Dockerfile.online"
+      ],
       "render_path": "the 'Комбинации клавиш' reference opened via showHelp('keyboard-shortcuts-content')",
       "rationale": "The built-in offline help opened by the Keyboard-shortcuts button is dist/cool-help.html - a keyboard-shortcuts REFERENCE that shipped English-only (NOT the full LO help corpus, so it IS translatable). editor/cool-help.ru.html is the fully-translated file (527 text nodes -> RU, key-combos preserved, tag structure intact - 3642 tags unchanged), regenerated from the pinned engine's cool-help.html by substituting text nodes via the editor/l10n/help/ru.json data map (translations reconciled to official uno/ru.json wording). editor/Dockerfile.online COPYs it over dist/cool-help.html BEFORE the rebrand/cache-bust steps so it flows through the same pipeline. Regenerate on engine re-pin.",
       "rollback": "Remove the `COPY cool-help.ru.html -> dist/cool-help.html` step in editor/Dockerfile.online (the English cool-help.html returns).",
@@ -282,7 +371,11 @@
       "id": "PO-L10N-025",
       "title": "Core catalog (sc.mo) overrides for server-rendered Calc strings (#46 + sidebar/#validation)",
       "type": "translation-data",
-      "files": ["editor/l10n/overrides/core/ru/sc.po", "/opt/collaboraoffice/program/resource/ru/LC_MESSAGES/sc.mo", "editor/Dockerfile.online"],
+      "files": [
+        "editor/l10n/overrides/core/ru/sc.po",
+        "/opt/collaboraoffice/program/resource/ru/LC_MESSAGES/sc.mo",
+        "editor/Dockerfile.online"
+      ],
       "source_class": "core",
       "render_path": "server (the engine renders .ui dialogs/panels and pulls their translations from sc.mo)",
       "rationale": "Some newer Calc strings are untranslated in the pinned engine's ru sc.mo and are rendered SERVER-SIDE from .ui files, so a client/browser override cannot reach them (the string is in ui-ru.json yet the screen stays English). editor/Dockerfile.online merges editor/l10n/overrides/core/<lang>/sc.po into the engine's sc.mo via gettext (msgunfmt -> msgcat --use-first, existing catalog first to keep its Plural-Forms header -> msgfmt -> cp) BEFORE systemplate-setup, so the per-document jail template ships the corrected catalog. Covers: the 'Create Table' dialog (definetablerangedialog|*); the Table-Style-Options sidebar toggles + Table Styles/None (sidebardatabase|*) and the number-format 'Category' label (sidebarnumberformat|numberformatcomboboxlabel); and the Data-Validation 'Error Alert' tab labels + Action items (erroralerttabpage|*). msgctxt values come from the engine .ui files (share/config/soffice.cfg/modules/scalc/ui/*.ui). 23 entries; ru only. For Writer/Impress use sw.po / sd.po the same way.",

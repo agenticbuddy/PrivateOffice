@@ -34,3 +34,6 @@ issues.md
 QA-SUMMARY.md
 update-log.md
 .DS_Store
+
+# local clean-room deploy-test copy (git archive of tracked files)
+handover/
